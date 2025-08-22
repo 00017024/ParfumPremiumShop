@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoute');
 const authMiddleware = require('./middleware/authMiddleware');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 dotenv.config();
 connectDB();
 
@@ -16,7 +17,7 @@ app.use(cors());
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/cart', cartRoutes);
-
+app.use('/orders', orderRoutes);
 
 app.get('/protected', authMiddleware, (req, res) => {
   res.json({ message: `Welcome user ${req.user.id}` });
