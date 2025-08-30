@@ -8,6 +8,8 @@ const authMiddleware = require('./middleware/authMiddleware');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
+const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 dotenv.config();
 connectDB();
 
@@ -18,6 +20,9 @@ app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/cart', cartRoutes);
 app.use('/orders', orderRoutes);
+app.use('/users', userRoutes);
+app.use('/admin', adminRoutes);
+
 
 app.get('/protected', authMiddleware, (req, res) => {
   res.json({ message: `Welcome user ${req.user.id}` });

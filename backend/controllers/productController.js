@@ -2,27 +2,44 @@ const Product = require('../models/Product');
 
 // @desc Get all products with filtering/sorting
 // @route GET /products
-exports.getProducts = async (req, res) => {
+// GET /products?search=chanel&page=1&limit=10&sort=price&order=asc
+const getProducts = async (req, res) => {
   try {
-    let query = {};
-    let sort = {};
+    let { search, page = 1, limit = 10, sort = 'createdAt', order = 'desc' } = req.query;
 
-    // Filtering
-    if (req.query.brand) query.brand = req.query.brand;
-    if (req.query.newArrival) query.newArrival = req.query.newArrival === 'true';
+    page = parseInt(page);
+    limit = parseInt(limit);
 
-    // Sorting
-    if (req.query.sort) {
-      const order = req.query.order === 'desc' ? -1 : 1;
-      sort[req.query.sort] = order;
+    const query = {};
+
+    // Search by name or brand (case-insensitive)
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } }
+      ];
     }
 
-    const products = await Product.find(query).sort(sort);
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({ error: 'Server error' });
+    // Count total for pagination info
+    const total = await Product.countDocuments(query);
+
+    // Fetch products with pagination and sorting
+    const products = await Product.find(query)
+      .sort({ [sort]: order === 'asc' ? 1 : -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      products
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
+
 
 // @desc Get product by ID
 // @route GET /products/:id

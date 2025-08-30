@@ -1,0 +1,5 @@
+import { Header } from "../components/header"
+import { HeroSection } from "../components/hero-section"
+import { ProductCategories } from "../components/product-categories"
+import { FeaturedProducts } from "../components/featured-products"
+import { Footer } from "../components/footer"
