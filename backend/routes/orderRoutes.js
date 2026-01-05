@@ -1,26 +1,39 @@
-const express = require('express');
-const {
-  createOrder,
-  getAllOrders,
-  getMyOrders,
-  updateOrderStatus
-} = require('../controllers/orderController');
-
-const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleware = require('../middleware/adminMiddleware');
-
+const express = require("express");
 const router = express.Router();
 
-// Create new order
-router.post('/', authMiddleware, createOrder);
+const orderController = require("../controllers/orderController");
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
+const validate = require("../middleware/validate");
+const {
+  updateOrderStatusSchema
+} = require("../validators/order.schema");
 
-// Get logged-in user's orders
-router.get('/my-orders', authMiddleware, getMyOrders);
+router.post(
+  "/",
+  authMiddleware,
+  orderController.createOrder
+);
 
-// Admin only: get all orders
-router.get('/', authMiddleware, adminMiddleware, getAllOrders);
+router.get(
+  "/my",
+  authMiddleware,
+  orderController.getMyOrders
+);
 
-// Admin only: update order status
-router.put('/:id/status', authMiddleware, adminMiddleware, updateOrderStatus);
+router.get(
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  orderController.getAllOrders
+);
+
+router.put(
+  "/:id/status",
+  authMiddleware,
+  adminMiddleware,
+  validate(updateOrderStatusSchema),
+  orderController.updateOrderStatus
+);
 
 module.exports = router;

@@ -1,41 +1,57 @@
-const User = require('../models/User');
-const Order = require('../models/Order');
-const bcrypt = require('bcryptjs');
+const User = require("../models/User");
+const Order = require("../models/Order");
+const bcrypt = require("bcryptjs");
+const ApiError = require("../utils/ApiError");
 
-// GET profile
-exports.getProfile = async (req, res) => {
+// GET /users/profile
+exports.getProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select('-password'); // exclude password
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(req.user.id).select("-password");
 
-    // Optionally include user orders
-    const orders = await Order.find({ user: req.user.id }).populate('orderItems.product', 'name price');
+    if (!user) {
+      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+    }
+
+    const orders = await Order.find({ user: req.user.id })
+      .populate("items.product", "name price");
 
     res.json({ user, orders });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+  } catch (err) {
+    next(err);
   }
 };
 
-// UPDATE profile
-exports.updateProfile = async (req, res) => {
+// PUT /users/profile
+exports.updateProfile = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
 
     const user = await User.findById(req.user.id);
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+    }
 
     if (name) user.name = name;
     if (email) user.email = email;
     if (phone) user.phone = phone;
+
     if (password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
     }
 
     await user.save();
-    res.json({ message: 'Profile updated successfully', user: { id: user._id, name: user.name, email: user.email, phone: user.phone } });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+
+    res.json({
+      message: "Profile updated successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone
+      }
+    });
+  } catch (err) {
+    next(err);
   }
 };

@@ -1,69 +1,87 @@
-const User = require('../models/User');
+const User = require("../models/User");
+const ApiError = require("../utils/ApiError");
 
-// Get all users
-exports.getAllUsers = async (req, res) => {
+// GET /admin/users
+exports.getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select('-password');
+    const users = await User.find().select("-password");
     res.json(users);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    next(err);
   }
 };
 
-// Get single user by ID
-exports.getUserById = async (req, res) => {
+// GET /admin/users/:id
+exports.getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (!user) {
+      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+    }
+
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    next(err);
   }
 };
 
-// Update user (role, name, phone, etc.)
-exports.updateUser = async (req, res) => {
+// PUT /admin/users/:id
+exports.updateUser = async (req, res, next) => {
   try {
-    const updates = req.body; 
+    const updates = { ...req.body };
     delete updates.password; // prevent password updates here
 
-    const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true }).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+    }
 
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    next(err);
   }
 };
 
-// Block user
-exports.blockUser = async (req, res) => {
+// POST /admin/users/:id/block
+exports.blockUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
       { new: true }
-    ).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    ).select("-password");
 
-    res.json({ message: 'User blocked', user });
+    if (!user) {
+      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+    }
+
+    res.json({ message: "User blocked", user });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    next(err);
   }
 };
 
-// Unblock user
-exports.unblockUser = async (req, res) => {
+// POST /admin/users/:id/unblock
+exports.unblockUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive: true },
       { new: true }
-    ).select('-password');
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    ).select("-password");
 
-    res.json({ message: 'User unblocked', user });
+    if (!user) {
+      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+    }
+
+    res.json({ message: "User unblocked", user });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+    next(err);
   }
 };

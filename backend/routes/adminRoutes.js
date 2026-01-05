@@ -1,18 +1,43 @@
-const express = require('express');
-const { getAllUsers, getUserById, updateUser, blockUser, unblockUser } = require('../controllers/adminController');
-const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleware = require('../middleware/adminMiddleware');
-
+const express = require("express");
 const router = express.Router();
 
-router.use(authMiddleware, adminMiddleware);
+const adminController = require("../controllers/adminController");
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
 
-router.get('/users', getAllUsers);
-router.get('/users/:id', getUserById);
-router.patch('/users/:id', updateUser);
+router.get(
+  "/users",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getAllUsers
+);
 
-// block/unblock
-router.patch('/users/:id/block', blockUser);
-router.patch('/users/:id/unblock', unblockUser);
+router.get(
+  "/users/:id",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getUserById
+);
+
+router.put(
+  "/users/:id",
+  authMiddleware,
+  adminMiddleware,
+  adminController.updateUser
+);
+
+router.post(
+  "/users/:id/block",
+  authMiddleware,
+  adminMiddleware,
+  adminController.blockUser
+);
+
+router.post(
+  "/users/:id/unblock",
+  authMiddleware,
+  adminMiddleware,
+  adminController.unblockUser
+);
 
 module.exports = router;

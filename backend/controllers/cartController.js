@@ -1,27 +1,32 @@
-const Cart = require('../models/Cart');
-const Product = require('../models/Product');
+const Cart = require("../models/Cart");
+const Product = require("../models/Product");
+const ApiError = require("../utils/ApiError");
 
-// GET /cart (get logged-in user cart)
-exports.getCart = async (req, res) => {
+// GET /cart
+exports.getCart = async (req, res, next) => {
   try {
     const cart = await Cart.findOne({ user: req.user.id })
-      .populate('items.product', 'name price imageUrl');
+      .populate("items.product", "name price imageUrl");
+
     if (!cart) {
-      return res.json({ items: [] }); // return empty cart
+      return res.json({ items: [] });
     }
+
     res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err) {
+    next(err);
   }
 };
 
-// POST /cart/add (add product to cart)
-exports.addToCart = async (req, res) => {
+// POST /cart/add
+exports.addToCart = async (req, res, next) => {
   try {
     const { productId, quantity } = req.body;
 
     const product = await Product.findById(productId);
-    if (!product) return res.status(404).json({ error: 'Product not found' });
+    if (!product) {
+      throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
+    }
 
     let cart = await Cart.findOne({ user: req.user.id });
 
@@ -29,70 +34,78 @@ exports.addToCart = async (req, res) => {
       cart = new Cart({ user: req.user.id, items: [] });
     }
 
-    const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+    const itemIndex = cart.items.findIndex(
+      item => item.product.toString() === productId
+    );
+
+    const qty = quantity && quantity > 0 ? quantity : 1;
 
     if (itemIndex > -1) {
-      // Product already in cart → update quantity
-      cart.items[itemIndex].quantity += quantity || 1;
+      cart.items[itemIndex].quantity += qty;
     } else {
-      // Add new product
-      cart.items.push({ product: productId, quantity: quantity || 1 });
+      cart.items.push({ product: productId, quantity: qty });
     }
 
     await cart.save();
     res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err) {
+    next(err);
   }
 };
 
-// DELETE /cart/remove/:productId (remove single product)
 // DELETE /cart/remove/:productId
-exports.removeFromCart = async (req, res) => {
+exports.removeFromCart = async (req, res, next) => {
   try {
     const { productId } = req.params;
-    const { quantity } = req.body; // optional
+    const { quantity } = req.body;
 
-    let cart = await Cart.findOne({ user: req.user.id });
-    if (!cart) return res.status(404).json({ error: 'Cart not found' });
+    const cart = await Cart.findOne({ user: req.user.id });
+    if (!cart) {
+      throw new ApiError(404, "Cart not found", "CART_NOT_FOUND");
+    }
 
-    const itemIndex = cart.items.findIndex(item => item.product.toString() === productId);
+    const itemIndex = cart.items.findIndex(
+      item => item.product.toString() === productId
+    );
 
     if (itemIndex === -1) {
-      return res.status(404).json({ error: 'Product not in cart' });
+      throw new ApiError(
+        404,
+        "Product not in cart",
+        "CART_ITEM_NOT_FOUND"
+      );
     }
 
     if (quantity && quantity > 0) {
-      // decrease quantity
       cart.items[itemIndex].quantity -= quantity;
+
       if (cart.items[itemIndex].quantity <= 0) {
-        // remove completely if no quantity left
         cart.items.splice(itemIndex, 1);
       }
     } else {
-      // remove all if no quantity provided
       cart.items.splice(itemIndex, 1);
     }
 
     await cart.save();
     res.json(cart);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (err) {
+    next(err);
   }
 };
 
-
-// DELETE /cart/clear (clear entire cart)
-exports.clearCart = async (req, res) => {
+// DELETE /cart/clear
+exports.clearCart = async (req, res, next) => {
   try {
-    let cart = await Cart.findOne({ user: req.user.id });
-    if (!cart) return res.status(404).json({ error: 'Cart not found' });
+    const cart = await Cart.findOne({ user: req.user.id });
+    if (!cart) {
+      throw new ApiError(404, "Cart not found", "CART_NOT_FOUND");
+    }
 
     cart.items = [];
     await cart.save();
 
-    res.json({ message: 'Cart cleared' });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.json({ message: "Cart cleared" });
+  } catch (err) {
+    next(err);
   }
 };

@@ -1,23 +1,44 @@
-const express = require('express');
-const {
-  getProducts,
-  getProductById,
-  addProduct,
-  updateProduct,
-  deleteProduct
-} = require('../controllers/productController');
-const authMiddleware = require('../middleware/authMiddleware');
-const adminMiddleware = require('../middleware/adminMiddleware');
-
+const express = require("express");
 const router = express.Router();
 
-// Public routes
-router.get('/', getProducts);
-router.get('/:id', getProductById);
+const productController = require("../controllers/productController");
+const authMiddleware = require("../middleware/authMiddleware");
+const adminMiddleware = require("../middleware/adminMiddleware");
+const validate = require("../middleware/validate");
+const {
+  createProductSchema
+} = require("../validators/product.schema");
 
-// Admin only routes
-router.post('/', authMiddleware, adminMiddleware, addProduct);
-router.put('/:id', authMiddleware, adminMiddleware, updateProduct);
-router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct);
+router.get(
+  "/",
+  productController.getProducts
+);
+
+router.get(
+  "/:id",
+  productController.getProductById
+);
+
+router.post(
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  validate(createProductSchema),
+  productController.addProduct
+);
+
+router.put(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  productController.updateProduct
+);
+
+router.delete(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  productController.deleteProduct
+);
 
 module.exports = router;

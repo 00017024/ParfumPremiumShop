@@ -1,21 +1,36 @@
-const User = require('../models/User');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const User = require("../models/User");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const ApiError = require("../utils/ApiError");
 
-exports.register = async (req, res) => {
+/**
+ * Register
+ */
+exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
 
     // Phone validation (Uzbekistan format: +998XXXXXXXXX)
     const phoneRegex = /^\+998\d{9}$/;
     if (!phoneRegex.test(phone)) {
-      return res.status(400).json({ message: 'Invalid phone number format. Use +998XXXXXXXXX' });
+      throw new ApiError(
+        400,
+        "Invalid phone number format. Use +998XXXXXXXXX",
+        "PHONE_INVALID"
+      );
     }
 
     // Check for existing email or phone
-    const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phone }]
+    });
+
     if (existingUser) {
-      return res.status(400).json({ message: 'Email or phone already in use' });
+      throw new ApiError(
+        400,
+        "Email or phone already in use",
+        "USER_ALREADY_EXISTS"
+      );
     }
 
     // Hash password
@@ -23,59 +38,79 @@ exports.register = async (req, res) => {
 
     // First registered user becomes admin
     const userCount = await User.countDocuments();
-    const role = userCount === 0 ? 'admin' : 'user';
+    const role = userCount === 0 ? "admin" : "user";
 
     const user = new User({
       name,
       email,
-      password: hashedPassword, // store hashed password in `password`
+      password: hashedPassword,
       phone,
       role
     });
 
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
     res.status(201).json({
       token,
       user: {
-        _id: user._id,
+        id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role
       }
     });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Email or phone already in use' });
+  } catch (err) {
+    // Mongo duplicate key safeguard
+    if (err.code === 11000) {
+      return next(
+        new ApiError(
+          400,
+          "Email or phone already in use",
+          "USER_DUPLICATE_KEY"
+        )
+      );
     }
-    res.status(500).json({ message: error.message });
+
+    next(err);
   }
 };
 
-exports.login = async (req, res) => {
+/**
+ * Login
+ */
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-   
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      throw new ApiError(
+        400,
+        "Invalid credentials",
+        "AUTH_INVALID_CREDENTIALS"
+      );
+    }
 
-    // Compare entered password with stored hashed password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    if (!isMatch) {
+      throw new ApiError(
+        400,
+        "Invalid credentials",
+        "AUTH_INVALID_CREDENTIALS"
+      );
+    }
 
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '1d' }
+      { expiresIn: "1d" }
     );
 
     res.json({
@@ -89,6 +124,6 @@ exports.login = async (req, res) => {
       }
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    next(err);
   }
 };

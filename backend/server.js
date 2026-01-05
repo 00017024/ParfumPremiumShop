@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoute');
 const authMiddleware = require('./middleware/authMiddleware');
+const errorHandler = require("./middleware/errorMiddleware");
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const orderRoutes = require('./routes/orderRoutes');
@@ -16,6 +17,7 @@ connectDB();
 // Routes
 app.use(express.json());
 app.use(cors());
+app.use(errorHandler);
 app.use('/auth', authRoutes);
 app.use('/products', productRoutes);
 app.use('/cart', cartRoutes);
