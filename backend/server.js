@@ -1,38 +1,58 @@
-const express = require('express');
-const app = express();
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-const cors = require('cors');
-const authRoutes = require('./routes/authRoute');
-const authMiddleware = require('./middleware/authMiddleware');
-const errorHandler = require("./middleware/errorMiddleware");
-const productRoutes = require('./routes/productRoutes');
-const cartRoutes = require('./routes/cartRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-dotenv.config();
-connectDB();
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
 
-// Routes
+const connectDB = require("./config/db");
+const errorHandler = require("./middleware/errorMiddleware");
+
+const authRoutes = require("./routes/authRoutes");
+const productRoutes = require("./routes/productRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const userRoutes = require("./routes/userRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+
+// Load env
+dotenv.config();
+
+// Validate
+if (!process.env.JWT_SECRET) {
+  console.error("FATAL ERROR: JWT_SECRET not defined");
+  process.exit(1);
+}
+
+// Connect to database
+if (process.env.NODE_ENV !== "test") {
+  connectDB();
+}
+
+const app = express();
+
 app.use(express.json());
 app.use(cors());
+
+// Routes
+app.use("/auth", authRoutes);
+app.use("/products", productRoutes);
+app.use("/cart", cartRoutes);
+app.use("/orders", orderRoutes);
+app.use("/users", userRoutes);
+app.use("/admin", adminRoutes);
+
+app.get("/", (req, res) => {
+  res.send("Parfum Premium API is running...");
+});
+
+// Error handler
 app.use(errorHandler);
-app.use('/auth', authRoutes);
-app.use('/products', productRoutes);
-app.use('/cart', cartRoutes);
-app.use('/orders', orderRoutes);
-app.use('/users', userRoutes);
-app.use('/admin', adminRoutes);
-
-
-app.get('/protected', authMiddleware, (req, res) => {
-  res.json({ message: `Welcome user ${req.user.id}` });
-});
-
-app.get('/', (req, res) => {
-  res.send('Parfum Premium API is running...');
-});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Start server
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
+
+module.exports = app;
