@@ -3,52 +3,52 @@ const Order = require("../models/Order");
 const bcrypt = require("bcryptjs");
 const ApiError = require("../utils/ApiError");
 
-// GET /users/profile
 exports.getProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
-
-    if (!user) {
-      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
-    }
-
-    const orders = await Order.find({ user: req.user.id })
-      .populate("items.product", "name price");
-
-    res.json({ user, orders });
+    // req.user is already populated by authMiddleware
+    res.status(200).json({
+      user: {
+        id: req.user._id,
+        name: req.user.name,
+        email: req.user.email,
+        phone: req.user.phone,
+        role: req.user.role,
+        isActive: req.user.isActive,
+        createdAt: req.user.createdAt,
+        updatedAt: req.user.updatedAt
+      }
+    });
   } catch (err) {
     next(err);
   }
 };
 
-// PUT /users/profile
 exports.updateProfile = async (req, res, next) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, phone } = req.body;
+    const updates = {};
+    
+    if (name) updates.name = name;
+    if (phone) updates.phone = phone;
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      updates,
+      { new: true, runValidators: true }
+    );
+
     if (!user) {
-      throw new ApiError(404, "User not found", "USER_NOT_FOUND");
+      throw new ApiError(404, 'User not found', 'USER_NOT_FOUND');
     }
-
-    if (name) user.name = name;
-    if (email) user.email = email;
-    if (phone) user.phone = phone;
-
-    if (password) {
-      const salt = await bcrypt.genSalt(10);
-      user.password = await bcrypt.hash(password, salt);
-    }
-
-    await user.save();
 
     res.json({
-      message: "Profile updated successfully",
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        phone: user.phone
+        phone: user.phone,
+        role: user.role,
+        isActive: user.isActive
       }
     });
   } catch (err) {

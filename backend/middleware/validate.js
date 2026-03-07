@@ -1,3 +1,5 @@
+const ApiError = require("../utils/ApiError");
+
 const validate = (schema, property = "body") => {
   return (req, res, next) => {
     const { error, value } = schema.validate(req[property], {
@@ -7,7 +9,7 @@ const validate = (schema, property = "body") => {
 
     if (error) {
       return next(
-        new (require("../utils/ApiError"))(
+        new ApiError(
           400,
           error.details.map(d => d.message).join(", "),
           "VALIDATION_ERROR"

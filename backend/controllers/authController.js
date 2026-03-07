@@ -2,25 +2,10 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const ApiError = require("../utils/ApiError");
-
-/**
- * Register
- */
+//register
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
-
-    // Phone validation (Uzbekistan format: +998XXXXXXXXX)
-    const phoneRegex = /^\+998\d{9}$/;
-    if (!phoneRegex.test(phone)) {
-      throw new ApiError(
-        400,
-        "Invalid phone number format. Use +998XXXXXXXXX",
-        "PHONE_INVALID"
-      );
-    }
-
-    // Check for existing email or phone
     const existingUser = await User.findOne({
       $or: [{ email }, { phone }]
     });
@@ -33,12 +18,18 @@ exports.register = async (req, res, next) => {
       );
     }
 
-    // Hash password
+    
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // First registered user becomes admin
     const userCount = await User.countDocuments();
-    const role = userCount === 0 ? "admin" : "user";
+    let role = "user";
+
+    // First user becomes admin automatically
+    if (userCount === 0) {
+      role = "admin";
+    } else if (process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL) {
+      // Subsequent users can be admin if they match ADMIN_EMAIL
+      role = "admin";
+    }
 
     const user = new User({
       name,
@@ -82,29 +73,17 @@ exports.register = async (req, res, next) => {
   }
 };
 
-/**
- * Login
- */
+//login
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email }).select("+password");
-    if (!user) {
-      throw new ApiError(
-        400,
-        "Invalid credentials",
-        "AUTH_INVALID_CREDENTIALS"
-      );
-    }
+    const passwordToCompare = user ? user.password : '$2a$10$invalidhashXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
+    const isMatch = await bcrypt.compare(password, passwordToCompare);
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      throw new ApiError(
-        400,
-        "Invalid credentials",
-        "AUTH_INVALID_CREDENTIALS"
-      );
+    if (!user || !isMatch) {
+      throw new ApiError(400, "Invalid credentials", "AUTH_INVALID_CREDENTIALS");
     }
 
     const token = jwt.sign(

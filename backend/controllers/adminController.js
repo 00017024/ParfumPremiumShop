@@ -30,7 +30,7 @@ exports.getUserById = async (req, res, next) => {
 exports.updateUser = async (req, res, next) => {
   try {
     const updates = { ...req.body };
-    delete updates.password; // prevent password updates here
+    delete updates.password; 
 
     const user = await User.findByIdAndUpdate(
       req.params.id,

@@ -1,19 +1,13 @@
 const mongoose = require("mongoose");
 
-/**
- * Single source of truth for order states
- */
 const ORDER_STATUS = {
-  PENDING: "PENDING",       // created, awaiting payment
-  PAID: "PAID",             // payment confirmed
-  CONFIRMED: "CONFIRMED",   // admin approved
-  COMPLETED: "COMPLETED",   // delivered
-  CANCELLED: "CANCELLED"    // cancelled by user/admin
+  PENDING: "PENDING",
+  PAID: "PAID",
+  CONFIRMED: "CONFIRMED",
+  COMPLETED: "COMPLETED",
+  CANCELLED: "CANCELLED"
 };
 
-/**
- * Allowed lifecycle transitions
- */
 const ORDER_TRANSITIONS = {
   PENDING: [ORDER_STATUS.PAID, ORDER_STATUS.CANCELLED],
   PAID: [ORDER_STATUS.CONFIRMED, ORDER_STATUS.CANCELLED],
@@ -57,17 +51,17 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-/**
- * Lifecycle guard
- */
+//Lifecycle guard
+
 orderSchema.methods.canTransitionTo = function (nextStatus) {
   const allowed = ORDER_TRANSITIONS[this.status] || [];
   return allowed.includes(nextStatus);
 };
 
-module.exports = mongoose.model("Order", orderSchema);
+const Order = mongoose.model("Order", orderSchema);
 
-/**
- * Export constants for controllers
- */
-module.exports.ORDER_STATUS = ORDER_STATUS;
+// Export named exports for clarity: { Order, ORDER_STATUS }
+module.exports = {
+  Order,
+  ORDER_STATUS
+};

@@ -2,8 +2,10 @@ const Joi = require("joi");
 
 exports.createProductSchema = Joi.object({
   name: Joi.string().min(2).required(),
-  price: Joi.number().min(0).required(),
   brand: Joi.string().required(),
-  description: Joi.string().allow(""),
-  imageUrl: Joi.string().uri().optional()
+  price: Joi.number().min(0).required(),
+  description: Joi.string().allow("", null),
+  imageUrl: Joi.string().uri().optional(),
+  stock: Joi.number().integer().min(0).optional(),
+  categories: Joi.array().items(Joi.string()).optional()
 });

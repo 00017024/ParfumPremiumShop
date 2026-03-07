@@ -19,14 +19,13 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 6,
-    select: false, // prevents returning password in queries unless explicitly selected
+    select: false,
   },
   phone: {
     type: String,
     required: true,
     unique: true,
     match: [/^\+?[1-9]\d{7,14}$/, 'Invalid phone number format'], 
-    // Example: +998991234567 or 998991234567
   },
   role: {
     type: String,

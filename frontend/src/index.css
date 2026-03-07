@@ -1,14 +1,18 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-@theme {
-  --color-premium-black: #0a0a0a; /* deep black */
-  --color-premium-gold:  #d4af37; /* classic gold */
-  --font-display: "Playfair Display", ui-serif, Georgia, serif;
-  --font-sans: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+@layer base {
+  body {
+    @apply bg-brand-black text-text-primary antialiased;
+  }
 }
 
-/* Optional: minimal base reset without fighting Tailwind */
-@layer base {
-  html, body, #root { height: 100%; }
-  body { @apply bg-premium-black text-white; }
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }

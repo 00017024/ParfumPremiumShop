@@ -2,7 +2,6 @@ const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 
 // GET /products
-// /products?search=chanel&page=1&limit=10&sort=price&order=asc
 exports.getProducts = async (req, res, next) => {
   try {
     let {
@@ -13,8 +12,8 @@ exports.getProducts = async (req, res, next) => {
       order = "desc"
     } = req.query;
 
-    page = parseInt(page);
-    limit = parseInt(limit);
+    page = parseInt(page, 10);
+    limit = parseInt(limit, 10);
 
     const query = {};
 
@@ -66,10 +65,10 @@ exports.addProduct = async (req, res, next) => {
 
     res.status(201).json(product);
   } catch (err) {
-    throw new ApiError(
-      400,
-      "Invalid product data",
-      "PRODUCT_INVALID_DATA"
+    next(
+      err instanceof ApiError
+        ? err
+        : new ApiError(400, "Invalid product data", "PRODUCT_INVALID_DATA")
     );
   }
 };

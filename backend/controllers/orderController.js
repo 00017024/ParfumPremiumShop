@@ -1,14 +1,33 @@
-const Order = require('../models/Order');
-const { ORDER_STATUS } = require('../models/Order');
+const { Order, ORDER_STATUS } = require('../models/Order');
 const ApiError = require("../utils/ApiError");
 const Cart = require('../models/Cart');
+const Product = require('../models/Product');
 
-// Create new order from cart
-exports.createOrder = async (req, res) => {
+// Create order
+exports.createOrder = async (req, res, next) => {
   try {
-    const cart = await Cart.findOne({ user: req.user.id }).populate('items.product');
+    const cart = await Cart.findOne({ user: req.user.id })
+      .populate("items.product");
+
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ error: 'Cart is empty' });
+      throw new ApiError(400, "Cart is empty", "CART_EMPTY");
+    }
+
+    // Ensure each cart item has sufficient stock before creating the order.
+    for (const item of cart.items) {
+      const product = item.product;
+
+      if (!product) {
+        throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
+      }
+
+      if (item.quantity > product.stock) {
+        throw new ApiError(
+          400,
+          `Insufficient stock for ${product.name}`,
+          "INSUFFICIENT_STOCK"
+        );
+      }
     }
 
     const totalPrice = cart.items.reduce(
@@ -28,7 +47,25 @@ exports.createOrder = async (req, res) => {
 
     await order.save();
 
-    // Clear cart after order
+    // Decrement product stock using atomic updates. If any update fails (concurrent
+    // order consumed stock), rollback the created order and return an error.
+    for (const item of cart.items) {
+      const updated = await Product.findOneAndUpdate(
+        { _id: item.product._id, stock: { $gte: item.quantity } },
+        { $inc: { stock: -item.quantity } },
+        { new: true }
+      );
+
+      if (!updated) {
+        // Rollback order creation to keep data consistent.
+        await Order.findByIdAndDelete(order._id);
+        return next(
+          new ApiError(400, `Insufficient stock for ${item.product.name}`, "INSUFFICIENT_STOCK")
+        );
+      }
+    }
+
+    // Clear the cart only after stocks have been successfully decremented.
     cart.items = [];
     await cart.save();
 
@@ -37,7 +74,6 @@ exports.createOrder = async (req, res) => {
     next(err);
   }
 };
-
 
 // Get all orders (admin)
 exports.getAllOrders = async (req, res, next) => {
@@ -81,33 +117,22 @@ exports.updateOrderStatus = async (req, res, next) => {
       throw new ApiError(404, "Order not found", "ORDER_NOT_FOUND");
     }
 
-    // Prevent no-op or double actions
-    if (order.status === nextStatus) {
-      throw new ApiError(
-        400,
-        `Order is already in ${nextStatus} status`,
-        "ORDER_STATUS_NOOP"
-      );
-
-    }
-
     // Role-based enforcement
     if (
       [ORDER_STATUS.CONFIRMED, ORDER_STATUS.COMPLETED].includes(nextStatus) &&
-      !req.user.isAdmin
+      req.user.role !== "admin"
     ) {
       throw new ApiError(
         403,
         "Only admin can perform this action",
         "ORDER_ADMIN_ONLY"
       );
-
     }
 
     // User can only cancel before confirmation
     if (
       nextStatus === ORDER_STATUS.CANCELLED &&
-      !req.user.isAdmin &&
+      req.user.role !== "admin" &&
       ![ORDER_STATUS.PENDING, ORDER_STATUS.PAID].includes(order.status)
     ) {
       throw new ApiError(
@@ -117,7 +142,17 @@ exports.updateOrderStatus = async (req, res, next) => {
       );
     }
 
-    // Lifecycle enforcement (MODEL LEVEL)
+    // Prevention of no-op or double actions
+    if (order.status === nextStatus) {
+      throw new ApiError(
+        400,
+        `Order is already in ${nextStatus} status`,
+        "ORDER_STATUS_NOOP"
+      );
+    }
+
+
+    // Lifecycle enforcement
     if (!order.canTransitionTo(nextStatus)) {
       throw new ApiError(
         400,
