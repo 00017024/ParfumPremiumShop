@@ -1,0 +1,440 @@
+import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ShoppingCart, Minus, Plus, ArrowLeft, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+import api from '@/lib/api';
+import { useCartStore } from '@/store/cartStore';
+import Layout from '@/components/layout/Layout';
+import ProductGrid from '@/components/product/ProductGrid';
+import ProductCardSkeleton from '@/components/product/ProductCardSkeleton';
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Derives stock status label, color classes, and dot color from stock count.
+ */
+function getStockStatus(stock) {
+  if (stock === 0) {
+    return {
+      label: 'Out of Stock',
+      textClass: 'text-red-500',
+      dotClass: 'bg-red-500',
+    };
+  }
+  if (stock <= 5) {
+    return {
+      label: `Low Stock — only ${stock} left`,
+      textClass: 'text-yellow-500',
+      dotClass: 'bg-yellow-500',
+    };
+  }
+  return {
+    label: 'In Stock',
+    textClass: 'text-green-500',
+    dotClass: 'bg-green-500',
+  };
+}
+
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
+
+function ProductPageSkeleton() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
+      {/* Breadcrumb placeholder */}
+      <div className="h-4 w-40 bg-surface-card rounded mb-8" />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+        {/* Image placeholder */}
+        <div className="aspect-square bg-surface-card rounded-lg" />
+
+        {/* Info placeholders */}
+        <div className="flex flex-col gap-5 py-2">
+          <div className="h-3 w-24 bg-surface-card rounded" />
+          <div className="h-8 w-3/4 bg-surface-card rounded" />
+          <div className="h-8 w-1/3 bg-surface-card rounded" />
+          <div className="h-4 w-28 bg-surface-card rounded" />
+          <div className="h-px bg-surface-card" />
+          <div className="h-12 w-36 bg-surface-card rounded" />
+          <div className="h-12 bg-surface-card rounded" />
+          <div className="h-px bg-surface-card" />
+          <div className="space-y-2">
+            <div className="h-3 w-full bg-surface-card rounded" />
+            <div className="h-3 w-5/6 bg-surface-card rounded" />
+            <div className="h-3 w-4/6 bg-surface-card rounded" />
+          </div>
+        </div>
+      </div>
+
+      {/* Related products skeleton */}
+      <div className="mt-20">
+        <div className="h-6 w-48 bg-surface-card rounded mb-8" />
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <ProductCardSkeleton key={i} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Error State ──────────────────────────────────────────────────────────────
+
+function ProductError({ message }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-28 px-4 text-center">
+      <AlertCircle className="w-14 h-14 text-text-muted mb-5" />
+      <h2 className="text-2xl font-semibold text-text-primary mb-2">
+        Product Not Found
+      </h2>
+      <p className="text-text-muted max-w-md mb-8">
+        {message || "This product doesn't exist or may have been removed."}
+      </p>
+      <Link
+        to="/products"
+        className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all duration-200"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back to Products
+      </Link>
+    </div>
+  );
+}
+
+// ─── Category Pills ───────────────────────────────────────────────────────────
+
+function CategoryPill({ label }) {
+  return (
+    <span className="inline-block border border-neutral-border text-text-muted text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-sm">
+      {label}
+    </span>
+  );
+}
+
+// ─── Quantity Selector ────────────────────────────────────────────────────────
+
+function QuantitySelector({ qty, setQty, max, disabled }) {
+  const decrease = () => setQty((q) => Math.max(1, q - 1));
+  const increase = () => setQty((q) => Math.min(max, q + 1));
+
+  return (
+    <div
+      className="inline-flex items-center border border-neutral-border rounded-sm overflow-hidden"
+      role="group"
+      aria-label="Quantity selector"
+    >
+      <button
+        onClick={decrease}
+        disabled={disabled || qty <= 1}
+        aria-label="Decrease quantity"
+        className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-brand-gold hover:bg-surface-card transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <Minus className="w-3.5 h-3.5" />
+      </button>
+
+      <span
+        className="w-12 h-11 flex items-center justify-center text-text-primary text-sm font-medium border-x border-neutral-border select-none"
+        aria-live="polite"
+        aria-label={`Quantity: ${qty}`}
+      >
+        {qty}
+      </span>
+
+      <button
+        onClick={increase}
+        disabled={disabled || qty >= max}
+        aria-label="Increase quantity"
+        className="w-11 h-11 flex items-center justify-center text-text-secondary hover:text-brand-gold hover:bg-surface-card transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  );
+}
+
+// ─── ProductPage ──────────────────────────────────────────────────────────────
+
+export default function ProductPage() {
+  const { id } = useParams();
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [imgError, setImgError] = useState(false);
+  const [qty, setQty] = useState(1);
+
+  const addItem = useCartStore((state) => state.addItem);
+
+  // ── Fetch product ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!id) return;
+
+    let cancelled = false;
+
+    const fetchProduct = async () => {
+      setLoading(true);
+      setError(null);
+      setImgError(false);
+      setQty(1);
+
+      try {
+        const { data } = await api.get(`/products/${id}`);
+
+        if (!cancelled) {
+          setProduct(data);
+          fetchRelated(data.categories);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const msg =
+            err.response?.status === 404
+              ? 'This product could not be found.'
+              : 'Failed to load product. Please try again.';
+          setError(msg);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchProduct();
+    return () => { cancelled = true; };
+  }, [id]);
+
+  // ── Fetch related products ─────────────────────────────────────────────────
+  const fetchRelated = async (categories) => {
+    if (!categories?.length) return;
+
+    setRelatedLoading(true);
+    try {
+      const { data } = await api.get('/products', {
+        params: {
+          category: categories[0],
+          limit: 4,
+        },
+      });
+
+      // Exclude the current product from related list
+      const filtered = (data.products || []).filter((p) => p._id !== id);
+      setRelatedProducts(filtered.slice(0, 4));
+    } catch {
+      // Related products failing silently — non-critical
+      setRelatedProducts([]);
+    } finally {
+      setRelatedLoading(false);
+    }
+  };
+
+  // ── Add to cart ────────────────────────────────────────────────────────────
+  const handleAddToCart = () => {
+    if (!product || product.stock === 0) return;
+
+    addItem(product, qty);
+    toast.success(`${product.name} added to cart`, {
+      duration: 2000,
+      style: { background: '#16a34a', color: '#fff' },
+    });
+  };
+
+  // ── Render: loading ────────────────────────────────────────────────────────
+  if (loading) {
+    return (
+      <Layout>
+        <ProductPageSkeleton />
+      </Layout>
+    );
+  }
+
+  // ── Render: error ──────────────────────────────────────────────────────────
+  if (error || !product) {
+    return (
+      <Layout>
+        <ProductError message={error} />
+      </Layout>
+    );
+  }
+
+  const isOOS = product.stock === 0;
+  const stockStatus = getStockStatus(product.stock);
+  const fallbackImg = `https://placehold.co/800x800/111111/D4AF37?text=${encodeURIComponent(product.brand)}`;
+
+  return (
+    <Layout>
+
+      {/* ── Breadcrumb ───────────────────────────────────────────────────── */}
+      <nav
+        aria-label="Breadcrumb"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-2"
+      >
+        <ol className="flex items-center gap-2 text-xs text-text-muted uppercase tracking-widest">
+          <li>
+            <Link to="/" className="hover:text-brand-gold transition-colors">
+              Home
+            </Link>
+          </li>
+          <li aria-hidden="true" className="opacity-40">/</li>
+          <li>
+            <Link to="/products" className="hover:text-brand-gold transition-colors">
+              Products
+            </Link>
+          </li>
+          <li aria-hidden="true" className="opacity-40">/</li>
+          <li className="text-text-secondary truncate max-w-[180px]" aria-current="page">
+            {product.name}
+          </li>
+        </ol>
+      </nav>
+
+      {/* ── Main product section ─────────────────────────────────────────── */}
+      <section
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12"
+        aria-label="Product details"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start">
+
+          {/* ── Left: Image ──────────────────────────────────────────────── */}
+          <div className="group relative aspect-square overflow-hidden bg-surface-dark rounded-sm">
+            <img
+              src={imgError ? fallbackImg : (product.imageUrl || fallbackImg)}
+              alt={`${product.brand} ${product.name}`}
+              onError={() => setImgError(true)}
+              loading="lazy"
+              className="w-full h-full object-cover object-center transition-transform duration-700 ease-out group-hover:scale-105"
+            />
+
+            {/* OOS overlay */}
+            {isOOS && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span className="border border-brand-gold/40 text-brand-gold/70 text-xs uppercase tracking-[0.25em] px-4 py-2">
+                  Out of Stock
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* ── Right: Product info ───────────────────────────────────────── */}
+          <div className="flex flex-col gap-5">
+
+            {/* Brand */}
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted">
+              {product.brand}
+            </p>
+
+            {/* Product name */}
+            <h1 className="text-3xl sm:text-4xl font-light text-text-primary leading-tight">
+              {product.name}
+            </h1>
+
+            {/* Price */}
+            <p
+              className="text-3xl font-light text-brand-gold"
+              aria-label={`Price: $${product.price.toFixed(2)}`}
+            >
+              ${product.price.toFixed(2)}
+            </p>
+
+            {/* Stock status */}
+            <div className="flex items-center gap-2" aria-live="polite">
+              <span
+                className={`w-2 h-2 rounded-full ${stockStatus.dotClass}`}
+                aria-hidden="true"
+              />
+              <span className={`text-sm ${stockStatus.textClass}`}>
+                {stockStatus.label}
+              </span>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-neutral-border" />
+
+            {/* Categories */}
+            {product.categories?.length > 0 && (
+              <div className="flex flex-wrap gap-2" aria-label="Categories">
+                {product.categories.map((cat) => (
+                  <CategoryPill key={cat} label={cat} />
+                ))}
+              </div>
+            )}
+
+            {/* Quantity + Add to Cart */}
+            <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+              <QuantitySelector
+                qty={qty}
+                setQty={setQty}
+                max={product.stock}
+                disabled={isOOS}
+              />
+
+              <button
+                onClick={handleAddToCart}
+                disabled={isOOS}
+                aria-label={
+                  isOOS
+                    ? 'Out of stock — cannot add to cart'
+                    : `Add ${product.name} to cart`
+                }
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2.5 px-8 py-3 border text-sm uppercase tracking-widest font-medium transition-all duration-200
+                  border-brand-gold text-brand-gold
+                  hover:bg-brand-gold hover:text-brand-black
+                  disabled:border-neutral-border disabled:text-text-muted disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-text-muted
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-gold focus-visible:ring-offset-2 focus-visible:ring-offset-surface-dark"
+              >
+                <ShoppingCart className="w-4 h-4" aria-hidden="true" />
+                {isOOS ? 'Unavailable' : 'Add to Cart'}
+              </button>
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-neutral-border" />
+
+            {/* Description */}
+            {product.description && (
+              <div>
+                <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-3">
+                  About this fragrance
+                </h2>
+                <p className="text-text-muted leading-relaxed max-w-prose text-sm">
+                  {product.description}
+                </p>
+              </div>
+            )}
+
+          </div>
+        </div>
+      </section>
+
+      {/* ── Related Products ─────────────────────────────────────────────── */}
+      {(relatedLoading || relatedProducts.length > 0) && (
+        <section
+          className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16"
+          aria-label="Related products"
+        >
+          {/* Section header */}
+          <div className="flex items-center gap-6 mb-8">
+            <h2 className="text-xs uppercase tracking-[0.25em] text-text-muted whitespace-nowrap">
+              Related Products
+            </h2>
+            <div
+              className="flex-1 h-px"
+              style={{
+                background:
+                  'linear-gradient(90deg, rgba(212,175,55,0.25), transparent)',
+              }}
+              aria-hidden="true"
+            />
+          </div>
+
+          <ProductGrid
+            products={relatedProducts}
+            loading={relatedLoading}
+          />
+        </section>
+      )}
+
+    </Layout>
+  );
+}
