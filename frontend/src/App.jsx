@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 
 import Products from './pages/Products';
 import ProductPage from './pages/ProductPage';
+import CartPage from './pages/CartPage';
 
 function App() {
   return (
@@ -10,7 +11,9 @@ function App() {
       <Toaster position="top-right" />
       <Routes>
         <Route path="/" element={<Products />} />
+        <Route path="/products" element={<Products />} />
         <Route path="/products/:id" element={<ProductPage />} />
+        <Route path="/cart" element={<CartPage />} />
       </Routes>
     </Router>
   );
