@@ -6,14 +6,14 @@ const Product = require('../models/Product');
 // Create order
 exports.createOrder = async (req, res, next) => {
   try {
-    const cart = await Cart.findOne({ user: req.user.id })
+    const cart = await Cart.findOne({ user: req.user._id })
       .populate("items.product");
 
     if (!cart || cart.items.length === 0) {
       throw new ApiError(400, "Cart is empty", "CART_EMPTY");
     }
 
-    // Ensure each cart item has sufficient stock before creating the order.
+    // Ensure stock availability
     for (const item of cart.items) {
       const product = item.product;
 
@@ -30,25 +30,34 @@ exports.createOrder = async (req, res, next) => {
       }
     }
 
+    // Calculate total price
     const totalPrice = cart.items.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
       0
     );
 
+    // Create order with checkout info
     const order = new Order({
-      user: req.user.id,
+      user: req.user._id,
+
+      customerName: req.body.customerName,
+      phone: req.body.phone,
+      city: req.body.city,
+      address: req.body.address,
+      notes: req.body.notes,
+
       items: cart.items.map(item => ({
         product: item.product._id,
         quantity: item.quantity
       })),
+
       totalPrice,
       status: ORDER_STATUS.PENDING
     });
 
     await order.save();
 
-    // Decrement product stock using atomic updates. If any update fails (concurrent
-    // order consumed stock), rollback the created order and return an error.
+    // Decrement product stock (atomic safety)
     for (const item of cart.items) {
       const updated = await Product.findOneAndUpdate(
         { _id: item.product._id, stock: { $gte: item.quantity } },
@@ -57,19 +66,28 @@ exports.createOrder = async (req, res, next) => {
       );
 
       if (!updated) {
-        // Rollback order creation to keep data consistent.
+        // Rollback order if stock conflict occurs
         await Order.findByIdAndDelete(order._id);
+
         return next(
-          new ApiError(400, `Insufficient stock for ${item.product.name}`, "INSUFFICIENT_STOCK")
+          new ApiError(
+            400,
+            `Insufficient stock for ${item.product.name}`,
+            "INSUFFICIENT_STOCK"
+          )
         );
       }
     }
 
-    // Clear the cart only after stocks have been successfully decremented.
+    // Clear cart after successful order
     cart.items = [];
     await cart.save();
 
+    // Populate product data for response
+    await order.populate("items.product", "name price brand");
+
     res.status(201).json(order);
+
   } catch (err) {
     next(err);
   }
@@ -81,24 +99,26 @@ exports.getAllOrders = async (req, res, next) => {
     const orders = await Order.find()
       .populate('user', 'name email')
       .populate('items.product', 'name price brand');
+
     res.json(orders);
-   } catch (err) {
+  } catch (err) {
     next(err);
   }
 };
 
-// Get user orders
+// Get current user's orders
 exports.getMyOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find({ user: req.user.id })
+    const orders = await Order.find({ user: req.user._id })
       .populate('items.product', 'name price brand');
+
     res.json(orders);
-   } catch (err) {
+  } catch (err) {
     next(err);
   }
 };
 
-// Update order status (admin)
+// Update order status (admin / controlled transitions)
 exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { status: nextStatus } = req.body;
@@ -109,10 +129,10 @@ exports.updateOrderStatus = async (req, res, next) => {
         "Invalid order status",
         "ORDER_STATUS_INVALID"
       );
-
     }
 
     const order = await Order.findById(req.params.id);
+
     if (!order) {
       throw new ApiError(404, "Order not found", "ORDER_NOT_FOUND");
     }
@@ -129,7 +149,7 @@ exports.updateOrderStatus = async (req, res, next) => {
       );
     }
 
-    // User can only cancel before confirmation
+    // Users can only cancel before confirmation
     if (
       nextStatus === ORDER_STATUS.CANCELLED &&
       req.user.role !== "admin" &&
@@ -142,7 +162,7 @@ exports.updateOrderStatus = async (req, res, next) => {
       );
     }
 
-    // Prevention of no-op or double actions
+    // Prevent duplicate transitions
     if (order.status === nextStatus) {
       throw new ApiError(
         400,
@@ -151,8 +171,7 @@ exports.updateOrderStatus = async (req, res, next) => {
       );
     }
 
-
-    // Lifecycle enforcement
+    // Lifecycle validation
     if (!order.canTransitionTo(nextStatus)) {
       throw new ApiError(
         400,
@@ -165,8 +184,8 @@ exports.updateOrderStatus = async (req, res, next) => {
     await order.save();
 
     res.json(order);
-  } catch (err) {
-  next(err);
-}
-};
 
+  } catch (err) {
+    next(err);
+  }
+};

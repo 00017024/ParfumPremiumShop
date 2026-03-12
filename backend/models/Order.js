@@ -23,6 +23,33 @@ const orderSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
+
+    customerName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+
+    phone: {
+      type: String,
+      required: true
+    },
+
+    city: {
+      type: String,
+      enum: ["Tashkent", "Samarkand"],
+      required: true
+    },
+
+    address: {
+      type: String,
+      required: true
+    },
+
+    notes: {
+      type: String
+    },
+
     items: [
       {
         product: {
@@ -37,11 +64,13 @@ const orderSchema = new mongoose.Schema(
         }
       }
     ],
+
     totalPrice: {
       type: Number,
       required: true,
       min: 0
     },
+
     status: {
       type: String,
       enum: Object.values(ORDER_STATUS),
@@ -51,8 +80,7 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-//Lifecycle guard
-
+// lifecycle guard
 orderSchema.methods.canTransitionTo = function (nextStatus) {
   const allowed = ORDER_TRANSITIONS[this.status] || [];
   return allowed.includes(nextStatus);
@@ -60,7 +88,6 @@ orderSchema.methods.canTransitionTo = function (nextStatus) {
 
 const Order = mongoose.model("Order", orderSchema);
 
-// Export named exports for clarity: { Order, ORDER_STATUS }
 module.exports = {
   Order,
   ORDER_STATUS
