@@ -22,6 +22,12 @@ router.get(
 );
 
 router.get(
+  "/:id",
+  authMiddleware,
+  orderController.getOrderById
+);
+
+router.get(
   "/",
   authMiddleware,
   adminMiddleware,
