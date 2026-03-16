@@ -1,30 +1,39 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-
+import { Routes, Route, Navigate } from 'react-router-dom';
+import ProtectedRoute    from '@/components/auth/ProtectedRoute';
 import Products from './pages/Products';
-import ProductPage from './pages/ProductPage';
-import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage';
-import OrderSuccessPage from './pages/OrderSuccessPage';
-import MyOrdersPage from './pages/MyOrdersPage';
-import OrderDetailsPage from './pages/OrderDetailsPage';
+import ProductPage       from '@/pages/ProductPage';
+import CartPage          from '@/pages/CartPage';
+import LoginPage         from '@/pages/LoginPage';
+import RegisterPage      from '@/pages/RegisterPage';
+import CheckoutPage      from '@/pages/CheckoutPage';
+import OrderSuccessPage  from '@/pages/OrderSuccessPage';
+import MyOrdersPage      from '@/pages/MyOrdersPage';
+import OrderDetailsPage  from '@/pages/OrderDetailsPage';
 
-function App() {
+export default function App() {
   return (
-    <Router>
-      <Toaster position="top-right" />
-      <Routes>
-        <Route path="/" element={<Products />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/products/:id" element={<ProductPage />} />
-        <Route path="/cart" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/order-success" element={<OrderSuccessPage />} />
-        <Route path="/orders" element={<MyOrdersPage />} />
-        <Route path="/orders/:id" element={<OrderDetailsPage />} />
-      </Routes>
-    </Router>
+    <Routes>
+      {/* ── Public routes ─────────────────────────────────────── */}
+      <Route path="/"               element={<Navigate to="/products" replace />} />
+      <Route path="/products"        element={<Products />} />
+      <Route path="/products/:id"   element={<ProductPage />} />
+      <Route path="/cart"           element={<CartPage />} />
+      <Route path="/login"          element={<LoginPage />} />
+      <Route path="/register"       element={<RegisterPage />} />
+
+      {/* ── Protected routes ──────────────────────────────────── */}
+      <Route path="/checkout" element={
+        <ProtectedRoute><CheckoutPage /></ProtectedRoute>
+      } />
+      <Route path="/order-success" element={
+        <ProtectedRoute><OrderSuccessPage /></ProtectedRoute>
+      } />
+      <Route path="/orders" element={
+        <ProtectedRoute><MyOrdersPage /></ProtectedRoute>
+      } />
+      <Route path="/orders/:id" element={
+        <ProtectedRoute><OrderDetailsPage /></ProtectedRoute>
+      } />
+    </Routes>
   );
 }
-
-export default App;
