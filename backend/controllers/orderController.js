@@ -1,6 +1,5 @@
 const { Order, ORDER_STATUS } = require('../models/Order');
 const ApiError = require('../utils/ApiError');
-const Cart = require('../models/Cart');
 const Product = require('../models/Product');
 
 // Shared populate string — ensures imageUrl is always included for frontend
@@ -13,50 +12,54 @@ const PRODUCT_FIELDS = 'name price brand imageUrl';
 
 exports.createOrder = async (req, res, next) => {
   try {
-    const cart = await Cart.findOne({ user: req.user._id })
-      .populate('items.product');
+    const { items, customerName, phone, city, address, notes } = req.body;
 
-    if (!cart || cart.items.length === 0) {
-      throw new ApiError(400, 'Cart is empty', 'CART_EMPTY');
+    if (!items || items.length === 0) {
+      throw new ApiError(400, "Order items missing", "ORDER_ITEMS_MISSING");
     }
-
     // Validate stock availability before touching anything
-    for (const item of cart.items) {
-      const product = item.product;
+    let totalPrice = 0;
+    const orderItems = [];
+
+    for (const item of items) {
+
+      const product = await Product.findById(item.productId);
 
       if (!product) {
-        throw new ApiError(404, 'Product not found', 'PRODUCT_NOT_FOUND');
+        throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
       }
 
       if (item.quantity > product.stock) {
         throw new ApiError(
           400,
           `Insufficient stock for ${product.name}`,
-          'INSUFFICIENT_STOCK'
+          "INSUFFICIENT_STOCK"
         );
       }
-    }
 
-    // Calculate total from cart items
-    const totalPrice = cart.items.reduce(
-      (sum, item) => sum + item.product.price * item.quantity,
-      0
-    );
+      totalPrice += product.price * item.quantity;
 
-    // Build order document
+      orderItems.push({
+        product: product._id,
+        quantity: item.quantity
+      });
+        // Calculate total from cart items
+        const totalPrice = cart.items.reduce(
+          (sum, item) => sum + item.product.price * item.quantity,
+          0
+        );
+
+      }
     const order = new Order({
-      user: req.user._id,
-      customerName: req.body.customerName,
-      phone: req.body.phone,
-      city: req.body.city,
-      address: req.body.address,
-      notes: req.body.notes,
-      items: cart.items.map((item) => ({
-        product: item.product._id,
-        quantity: item.quantity,
-      })),
-      totalPrice,
-      status: ORDER_STATUS.PENDING,
+    user: req.user._id,
+    customerName,
+    phone,
+    city,
+    address,
+    notes,
+    items: orderItems,
+    totalPrice,
+    status: ORDER_STATUS.PENDING
     });
 
     await order.save();
@@ -80,10 +83,6 @@ exports.createOrder = async (req, res, next) => {
         );
       }
     }
-
-    // Clear cart after successful order creation
-    cart.items = [];
-    await cart.save();
 
     // Populate product fields for response
     await order.populate('items.product', PRODUCT_FIELDS);
