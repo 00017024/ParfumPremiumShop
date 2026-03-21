@@ -16,6 +16,13 @@ router.post(
 );
 
 router.get(
+  "/",
+  authMiddleware,
+  adminMiddleware,
+  orderController.getAllOrders
+);
+
+router.get(
   "/my",
   authMiddleware,
   orderController.getMyOrders
@@ -27,13 +34,6 @@ router.get(
   orderController.getOrderById
 );
 
-router.get(
-  "/",
-  authMiddleware,
-  adminMiddleware,
-  orderController.getAllOrders
-);
-
 router.put(
   "/:id/status",
   authMiddleware,
@@ -41,5 +41,6 @@ router.put(
   validate(updateOrderStatusSchema),
   orderController.updateOrderStatus
 );
+
 
 module.exports = router;

@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const path = require("path");
 
-dotenv.config({ path: ".env.test" });
+dotenv.config({ path: path.resolve(__dirname, "../../.env.test") });
 
 // Connect
 beforeAll(async () => {
