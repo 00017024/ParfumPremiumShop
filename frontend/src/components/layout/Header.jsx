@@ -1,16 +1,17 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User } from 'lucide-react';
-import { useAuthStore } from '@/store/authStore';
+import { ShoppingCart, User, Package } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { useCartStore } from '@/store/cartStore';
 
 export default function Header() {
-  const { isAuthenticated, user, logout } = useAuthStore();
+  const { user, logout } = useAuth();
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const cartItemCount = getTotalItems();
 
   return (
     <header className="bg-brand-black border-b border-neutral-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold text-brand-gold tracking-wide hover:opacity-80 transition-opacity">
           PARFUM PREMIUM
@@ -21,9 +22,14 @@ export default function Header() {
           <Link to="/" className="text-text-secondary hover:text-text-primary transition-colors">
             Home
           </Link>
-          <Link to="/" className="text-text-secondary hover:text-text-primary transition-colors">
+          <Link to="/products" className="text-text-secondary hover:text-text-primary transition-colors">
             Shop
           </Link>
+          {user && (
+            <Link to="/orders" className="text-text-secondary hover:text-text-primary transition-colors">
+              My Orders
+            </Link>
+          )}
         </nav>
 
         {/* Actions */}
@@ -39,10 +45,10 @@ export default function Header() {
           </Link>
 
           {/* User */}
-          {isAuthenticated ? (
+          {user ? (
             <div className="flex items-center gap-3">
               <span className="text-text-primary text-sm hidden sm:block">
-                {user?.name}
+                {user.name}
               </span>
               <button
                 onClick={logout}
