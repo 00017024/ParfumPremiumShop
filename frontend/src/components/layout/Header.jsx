@@ -43,6 +43,9 @@ export default function Header() {
               </span>
             )}
           </Link>
+            {user?.role === 'admin' && (
+          <Link to="/admin" className="text-brand-gold text-sm">Admin</Link>
+           )}
 
           {/* User */}
           {user ? (

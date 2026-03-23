@@ -1,0 +1,208 @@
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, RotateCcw, Loader2 } from 'lucide-react';
+
+import { useAdminOrderDetail } from '@/hooks/admin/useAdminOrderDetail';
+import OrderStatusBadge from '@/components/admin/OrderStatusBadge';
+import OrderStatusSelect from '@/components/admin/OrderStatusSelect';
+
+// ─── Section wrapper (same design as user-facing OrderDetailsPage) ────────────
+
+function Section({ title, children }) {
+  return (
+    <section
+      className="bg-surface-card border border-neutral-border rounded-sm p-6 flex flex-col gap-4"
+      aria-label={title}
+    >
+      <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted pb-2 border-b border-neutral-border">
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
+
+function InfoRow({ label, value }) {
+  if (!value) return null;
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3">
+      <span className="text-[11px] uppercase tracking-widest text-text-muted w-28 flex-shrink-0">
+        {label}
+      </span>
+      <span className="text-sm text-text-primary">{value}</span>
+    </div>
+  );
+}
+
+function PageSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 animate-pulse max-w-4xl">
+      <div className="h-4 w-48 bg-surface-card rounded" />
+      {[80, 140, 200].map((h, i) => (
+        <div key={i} className="bg-surface-card border border-neutral-border rounded-sm p-6">
+          <div className="h-3 w-32 bg-surface-dark rounded mb-4" />
+          <div className="bg-surface-dark rounded" style={{ height: h }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── AdminOrderDetailPage ─────────────────────────────────────────────────────
+
+export default function AdminOrderDetailPage() {
+  const { id } = useParams();
+  const { order, loading, error, updating, reload, changeStatus } =
+    useAdminOrderDetail(id);
+
+  return (
+    <div className="max-w-4xl">
+
+      {/* ── Back link ────────────────────────────────────────────────── */}
+      <Link
+        to="/admin/orders"
+        className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-text-muted hover:text-brand-gold transition-colors mb-8"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        All Orders
+      </Link>
+
+      {loading && <PageSkeleton />}
+
+      {!loading && error && (
+        <div className="flex flex-col items-center gap-6 py-20 text-center">
+          <p className="text-text-muted text-sm">Failed to load order.</p>
+          <button
+            onClick={reload}
+            className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!loading && !error && order && (() => {
+        const shortId = order._id.slice(-6).toUpperCase();
+        const date = new Date(order.createdAt).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        });
+
+        return (
+          <div className="flex flex-col gap-6">
+
+            {/* ── Page header ─────────────────────────────────────────── */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h1 className="text-2xl font-light text-text-primary tracking-wide">
+                  Order{' '}
+                  <span className="text-brand-gold">#{shortId}</span>
+                </h1>
+                <p className="text-xs text-text-muted mt-0.5">{date}</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <OrderStatusBadge status={order.status} />
+                {updating && (
+                  <Loader2 className="w-4 h-4 text-brand-gold animate-spin" />
+                )}
+              </div>
+            </div>
+
+            {/* ── Status management ────────────────────────────────────── */}
+            <Section title="Update Status">
+              <div className="flex items-center gap-4 flex-wrap">
+                <p className="text-sm text-text-secondary">
+                  Current:{' '}
+                  <span className="text-text-primary font-medium">
+                    {order.status}
+                  </span>
+                </p>
+                <OrderStatusSelect
+                  currentStatus={order.status}
+                  onChange={changeStatus}
+                  loading={updating}
+                />
+              </div>
+            </Section>
+
+            {/* ── Order information ────────────────────────────────────── */}
+            <Section title="Order Information">
+              <InfoRow label="Order ID" value={`#${shortId}`} />
+              <InfoRow label="Date"     value={date} />
+              <InfoRow label="Status"   value={order.status} />
+              <InfoRow
+                label="Total"
+                value={`$${Number(order.totalPrice).toFixed(2)}`}
+              />
+            </Section>
+
+            {/* ── Customer details ─────────────────────────────────────── */}
+            <Section title="Customer & Delivery">
+              <InfoRow label="Name"    value={order.customerName} />
+              <InfoRow label="Phone"   value={order.phone} />
+              <InfoRow label="City"    value={order.city} />
+              <InfoRow label="Address" value={order.address} />
+              {order.notes && (
+                <InfoRow label="Notes" value={order.notes} />
+              )}
+            </Section>
+
+            {/* ── Items ───────────────────────────────────────────────── */}
+            <Section title="Ordered Items">
+              <ul className="flex flex-col divide-y divide-neutral-border" aria-label="Order items">
+                {order.items.map((item, idx) => {
+                  const product = item.product;
+                  const lineTotal = (product.price * item.quantity).toFixed(2);
+                  const fallback = `https://placehold.co/64x64/2A2A2A/D4AF37?text=${encodeURIComponent(product.brand ?? '?')}`;
+
+                  return (
+                    <li
+                      key={product._id ?? idx}
+                      className="flex items-center gap-4 py-4 first:pt-0 last:pb-0"
+                    >
+                      <div className="w-14 h-14 flex-shrink-0 overflow-hidden rounded-sm bg-surface-dark">
+                        <img
+                          src={product.imageUrl || fallback}
+                          alt={`${product.brand} ${product.name}`}
+                          onError={(e) => { e.currentTarget.src = fallback; }}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">
+                          {product.name}
+                        </p>
+                        <p className="text-[11px] uppercase tracking-widest text-text-muted mt-0.5">
+                          {product.brand}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
+                          <span>${Number(product.price).toFixed(2)}</span>
+                          <span className="opacity-30">·</span>
+                          <span>Qty: {item.quantity}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm font-medium text-text-primary flex-shrink-0">
+                        ${lineTotal}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <div className="border-t border-neutral-border pt-4 flex justify-between items-baseline">
+                <span className="text-xs uppercase tracking-widest text-text-muted">
+                  Order Total
+                </span>
+                <span className="text-xl font-light text-brand-gold">
+                  ${Number(order.totalPrice).toFixed(2)}
+                </span>
+              </div>
+            </Section>
+
+          </div>
+        );
+      })()}
+
+    </div>
+  );
+}
