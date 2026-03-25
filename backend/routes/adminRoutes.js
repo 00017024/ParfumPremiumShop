@@ -6,6 +6,13 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 
 router.get(
+  "/stats",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getStats
+);
+
+router.get(
   "/users",
   authMiddleware,
   adminMiddleware,

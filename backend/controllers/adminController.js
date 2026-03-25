@@ -1,4 +1,5 @@
 const User = require("../models/User");
+const { Order, ORDER_STATUS } = require("../models/Order");
 const ApiError = require("../utils/ApiError");
 
 // GET /admin/users
@@ -81,6 +82,69 @@ exports.unblockUser = async (req, res, next) => {
     }
 
     res.json({ message: "User unblocked", user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /admin/stats
+exports.getStats = async (req, res, next) => {
+  try {
+    const [orderStats, totalUsers] = await Promise.all([
+      Order.aggregate([
+        {
+          $facet: {
+            totalOrders: [{ $count: "count" }],
+
+            revenue: [
+              { $match: { status: { $ne: ORDER_STATUS.CANCELLED } } },
+              { $group: { _id: null, total: { $sum: "$totalPrice" } } },
+            ],
+
+            pendingOrders: [
+              { $match: { status: ORDER_STATUS.PENDING } },
+              { $count: "count" },
+            ],
+
+            recentOrders: [
+              { $sort: { createdAt: -1 } },
+              { $limit: 5 },
+              {
+                $lookup: {
+                  from: "users",
+                  localField: "user",
+                  foreignField: "_id",
+                  as: "user",
+                  pipeline: [{ $project: { name: 1, email: 1 } }],
+                },
+              },
+              { $unwind: { path: "$user", preserveNullAndEmpty: true } },
+              {
+                $lookup: {
+                  from: "products",
+                  localField: "items.product",
+                  foreignField: "_id",
+                  as: "populatedProducts",
+                  pipeline: [{ $project: { name: 1, price: 1, brand: 1, imageUrl: 1 } }],
+                },
+              },
+            ],
+          },
+        },
+      ]),
+
+      User.countDocuments(),
+    ]);
+
+    const stats = orderStats[0];
+
+    res.json({
+      totalOrders:   stats.totalOrders[0]?.count   ?? 0,
+      totalRevenue:  stats.revenue[0]?.total        ?? 0,
+      pendingOrders: stats.pendingOrders[0]?.count  ?? 0,
+      totalUsers,
+      recentOrders:  stats.recentOrders,
+    });
   } catch (err) {
     next(err);
   }
