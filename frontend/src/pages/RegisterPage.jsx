@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
 
 import { useAuth } from '@/context/AuthContext';
+import { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } from '@/lib/validation';
 import Layout from '@/components/layout/Layout';
 
 export default function RegisterPage() {
@@ -23,10 +24,8 @@ export default function RegisterPage() {
       e.email = 'Email is required.';
     if (!form.phone.trim())
       e.phone = 'Phone number is required.';
-    else if (form.phone.trim().length < 9)
-      e.phone = 'Phone number is too short.';
-    else if (form.phone.trim().length > 15)
-      e.phone = 'Phone number is too long.';
+    else if (!UZ_PHONE_REGEX.test(form.phone.trim()))
+      e.phone = UZ_PHONE_MESSAGE;
     if (!form.password || form.password.length < 6)
       e.password = 'Password must be at least 6 characters.';
     return e;

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
 import { useStockValidation } from '@/hooks/useStockValidation';
+import { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } from '@/lib/validation';
 import Layout from '@/components/layout/Layout';
 import EmptyState from '@/components/product/EmptyState';
 
@@ -18,10 +19,8 @@ function validate(form) {
     errors.name = 'Full name must be at least 2 characters.';
   }
 
-  const uzPhoneRegex = /^\+998\d{9}$/;
-
-  if (!uzPhoneRegex.test(form.phone.trim())) {
-    errors.phone = 'Phone must be in format +998XXXXXXXXX';
+  if (!UZ_PHONE_REGEX.test(form.phone.trim())) {
+    errors.phone = UZ_PHONE_MESSAGE;
   }
 
   if (!['Tashkent', 'Samarkand'].includes(form.city)) {

@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } = require('../validators/phone');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -25,7 +26,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    match: [/^\+?[1-9]\d{7,14}$/, 'Invalid phone number format'], 
+    match: [UZ_PHONE_REGEX, UZ_PHONE_MESSAGE],
   },
   role: {
     type: String,

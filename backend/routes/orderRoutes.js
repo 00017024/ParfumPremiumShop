@@ -6,12 +6,14 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const validate = require("../middleware/validate");
 const {
-  updateOrderStatusSchema
+  createOrderSchema,
+  updateOrderStatusSchema,
 } = require("../validators/order.schema");
 
 router.post(
   "/",
   authMiddleware,
+  validate(createOrderSchema),
   orderController.createOrder
 );
 

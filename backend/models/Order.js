@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } = require('../validators/phone');
 
 const ORDER_STATUS = {
   PENDING: "PENDING",
@@ -32,7 +33,8 @@ const orderSchema = new mongoose.Schema(
 
     phone: {
       type: String,
-      required: true
+      required: true,
+      match: [UZ_PHONE_REGEX, UZ_PHONE_MESSAGE],
     },
 
     city: {
