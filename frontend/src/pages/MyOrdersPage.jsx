@@ -207,10 +207,10 @@ export default function MyOrdersPage() {
         {/* ── Empty ─────────────────────────────────────────────────── */}
         {!loading && !error && orders.length === 0 && (
           <div className="flex flex-col items-center">
-            <EmptyState message="No orders yet" />
-            <p className="text-sm text-text-muted -mt-4 mb-6 text-center max-w-xs">
-              When you purchase perfumes, your orders will appear here.
-            </p>
+            <EmptyState
+              message="No orders yet"
+              description="When you purchase perfumes, your orders will appear here."
+            />
             <Link
               to="/products"
               className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all duration-200"

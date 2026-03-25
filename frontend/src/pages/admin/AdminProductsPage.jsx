@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, RotateCcw, Search } from 'lucide-react';
 
 import { useAdminProducts } from '@/hooks/admin/useAdminProducts';
+import { useDebounce } from '@/hooks/useDebounce';
 import ProductFormModal from '@/components/admin/ProductFormModal';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
@@ -49,18 +50,18 @@ export default function AdminProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState(null); // { _id, name }
   const [deleting, setDeleting]         = useState(false);
 
-  // ── Search (local debounce handled via updateParams) ──────────────────────
-  const [searchInput, setSearchInput]   = useState(params.search ?? '');
+  // ── Search ─────────────────────────────────────────────────────────────────
+  const [searchInput, setSearchInput] = useState(params.search ?? '');
+  const debouncedSearch = useDebounce(searchInput, 350);
+
+  // Sync debounced value → query params (fires only when typing stops)
+  useEffect(() => {
+    updateParams({ search: debouncedSearch || undefined, page: 1 });
+  }, [debouncedSearch]);
 
   const handleSearchChange = useCallback((e) => {
-    const val = e.target.value;
-    setSearchInput(val);
-    // Simple debounce: update params after user stops typing
-    clearTimeout(window.__productSearchTimer);
-    window.__productSearchTimer = setTimeout(() => {
-      updateParams({ search: val || undefined, page: 1 });
-    }, 350);
-  }, [updateParams]);
+    setSearchInput(e.target.value);
+  }, []);
 
   // ── Open create modal ──────────────────────────────────────────────────────
   const openCreate = () => {

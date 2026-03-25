@@ -239,7 +239,7 @@ export default function CartPage() {
         {items.length === 0 ? (
           <div className="flex flex-col items-center">
             <EmptyState
-              title="Your cart is empty"
+              message="Your cart is empty"
               description="Browse our fragrances and discover something you'll love."
             />
 

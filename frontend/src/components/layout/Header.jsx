@@ -22,9 +22,6 @@ export default function Header() {
           <Link to="/" className="text-text-secondary hover:text-text-primary transition-colors">
             Home
           </Link>
-          <Link to="/products" className="text-text-secondary hover:text-text-primary transition-colors">
-            Shop
-          </Link>
           {user && (
             <Link to="/orders" className="text-text-secondary hover:text-text-primary transition-colors">
               My Orders

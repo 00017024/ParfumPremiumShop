@@ -14,6 +14,7 @@ import CheckoutPage        from '@/pages/CheckoutPage';
 import OrderSuccessPage    from '@/pages/OrderSuccessPage';
 import MyOrdersPage        from '@/pages/MyOrdersPage';
 import OrderDetailsPage    from '@/pages/OrderDetailsPage';
+import NotFoundPage        from '@/pages/NotFoundPage';
 
 // ── Admin pages ───────────────────────────────────────────────────────────────
 import AdminLayout         from '@/pages/admin/AdminLayout';
@@ -67,6 +68,9 @@ export default function App() {
         <Route path="products"  element={<AdminProductsPage />} />
         <Route path="users"     element={<AdminUsersPage />} />
       </Route>
+
+      {/* ── 404 — must be last ────────────────────────────────── */}
+      <Route path="*" element={<NotFoundPage />} />
 
     </Routes>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchParams } from 'react-router-dom';
 import api from '@/lib/api';
 import Layout from '@/components/layout/Layout';
@@ -21,16 +22,13 @@ export default function Products() {
 
   // Debounced search
   const [searchInput, setSearchInput] = useState(search);
+  const debouncedSearch = useDebounce(searchInput, 300);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchInput !== search) {
-        updateParams({ search: searchInput, page: 1 });
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
+    if (debouncedSearch !== search) {
+      updateParams({ search: debouncedSearch, page: 1 });
+    }
+  }, [debouncedSearch]);
 
   // Fetch products
   useEffect(() => {
