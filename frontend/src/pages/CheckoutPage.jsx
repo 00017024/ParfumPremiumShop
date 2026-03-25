@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Loader2, ShoppingBag, ChevronRight } from 'lucide-react';
+import { Loader2, ShoppingBag, ChevronRight, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
+import { useStockValidation } from '@/hooks/useStockValidation';
 import Layout from '@/components/layout/Layout';
 import EmptyState from '@/components/product/EmptyState';
 
@@ -65,7 +66,7 @@ const inputClass = (hasError) =>
 
 // ─── OrderSummaryPanel ────────────────────────────────────────────────────────
 
-function OrderSummaryPanel({ items, subtotal }) {
+function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
   return (
     <aside
       className="bg-surface-card border border-neutral-border rounded-sm p-6 flex flex-col gap-5 h-fit"
@@ -102,6 +103,12 @@ function OrderSummaryPanel({ items, subtotal }) {
                 </p>
                 <p className="text-sm text-text-primary truncate">{product.name}</p>
                 <p className="text-xs text-text-muted mt-0.5">Qty: {quantity}</p>
+                {stockIssues[product._id] && (
+                  <p className="flex items-start gap-1 text-xs text-red-400 mt-1.5 leading-tight">
+                    <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-px" aria-hidden="true" />
+                    {stockIssues[product._id]}
+                  </p>
+                )}
               </div>
 
               {/* Line total */}
@@ -142,8 +149,19 @@ function OrderSummaryPanel({ items, subtotal }) {
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
-  const items = useCartStore((state) => state.items);
-  const clearCart = useCartStore((state) => state.clearCart);
+  const items          = useCartStore((state) => state.items);
+  const clearCart      = useCartStore((state) => state.clearCart);
+  const updateQuantity = useCartStore((state) => state.updateQuantity);
+  const removeItem     = useCartStore((state) => state.removeItem);
+
+  // ── Stock validation ────────────────────────────────────────────────────────
+  const { stockIssues, checking, revalidate } = useStockValidation(
+    items,
+    updateQuantity,
+    removeItem
+  );
+
+  const hasStockIssues = Object.keys(stockIssues).length > 0;
 
   // ── Form state ─────────────────────────────────────────────────────────────
   const [form, setForm] = useState({
@@ -359,19 +377,31 @@ export default function CheckoutPage() {
               {/* Submit */}
               <button
                 type="submit"
-                disabled={submitting || isCartEmpty}
-                aria-label={submitting ? 'Processing order…' : 'Place order'}
+                disabled={submitting || isCartEmpty || checking || hasStockIssues}
+                aria-label={
+                  checking        ? 'Checking stock availability…' :
+                  hasStockIssues  ? 'Some items have stock issues — review your order' :
+                  submitting      ? 'Processing order…' :
+                  'Place order'
+                }
                 className="mt-2 flex items-center justify-center gap-2.5 w-full py-4 text-sm uppercase tracking-widest font-medium transition-all duration-200
                   bg-brand-gold text-brand-black
                   hover:bg-opacity-90
                   active:scale-[0.99]
                   disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
               >
-                {submitting ? (
+                {checking ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                    Checking availability…
+                  </>
+                ) : submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
                     Processing…
                   </>
+                ) : hasStockIssues ? (
+                  'Fix stock issues to continue'
                 ) : (
                   'Place Order'
                 )}
@@ -380,7 +410,7 @@ export default function CheckoutPage() {
           </section>
 
           {/* ── Right: Order summary ───────────────────────────────────── */}
-          <OrderSummaryPanel items={items} subtotal={subtotal} />
+          <OrderSummaryPanel items={items} subtotal={subtotal} stockIssues={stockIssues} />
 
         </div>
       </div>
