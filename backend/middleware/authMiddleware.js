@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
+
 const User = require('../models/User');
+const BlacklistedToken = require('../models/BlacklistedToken');
 const ApiError = require('../utils/ApiError');
 
 const authMiddleware = async (req, res, next) => {
@@ -8,6 +10,15 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Reject tokens that have been explicitly invalidated via logout
+    if (decoded.jti) {
+      const isBlacklisted = await BlacklistedToken.exists({ jti: decoded.jti });
+      if (isBlacklisted) {
+        return next(new ApiError(401, 'Token has been invalidated', 'TOKEN_INVALIDATED'));
+      }
+    }
+
     const user = await User.findById(decoded.id);
 
     if (!user) return next(new ApiError(404, 'User not found', 'USER_NOT_FOUND'));

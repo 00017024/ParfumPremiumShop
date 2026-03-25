@@ -1,7 +1,24 @@
-const User = require("../models/User");
+const crypto = require("crypto");
+
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+
+const User = require("../models/User");
+const BlacklistedToken = require("../models/BlacklistedToken");
 const ApiError = require("../utils/ApiError");
+
+/*
+Generate a signed JWT with a unique jti claim.
+ */
+const signToken = (payload) => {
+  const jti = crypto.randomUUID();
+  const token = jwt.sign(
+    { ...payload, jti },
+    process.env.JWT_SECRET,
+    { expiresIn: "1d" }
+  );
+  return { token, jti };
+};
 //register
 exports.register = async (req, res, next) => {
   try {
@@ -41,11 +58,7 @@ exports.register = async (req, res, next) => {
 
     await user.save();
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const { token } = signToken({ id: user._id, role: user.role });
 
     res.status(201).json({
       token,
@@ -86,11 +99,7 @@ exports.login = async (req, res, next) => {
       throw new ApiError(400, "Invalid credentials", "AUTH_INVALID_CREDENTIALS");
     }
 
-    const token = jwt.sign(
-      { id: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const { token } = signToken({ id: user._id, role: user.role });
 
     res.json({
       token,
@@ -103,6 +112,30 @@ exports.login = async (req, res, next) => {
       }
     });
   } catch (err) {
+    next(err);
+  }
+};
+
+// POST /auth/logout
+exports.logout = async (req, res, next) => {
+  try {
+    const rawToken = req.header('Authorization')?.replace('Bearer ', '');
+
+    if (rawToken) {
+      const decoded = jwt.decode(rawToken);
+
+      if (decoded?.jti && decoded?.exp) {
+        await BlacklistedToken.create({
+          jti: decoded.jti,
+          expiresAt: new Date(decoded.exp * 1000),
+        });
+      }
+    }
+
+    res.json({ message: "Logged out successfully" });
+  } catch (err) {
+    // Never block logout — even if blacklisting fails, the client
+    // clears its token and the session ends from the user's perspective.
     next(err);
   }
 };

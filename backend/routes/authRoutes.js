@@ -20,4 +20,12 @@ router.post(
   authController.login
 );
 
+/* 
+Logout does not require body validation — the token comes from the authorization header.
+*/
+router.post(
+  "/logout",
+  authController.logout
+);
+
 module.exports = router;

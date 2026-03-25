@@ -11,7 +11,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [token, setToken]     = useState(null);
-  const [loading, setLoading] = useState(true); // true until session is restored
+  const [loading, setLoading] = useState(true); 
 
   // ── Restore session on mount ─────────────────────────────────────────────
   useEffect(() => {
@@ -80,8 +80,14 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────────────────
 
-  const logout = () => {
-    clearSession();
+  const logout = async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch {
+      // Silently ignore — network errors or an already-expired token
+    } finally {
+      clearSession();
+    }
   };
 
   // ── Context value ─────────────────────────────────────────────────────────
