@@ -54,7 +54,7 @@ export default function AdminDashboardPage() {
                   maximumFractionDigits: 2,
                 })}`
           }
-          sub="Excluding cancelled orders"
+          sub="Paid & completed orders"
           loading={loading}
         />
         <StatCard

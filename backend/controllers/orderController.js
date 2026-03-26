@@ -142,12 +142,18 @@ exports.getOrderById = async (req, res, next) => {
 // GET /orders (Admin)
 exports.getAllOrders = async (req, res, next) => {
   try {
+    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+
+    const total  = await Order.countDocuments();
     const orders = await Order.find()
       .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
       .populate("user", "name email")
       .populate("items.product", "name price brand imageUrl");
 
-    res.json(orders);
+    res.json({ total, page, pages: Math.ceil(total / limit), orders });
   } catch (err) {
     next(err);
   }
@@ -172,8 +178,20 @@ exports.updateOrderStatus = async (req, res, next) => {
       );
     }
 
+    const wasCancelled = status === ORDER_STATUS.CANCELLED;
+
     order.status = status;
     await order.save();
+
+    if (wasCancelled) {
+      for (const item of order.items) {
+        await Product.updateOne(
+          { _id: item.product },
+          { $inc: { stock: item.quantity } }
+        );
+      }
+    }
+
     await order.populate("items.product", "name price brand imageUrl");
 
     res.json(order);

@@ -1,6 +1,8 @@
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 
+const ALLOWED_SORT_FIELDS = new Set(["createdAt", "price", "name"]);
+
 // GET /products
 exports.getProducts = async (req, res, next) => {
   try {
@@ -12,16 +14,24 @@ exports.getProducts = async (req, res, next) => {
       order = "desc"
     } = req.query;
 
-    page = parseInt(page, 10);
-    limit = parseInt(limit, 10);
+    page  = Math.max(1, parseInt(page, 10)  || 1);
+    limit = Math.min(100, Math.max(1, parseInt(limit, 10) || 10));
+
+    if (!ALLOWED_SORT_FIELDS.has(sort)) sort = "createdAt";
 
     const query = {};
 
     if (search) {
+      // Escape special regex chars to prevent ReDoS
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { brand: { $regex: search, $options: "i" } }
+        { name: { $regex: escaped, $options: "i" } },
+        { brand: { $regex: escaped, $options: "i" } }
       ];
+    }
+
+    if (req.query.category) {
+      query.categories = req.query.category;
     }
 
     const total = await Product.countDocuments(query);
@@ -65,11 +75,12 @@ exports.addProduct = async (req, res, next) => {
 
     res.status(201).json(product);
   } catch (err) {
-    next(
-      err instanceof ApiError
-        ? err
-        : new ApiError(400, "Invalid product data", "PRODUCT_INVALID_DATA")
-    );
+    if (err instanceof ApiError) return next(err);
+    // Surface Mongoose ValidationError and hook errors (e.g. profile mismatch)
+    if (err.name === "ValidationError" || err.message?.startsWith("Profile mismatch")) {
+      return next(new ApiError(400, err.message, "VALIDATION_ERROR"));
+    }
+    next(new ApiError(400, "Invalid product data", "PRODUCT_INVALID_DATA"));
   }
 };
 
@@ -88,11 +99,12 @@ exports.updateProduct = async (req, res, next) => {
 
     res.json(product);
   } catch (err) {
-    next(
-      err instanceof ApiError
-        ? err
-        : new ApiError(400, "Invalid update data", "PRODUCT_UPDATE_INVALID")
-    );
+    if (err instanceof ApiError) return next(err);
+    // Surface Mongoose ValidationError and hook errors (e.g. profile mismatch)
+    if (err.name === "ValidationError" || err.message?.startsWith("Profile mismatch")) {
+      return next(new ApiError(400, err.message, "VALIDATION_ERROR"));
+    }
+    next(new ApiError(400, "Invalid update data", "PRODUCT_UPDATE_INVALID"));
   }
 };
 

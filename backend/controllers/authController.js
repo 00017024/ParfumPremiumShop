@@ -38,15 +38,9 @@ exports.register = async (req, res, next) => {
     
     const hashedPassword = await bcrypt.hash(password, 10);
     const userCount = await User.countDocuments();
-    let role = "user";
 
-    // First user becomes admin automatically
-    if (userCount === 0) {
-      role = "admin";
-    } else if (process.env.ADMIN_EMAIL && email === process.env.ADMIN_EMAIL) {
-      // Subsequent users can be admin if they match ADMIN_EMAIL
-      role = "admin";
-    }
+    // First registered user becomes admin automatically
+    const role = userCount === 0 ? "admin" : "user";
 
     const user = new User({
       name,

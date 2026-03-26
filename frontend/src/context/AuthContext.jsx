@@ -20,8 +20,17 @@ export function AuthProvider({ children }) {
 
     if (storedToken && storedUser) {
       try {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        // Decode the JWT payload (base64) and check expiry without a library
+        const payload = JSON.parse(atob(storedToken.split('.')[1]));
+        const isExpired = payload.exp && Date.now() / 1000 > payload.exp;
+
+        if (isExpired) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        } else {
+          setToken(storedToken);
+          setUser(JSON.parse(storedUser));
+        }
       } catch {
         // Corrupt data — clear and start fresh
         localStorage.removeItem('token');

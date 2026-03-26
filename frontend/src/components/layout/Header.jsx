@@ -47,9 +47,12 @@ export default function Header() {
           {/* User */}
           {user ? (
             <div className="flex items-center gap-3">
-              <span className="text-text-primary text-sm hidden sm:block">
+              <Link
+                to="/profile"
+                className="text-text-primary text-sm hidden sm:block hover:text-brand-gold transition-colors"
+              >
                 {user.name}
-              </span>
+              </Link>
               <button
                 onClick={logout}
                 className="text-text-secondary hover:text-text-primary transition-colors text-sm"

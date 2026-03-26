@@ -9,18 +9,23 @@ import {
 /**
  * Manages admin user list with block/unblock operations.
  */
-export function useAdminUsers() {
-  const [users, setUsers]       = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState(null);
+export function useAdminUsers(initialParams = { page: 1, limit: 20 }) {
+  const [users, setUsers]           = useState([]);
+  const [total, setTotal]           = useState(0);
+  const [pages, setPages]           = useState(1);
+  const [params, setParams]         = useState(initialParams);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
   const [togglingId, setTogglingId] = useState(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchAllUsers();
-      setUsers(Array.isArray(data) ? data : []);
+      const data = await fetchAllUsers(params);
+      setUsers(data.users ?? []);
+      setTotal(data.total ?? 0);
+      setPages(data.pages ?? 1);
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to load users.';
       setError(message);
@@ -28,6 +33,10 @@ export function useAdminUsers() {
     } finally {
       setLoading(false);
     }
+  }, [params]);
+
+  const updateParams = useCallback((updates) => {
+    setParams((prev) => ({ ...prev, ...updates }));
   }, []);
 
   useEffect(() => {
@@ -74,5 +83,5 @@ export function useAdminUsers() {
     }
   }, []);
 
-  return { users, loading, error, togglingId, reload: load, toggleBlock };
+  return { users, total, pages, params, loading, error, togglingId, reload: load, toggleBlock, updateParams };
 }

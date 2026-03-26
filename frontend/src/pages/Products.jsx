@@ -32,38 +32,39 @@ export default function Products() {
 
   // Fetch products
   useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const [sortField, sortOrder] = sort.split('-');
+
+        const response = await api.get('/products', {
+          signal: controller.signal,
+          params: {
+            search: search || undefined,
+            sort: sortField,
+            order: sortOrder,
+            page,
+            limit: 12,
+          },
+        });
+
+        setProducts(response.data.products);
+        setTotalPages(response.data.pages);
+      } catch (error) {
+        if (error.name === 'CanceledError') return; // ignore aborted requests
+        toast.error('Failed to load products', {
+          style: { background: '#dc2626', color: '#fff' },
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProducts();
+    return () => controller.abort();
   }, [search, sort, page]);
-
-  const fetchProducts = async () => {
-    setLoading(true);
-    try {
-      const [sortField, sortOrder] = sort.split('-');
-      
-      const response = await api.get('/products', {
-        params: {
-          search: search || undefined,
-          sort: sortField,
-          order: sortOrder,
-          page,
-          limit: 12,
-        },
-      });
-
-      setProducts(response.data.products);
-      setTotalPages(response.data.pages);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      toast.error('Failed to load products', {
-        style: {
-          background: '#dc2626',
-          color: '#fff',
-        },
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const updateParams = (updates) => {
     const newParams = new URLSearchParams(searchParams);

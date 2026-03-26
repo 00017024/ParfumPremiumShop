@@ -3,9 +3,9 @@ import api from '@/lib/api';
 /**
  * Fetch all registered users (admin only).
  */
-export const fetchAllUsers = async () => {
-  const { data } = await api.get('/admin/users');
-  return data; // array of user objects
+export const fetchAllUsers = async (params = {}) => {
+  const { data } = await api.get('/admin/users', { params });
+  return data; // { total, page, pages, users }
 };
 
 /**

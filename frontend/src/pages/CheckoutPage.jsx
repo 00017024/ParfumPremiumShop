@@ -152,12 +152,14 @@ export default function CheckoutPage() {
   const clearCart      = useCartStore((state) => state.clearCart);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem     = useCartStore((state) => state.removeItem);
+  const updateProduct  = useCartStore((state) => state.updateProduct);
 
   // ── Stock validation ────────────────────────────────────────────────────────
   const { stockIssues, checking, revalidate } = useStockValidation(
     items,
     updateQuantity,
-    removeItem
+    removeItem,
+    updateProduct
   );
 
   const hasStockIssues = Object.keys(stockIssues).length > 0;
@@ -213,7 +215,7 @@ export default function CheckoutPage() {
       await api.post('/orders', payload);
 
       clearCart();
-      navigate('/order-success');
+      navigate('/order-success', { state: { fromCheckout: true } });
     } catch (err) {
       const msg =
         err.response?.data?.message || 'Failed to place order. Please try again.';

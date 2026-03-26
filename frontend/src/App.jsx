@@ -13,6 +13,7 @@ import RegisterPage        from '@/pages/RegisterPage';
 import CheckoutPage        from '@/pages/CheckoutPage';
 import OrderSuccessPage    from '@/pages/OrderSuccessPage';
 import MyOrdersPage        from '@/pages/MyOrdersPage';
+import ProfilePage         from '@/pages/ProfilePage';
 import OrderDetailsPage    from '@/pages/OrderDetailsPage';
 import NotFoundPage        from '@/pages/NotFoundPage';
 
@@ -48,6 +49,9 @@ export default function App() {
       } />
       <Route path="/orders/:id" element={
         <ProtectedRoute><OrderDetailsPage /></ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute><ProfilePage /></ProtectedRoute>
       } />
 
       {/* ── Admin routes ──────────────────────────────────────────── */}

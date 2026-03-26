@@ -34,7 +34,7 @@ app.use("/auth",     authLimiter,       authRoutes);
 app.use("/products", publicReadLimiter, productRoutes);
 app.use("/orders",   userLimiter,       orderRoutes);
 app.use("/users",    userLimiter,       userRoutes);
-app.use("/admin",                       adminRoutes);
+app.use("/admin",    userLimiter,        adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("Parfum Premium API is running...");

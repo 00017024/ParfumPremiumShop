@@ -6,7 +6,8 @@ const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const validate = require("../middleware/validate");
 const {
-  createProductSchema
+  createProductSchema,
+  updateProductSchema
 } = require("../validators/product.schema");
 
 router.get(
@@ -31,6 +32,7 @@ router.put(
   "/:id",
   authMiddleware,
   adminMiddleware,
+  validate(updateProductSchema),
   productController.updateProduct
 );
 

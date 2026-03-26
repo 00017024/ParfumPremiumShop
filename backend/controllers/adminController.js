@@ -1,12 +1,22 @@
 const User = require("../models/User");
 const { Order, ORDER_STATUS } = require("../models/Order");
+const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 
 // GET /admin/users
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const users = await User.find().select("-password");
-    res.json(users);
+    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+
+    const total = await User.countDocuments();
+    const users = await User.find()
+      .select("-password")
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json({ total, page, pages: Math.ceil(total / limit), users });
   } catch (err) {
     next(err);
   }
@@ -52,6 +62,10 @@ exports.updateUser = async (req, res, next) => {
 // POST /admin/users/:id/block
 exports.blockUser = async (req, res, next) => {
   try {
+    if (req.params.id === req.user._id.toString()) {
+      throw new ApiError(400, "You cannot block your own account", "CANNOT_BLOCK_SELF");
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
@@ -90,14 +104,24 @@ exports.unblockUser = async (req, res, next) => {
 // GET /admin/stats
 exports.getStats = async (req, res, next) => {
   try {
-    const [orderStats, totalUsers] = await Promise.all([
+    const [orderStats, totalUsers, totalProducts] = await Promise.all([
       Order.aggregate([
         {
           $facet: {
             totalOrders: [{ $count: "count" }],
 
             revenue: [
-              { $match: { status: { $ne: ORDER_STATUS.CANCELLED } } },
+              {
+                $match: {
+                  status: {
+                    $in: [
+                      ORDER_STATUS.PAID,
+                      ORDER_STATUS.CONFIRMED,
+                      ORDER_STATUS.COMPLETED,
+                    ],
+                  },
+                },
+              },
               { $group: { _id: null, total: { $sum: "$totalPrice" } } },
             ],
 
@@ -112,20 +136,24 @@ exports.getStats = async (req, res, next) => {
               {
                 $lookup: {
                   from: "users",
-                  localField: "user",
-                  foreignField: "_id",
+                  let: { userId: "$user" },
+                  pipeline: [
+                    { $match: { $expr: { $eq: ["$_id", "$$userId"] } } },
+                    { $project: { name: 1, email: 1 } },
+                  ],
                   as: "user",
-                  pipeline: [{ $project: { name: 1, email: 1 } }],
                 },
               },
-              { $unwind: { path: "$user", preserveNullAndEmpty: true } },
+              { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
               {
                 $lookup: {
                   from: "products",
-                  localField: "items.product",
-                  foreignField: "_id",
+                  let: { productIds: "$items.product" },
+                  pipeline: [
+                    { $match: { $expr: { $in: ["$_id", "$$productIds"] } } },
+                    { $project: { name: 1, price: 1, brand: 1, imageUrl: 1 } },
+                  ],
                   as: "populatedProducts",
-                  pipeline: [{ $project: { name: 1, price: 1, brand: 1, imageUrl: 1 } }],
                 },
               },
             ],
@@ -134,6 +162,7 @@ exports.getStats = async (req, res, next) => {
       ]),
 
       User.countDocuments(),
+      Product.countDocuments(),
     ]);
 
     const stats = orderStats[0];
@@ -143,6 +172,7 @@ exports.getStats = async (req, res, next) => {
       totalRevenue:  stats.revenue[0]?.total        ?? 0,
       pendingOrders: stats.pendingOrders[0]?.count  ?? 0,
       totalUsers,
+      totalProducts,
       recentOrders:  stats.recentOrders,
     });
   } catch (err) {

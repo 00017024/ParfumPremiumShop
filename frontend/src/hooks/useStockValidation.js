@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/lib/api';
 
 /**
@@ -7,9 +7,17 @@ import api from '@/lib/api';
  * @param {Function} removeItem    - cartStore.removeItem, used when product is gone.
  * @returns {{ stockIssues, checking, revalidate }}
  */
-export function useStockValidation(items, updateQuantity, removeItem) {
+export function useStockValidation(items, updateQuantity, removeItem, updateProduct) {
   const [stockIssues, setStockIssues] = useState({});
   const [checking, setChecking]       = useState(false);
+
+  // Stable refs so the callback never goes stale on store function identity changes
+  const updateQuantityRef = useRef(updateQuantity);
+  const removeItemRef     = useRef(removeItem);
+  const updateProductRef  = useRef(updateProduct);
+  useEffect(() => { updateQuantityRef.current = updateQuantity; }, [updateQuantity]);
+  useEffect(() => { removeItemRef.current     = removeItem;     }, [removeItem]);
+  useEffect(() => { updateProductRef.current  = updateProduct;  }, [updateProduct]);
 
   const validate = useCallback(async () => {
     if (items.length === 0) {
@@ -34,21 +42,23 @@ export function useStockValidation(items, updateQuantity, removeItem) {
         if (result.status === 'rejected') {
           // Product fetch failed — treat as unavailable
           issues[productId] = `${item.product.name} is no longer available.`;
-          removeItem(productId);
+          removeItemRef.current(productId);
           return;
         }
 
         const liveProduct = result.value.data;
         const liveStock   = liveProduct.stock ?? 0;
 
+        // Refresh the cached product data (price, stock, etc.)
+        updateProductRef.current(productId, liveProduct);
+
         if (liveStock === 0) {
           issues[productId] = `${item.product.name} is out of stock.`;
         } else if (item.quantity > liveStock) {
-          // Auto-clamp to available stock and inform the user
           issues[productId] =
             `Only ${liveStock} unit${liveStock === 1 ? '' : 's'} available ` +
             `(your cart had ${item.quantity}). Quantity updated.`;
-          updateQuantity(productId, liveStock);
+          updateQuantityRef.current(productId, liveStock);
         }
       });
 
@@ -59,12 +69,11 @@ export function useStockValidation(items, updateQuantity, removeItem) {
     } finally {
       setChecking(false);
     }
-  }, [items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items]); // re-creates when items array reference changes
 
   useEffect(() => {
     validate();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  // Run once on mount. Use revalidate() for manual re-checks.
+  }, [validate]); // runs on mount and whenever items change
 
   return { stockIssues, checking, revalidate: validate };
 }

@@ -1,9 +1,16 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation, Navigate } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 
 import Layout from '@/components/layout/Layout';
 
 export default function OrderSuccessPage() {
+  const { state } = useLocation();
+
+  // Redirect away if user navigated here directly without placing an order
+  if (!state?.fromCheckout) {
+    return <Navigate to="/orders" replace />;
+  }
+
   return (
     <Layout>
       <section

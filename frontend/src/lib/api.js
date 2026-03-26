@@ -24,4 +24,23 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+// ─── Response interceptor ─────────────────────────────────────────────────────
+// On 401 clear the stale session and send the user to login.
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      // Only redirect if not already on an auth page
+      if (!window.location.pathname.startsWith('/login') &&
+          !window.location.pathname.startsWith('/register')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
