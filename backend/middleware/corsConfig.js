@@ -1,7 +1,10 @@
 const cors = require("cors");
+
 const buildAllowedOrigins = () => {
   if (process.env.CORS_ALLOWED_ORIGINS) {
-    return process.env.CORS_ALLOWED_ORIGINS.split(",").map((o) => o.trim());
+    return process.env.CORS_ALLOWED_ORIGINS
+      .split(",")
+      .map((o) => o.trim());
   }
 
   if (process.env.NODE_ENV === "production") {
@@ -20,12 +23,14 @@ const allowedOrigins = buildAllowedOrigins();
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow server-to-server requests (no origin header) and allowed origins.
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error(`CORS: origin '${origin}' is not allowed`));
+    // Allow requests with no origin (Postman, mobile apps, server-to-server)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
     }
+
+    return callback(new Error(`CORS: origin '${origin}' is not allowed`));
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],

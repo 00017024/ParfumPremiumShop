@@ -24,8 +24,8 @@ const inactiveClass =
 /**
  * Admin sidebar.
  *
- * @param {boolean}  mobileOpen  - Whether the sidebar is open on mobile (drawer mode).
- * @param {function} onClose     - Called when mobile overlay is clicked.
+ * @param {boolean}  mobileOpen 
+ * @param {function} onClose 
  */
 export default function AdminSidebar({ mobileOpen, onClose }) {
   const { user, logout } = useAuth();

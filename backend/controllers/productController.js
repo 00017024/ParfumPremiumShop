@@ -3,6 +3,15 @@ const ApiError = require("../utils/ApiError");
 
 const ALLOWED_SORT_FIELDS = new Set(["createdAt", "price", "name"]);
 
+// Maps each product type to its exclusive profile field.
+// Used to auto-unset incompatible profiles on type change.
+const PROFILE_FOR_TYPE = {
+  perfume:   "scentProfile",
+  skincare:  "skincareProfile",
+  cosmetics: "cosmeticsProfile",
+};
+const ALL_PROFILES = Object.values(PROFILE_FOR_TYPE);
+
 // GET /products
 exports.getProducts = async (req, res, next) => {
   try {
@@ -87,9 +96,31 @@ exports.addProduct = async (req, res, next) => {
 // PUT /products/:id (Admin)
 exports.updateProduct = async (req, res, next) => {
   try {
+    // When type is changing, build a $set/$unset document so that profiles
+    // incompatible with the new type are atomically removed in the same write.
+    // No extra DB read is needed — the new type is known from the request body.
+    let updateDoc = req.body;
+
+    if (req.body.type) {
+      const allowedProfile = PROFILE_FOR_TYPE[req.body.type];
+      const toUnset = {};
+
+      for (const profile of ALL_PROFILES) {
+        // Only $unset profiles the caller isn't explicitly setting.
+        // (Setting an incompatible profile is rejected by the Mongoose hook.)
+        if (profile !== allowedProfile && req.body[profile] == null) {
+          toUnset[profile] = "";
+        }
+      }
+
+      if (Object.keys(toUnset).length > 0) {
+        updateDoc = { $set: req.body, $unset: toUnset };
+      }
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateDoc,
       { new: true, runValidators: true }
     );
 
