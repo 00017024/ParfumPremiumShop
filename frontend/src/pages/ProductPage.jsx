@@ -102,6 +102,125 @@ function ProductError({ message }) {
   );
 }
 
+// ─── Scent Profile Display ────────────────────────────────────────────────────
+
+const ACCORD_ORDER = ['woody', 'musky', 'sweet', 'citrus', 'floral', 'spicy', 'powdery', 'fresh'];
+const ACCORD_LABELS = {
+  woody: 'Woody', musky: 'Musky', sweet: 'Sweet', citrus: 'Citrus',
+  floral: 'Floral', spicy: 'Spicy', powdery: 'Powdery', fresh: 'Fresh',
+};
+
+function ScentProfileDisplay({ profile }) {
+  const active = ACCORD_ORDER.filter((k) => (profile[k] ?? 0) > 0);
+  if (!active.length) return null;
+
+  return (
+    <div>
+      <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-3">
+        Scent Profile
+      </h2>
+      <div className="space-y-2.5">
+        {active.map((accord) => (
+          <div key={accord} className="flex items-center gap-3">
+            <span className="text-xs text-text-secondary w-16 shrink-0">
+              {ACCORD_LABELS[accord]}
+            </span>
+            <div className="flex-1 bg-surface-card rounded-full h-1.5 overflow-hidden">
+              <div
+                className="h-full bg-brand-gold rounded-full"
+                style={{ width: `${(profile[accord] / 10) * 100}%` }}
+                aria-label={`${ACCORD_LABELS[accord]}: ${profile[accord]} out of 10`}
+              />
+            </div>
+            <span className="text-xs text-text-muted w-5 text-right shrink-0">
+              {profile[accord]}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Skincare Profile Display ─────────────────────────────────────────────────
+
+function ProfileBadge({ children }) {
+  return (
+    <span className="px-2.5 py-1 border border-neutral-border text-text-secondary text-xs rounded-sm capitalize">
+      {children}
+    </span>
+  );
+}
+
+function SkincareProfileDisplay({ profile }) {
+  const skinTypes   = profile.skinTypes   || [];
+  const ingredients = profile.ingredients || [];
+  if (!skinTypes.length && !ingredients.length) return null;
+
+  return (
+    <div className="space-y-4">
+      {skinTypes.length > 0 && (
+        <div>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-2">
+            Skin Types
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {skinTypes.map((t) => <ProfileBadge key={t}>{t}</ProfileBadge>)}
+          </div>
+        </div>
+      )}
+      {ingredients.length > 0 && (
+        <div>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-2">
+            Key Ingredients
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {ingredients.map((ing) => (
+              <span
+                key={ing}
+                className="px-2.5 py-1 bg-surface-card border border-neutral-border text-text-secondary text-xs rounded-sm"
+              >
+                {ing}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Cosmetics Profile Display ────────────────────────────────────────────────
+
+const COLOR_SWATCHES = {
+  nude: '#C4A882', red: '#C0392B', pink: '#E91E8C', brown: '#8B4513', coral: '#FF7F50',
+};
+
+function CosmeticsProfileDisplay({ profile }) {
+  const colors = profile.colors || [];
+  if (!colors.length) return null;
+
+  return (
+    <div>
+      <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-2">
+        Color Family
+      </h2>
+      <div className="flex flex-wrap gap-3">
+        {colors.map((color) => (
+          <div key={color} className="flex items-center gap-2">
+            <span
+              className="w-5 h-5 rounded-full border border-white/10 shrink-0"
+              style={{ background: COLOR_SWATCHES[color] || '#6B6B6B' }}
+              aria-hidden="true"
+            />
+            <span className="text-xs text-text-secondary capitalize">{color}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Category Pills ───────────────────────────────────────────────────────────
 
 function CategoryPill({ label }) {
@@ -395,12 +514,34 @@ export default function ProductPage() {
             {product.description && (
               <div>
                 <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-3">
-                  About this fragrance
+                  {product.type === 'perfume' ? 'About this fragrance' : 'About this product'}
                 </h2>
                 <p className="text-text-muted leading-relaxed max-w-prose text-sm">
                   {product.description}
                 </p>
               </div>
+            )}
+
+            {/* Category-specific profile */}
+            {product.type === 'perfume' && product.scentProfile && (
+              <>
+                <div className="border-t border-neutral-border" />
+                <ScentProfileDisplay profile={product.scentProfile} />
+              </>
+            )}
+
+            {product.type === 'skincare' && product.skincareProfile && (
+              <>
+                <div className="border-t border-neutral-border" />
+                <SkincareProfileDisplay profile={product.skincareProfile} />
+              </>
+            )}
+
+            {product.type === 'cosmetics' && product.cosmeticsProfile && (
+              <>
+                <div className="border-t border-neutral-border" />
+                <CosmeticsProfileDisplay profile={product.cosmeticsProfile} />
+              </>
             )}
 
           </div>

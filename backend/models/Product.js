@@ -18,7 +18,7 @@ const scentProfileSchema = new mongoose.Schema(
 
 const skincareProfileSchema = new mongoose.Schema(
   {
-    skinType:    [{ type: String, enum: ["dry", "oily", "combination", "sensitive", "normal"] }],
+    skinTypes:   [{ type: String, enum: ["dry", "oily", "combination", "sensitive", "normal"] }],
     concerns:    [{ type: String, enum: ["acne", "aging", "hydration", "pigmentation", "pores"] }],
     ingredients: [{ type: String }],
     routineStep: [{ type: String, enum: ["cleanser", "toner", "serum", "moisturizer", "sunscreen"] }],
@@ -32,7 +32,7 @@ const cosmeticsProfileSchema = new mongoose.Schema(
     productType: [{ type: String, enum: ["foundation", "lipstick", "mascara", "eyeliner", "blush"] }],
     finish:      [{ type: String, enum: ["matte", "glow", "satin", "dewy"] }],
     coverage:    [{ type: String, enum: ["light", "medium", "full"] }],
-    colorFamily: [{ type: String, enum: ["nude", "red", "pink", "brown", "coral"] }],
+    colors:      [{ type: String, enum: ["nude", "red", "pink", "brown", "coral"] }],
   },
   { _id: false }
 );

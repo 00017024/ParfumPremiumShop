@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ':*)",
+      "Read(//d c:/Users/user/Desktop/**)"
+    ]
+  }
+}

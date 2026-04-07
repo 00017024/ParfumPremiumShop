@@ -15,6 +15,11 @@ router.get(
   productController.getProducts
 );
 
+// Filter routes must come before /:id to prevent Express matching "filter" as an ID param.
+router.get("/filter/perfume",   productController.filterPerfumes);
+router.get("/filter/skincare",  productController.filterSkincare);
+router.get("/filter/cosmetics", productController.filterCosmetics);
+
 router.get(
   "/:id",
   productController.getProductById
