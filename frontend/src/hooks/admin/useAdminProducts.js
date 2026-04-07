@@ -51,8 +51,10 @@ export function useAdminProducts(initialParams = { page: 1, limit: 12 }) {
       return { success: true, product: newProduct };
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to create product.';
+      const details = err.response?.data?.details ?? [];
+      // Only toast the summary — per-field detail is handled by the form.
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
-      return { success: false };
+      return { success: false, message, details };
     } finally {
       setSubmitting(false);
     }
@@ -69,8 +71,9 @@ export function useAdminProducts(initialParams = { page: 1, limit: 12 }) {
       return { success: true, product: updated };
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to update product.';
+      const details = err.response?.data?.details ?? [];
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
-      return { success: false };
+      return { success: false, message, details };
     } finally {
       setSubmitting(false);
     }

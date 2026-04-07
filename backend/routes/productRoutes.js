@@ -36,6 +36,16 @@ router.put(
   productController.updateProduct
 );
 
+// PATCH supports the same partial-update rules as PUT.
+// Both route to the same controller action; the schema handles the distinction.
+router.patch(
+  "/:id",
+  authMiddleware,
+  adminMiddleware,
+  validate(updateProductSchema),
+  productController.updateProduct
+);
+
 router.delete(
   "/:id",
   authMiddleware,

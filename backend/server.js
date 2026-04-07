@@ -26,9 +26,6 @@ if (process.env.NODE_ENV !== "test") {
 }
 
 const app = express();
-
-// Trust the first proxy hop (required on Render / Heroku so that
-// express-rate-limit can read the real client IP from X-Forwarded-For)
 app.set("trust proxy", 1);
 
 // ── Global middleware ──────────────────────────────────────────────────────────
