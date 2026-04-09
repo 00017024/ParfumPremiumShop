@@ -160,7 +160,7 @@ export default function AdminProductsPage() {
           <table className="w-full text-sm" aria-label="Products table">
             <thead>
               <tr className="border-b border-neutral-border">
-                {['Image', 'Name', 'Brand', 'Price', 'Stock', 'Categories', 'Actions'].map(
+                {['Image', 'Name', 'Brand', 'Price', 'Stock', 'Category', 'Actions'].map(
                   (h) => (
                     <th
                       key={h}
@@ -240,26 +240,16 @@ export default function AdminProductsPage() {
                         </span>
                       </td>
 
-                      {/* Categories */}
+                      {/* Category */}
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1 max-w-[160px]">
-                          {product.categories?.length > 0
-                            ? product.categories.slice(0, 2).map((c) => (
-                              <span
-                                key={c}
-                                className="text-[10px] uppercase tracking-wider border border-neutral-border text-text-muted px-1.5 py-0.5 rounded-sm"
-                              >
-                                {c}
-                              </span>
-                            ))
-                            : <span className="text-xs text-text-muted italic">None</span>
-                          }
-                          {product.categories?.length > 2 && (
-                            <span className="text-[10px] text-text-muted">
-                              +{product.categories.length - 2}
+                        {product.category
+                          ? (
+                            <span className="text-[10px] uppercase tracking-wider border border-neutral-border text-text-muted px-1.5 py-0.5 rounded-sm">
+                              {product.category}
                             </span>
-                          )}
-                        </div>
+                          )
+                          : <span className="text-xs text-text-muted italic">—</span>
+                        }
                       </td>
 
                       {/* Actions */}

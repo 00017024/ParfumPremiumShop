@@ -22,11 +22,11 @@ const INGREDIENTS = [
 
 /**
  * Accord fields are flat (not nested under an 'accords' key) so MongoDB
- * dot-notation queries work at one depth level: { "scentProfile.woody": { $gte: 5 } }
+ * dot-notation queries work at one depth level: { "perfumeProfile.woody": { $gte: 5 } }
  *
  * Custom validator enforces the rule: at least one accord must be > 0.
  */
-const scentProfileSchema = Joi.object(
+const perfumeProfileSchema = Joi.object(
   Object.fromEntries(
     ACCORD_KEYS.map((key) => [key, Joi.number().min(0).max(10).default(0)])
   )
@@ -66,15 +66,16 @@ const skincareProfileSchema = Joi.object({
 });
 
 const cosmeticsProfileSchema = Joi.object({
-  // Colors are open-ended strings (no enum) — intentional per spec.
-  colors: Joi.array().items(Joi.string()).optional(),
+  colors: Joi.array()
+    .items(Joi.string().valid("nude", "red", "pink", "brown", "coral"))
+    .optional(),
 });
 
 // ─── Profile routing map ──────────────────────────────────────────────────────
 
 // Single source of truth — mirrors the Mongoose model's PROFILE_FOR_TYPE map.
 const PROFILE_FOR_TYPE = {
-  perfume:   "scentProfile",
+  perfume:   "perfumeProfile",
   skincare:  "skincareProfile",
   cosmetics: "cosmeticsProfile",
 };
@@ -90,13 +91,10 @@ const BASE_FIELDS = {
   price:       Joi.number().min(0),
   description: Joi.string().allow("", null),
   imageUrl:    Joi.string().uri(),
-  categories:  Joi.array().items(Joi.string()),   // legacy free-form array
   stock:       Joi.number().integer().min(0),
-  popularity:  Joi.number().min(0),
   newArrival:  Joi.boolean(),
-  rating:      Joi.number().min(0).max(5),
-  // `category` in current model = gender/audience segmentation, NOT the type discriminator.
-  category:    Joi.string().valid("men", "women", "unisex", "skincare", "makeup"),
+  // `category` = audience segmentation (gender/demographic)
+  category:    Joi.string().valid("men", "women", "unisex"),
 };
 
 // ─── Create schema ────────────────────────────────────────────────────────────
@@ -114,11 +112,8 @@ exports.createProductSchema = Joi.object({
   // Optional base fields
   description: BASE_FIELDS.description.optional(),
   imageUrl:    BASE_FIELDS.imageUrl.optional(),
-  categories:  BASE_FIELDS.categories.optional(),
   stock:       BASE_FIELDS.stock.optional(),
-  popularity:  BASE_FIELDS.popularity.optional(),
   newArrival:  BASE_FIELDS.newArrival.optional(),
-  rating:      BASE_FIELDS.rating.optional(),
   category:    BASE_FIELDS.category.optional(),
 
   // Primary type discriminator
@@ -133,10 +128,10 @@ exports.createProductSchema = Joi.object({
   // ── Conditional profiles ───────────────────────────────────────────────────
   // Only the profile matching `type` is accepted; all others are forbidden.
 
-  scentProfile: Joi.when("type", {
+  perfumeProfile: Joi.when("type", {
     is:        "perfume",
-    then:      scentProfileSchema.required().messages({
-      "any.required": "Perfume products must include a scentProfile",
+    then:      perfumeProfileSchema.required().messages({
+      "any.required": "Perfume products must include a perfumeProfile",
     }),
     otherwise: Joi.forbidden(),
   }),
@@ -176,11 +171,8 @@ exports.updateProductSchema = Joi.object({
   price:       BASE_FIELDS.price.optional(),
   description: BASE_FIELDS.description.optional(),
   imageUrl:    BASE_FIELDS.imageUrl.optional(),
-  categories:  BASE_FIELDS.categories.optional(),
   stock:       BASE_FIELDS.stock.optional(),
-  popularity:  BASE_FIELDS.popularity.optional(),
   newArrival:  BASE_FIELDS.newArrival.optional(),
-  rating:      BASE_FIELDS.rating.optional(),
   category:    BASE_FIELDS.category.optional(),
 
   type: Joi.string().valid(...PRODUCT_TYPES).optional(),
@@ -193,18 +185,18 @@ exports.updateProductSchema = Joi.object({
   //   otherwise (type absent)                      → profile allowed (optional)
   //             Mongoose hook enforces DB-level type consistency.
 
-  scentProfile: Joi.when("type", {
+  perfumeProfile: Joi.when("type", {
     switch: [
       {
         is:   "perfume",
-        then: scentProfileSchema.optional(),
+        then: perfumeProfileSchema.optional(),
       },
       {
         is:   Joi.exist(),   // type set, but not "perfume"
         then: Joi.forbidden(),
       },
     ],
-    otherwise: scentProfileSchema.optional(),
+    otherwise: perfumeProfileSchema.optional(),
   }),
 
   skincareProfile: Joi.when("type", {

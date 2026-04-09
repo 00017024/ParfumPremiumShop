@@ -104,9 +104,9 @@ function ProductError({ message }) {
 
 // ─── Scent Profile Display ────────────────────────────────────────────────────
 
-const ACCORD_ORDER = ['woody', 'musky', 'sweet', 'citrus', 'floral', 'spicy', 'powdery', 'fresh'];
+const ACCORD_ORDER = ['woody', 'oriental', 'sweet', 'citrus', 'floral', 'spicy', 'powdery', 'fresh'];
 const ACCORD_LABELS = {
-  woody: 'Woody', musky: 'Musky', sweet: 'Sweet', citrus: 'Citrus',
+  woody: 'Woody', oriental: 'Oriental', sweet: 'Sweet', citrus: 'Citrus',
   floral: 'Floral', spicy: 'Spicy', powdery: 'Powdery', fresh: 'Fresh',
 };
 
@@ -279,9 +279,10 @@ export default function ProductPage() {
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [product, setProduct] = useState(null);
-  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [relatedLoading, setRelatedLoading] = useState(false);
+  const [recsLoading, setRecsLoading] = useState(false);
+  const [recsError, setRecsError] = useState(false);
   const [error, setError] = useState(null);
   const [imgError, setImgError] = useState(false);
   const [qty, setQty] = useState(1);
@@ -294,6 +295,11 @@ export default function ProductPage() {
 
     let cancelled = false;
 
+    // Clear stale recommendation state immediately on id change so the previous
+    // product's data never shows while the new product's recommendations load.
+    setRecommendations([]);
+    setRecsError(false);
+
     const fetchProduct = async () => {
       setLoading(true);
       setError(null);
@@ -305,7 +311,7 @@ export default function ProductPage() {
 
         if (!cancelled) {
           setProduct(data);
-          fetchRelated(data.categories);
+          fetchRecommendations(data._id);
         }
       } catch (err) {
         if (!cancelled) {
@@ -324,27 +330,19 @@ export default function ProductPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  // ── Fetch related products ─────────────────────────────────────────────────
-  const fetchRelated = async (categories) => {
-    if (!categories?.length) return;
-
-    setRelatedLoading(true);
+  // ── Fetch recommendations ──────────────────────────────────────────────────
+  const fetchRecommendations = async (productId) => {
+    setRecsLoading(true);
+    setRecsError(false);
     try {
-      const { data } = await api.get('/products', {
-        params: {
-          category: categories[0],
-          limit: 4,
-        },
+      const { data } = await api.get(`/products/${productId}/recommendations`, {
+        params: { limit: 4 },
       });
-
-      // Exclude the current product from related list
-      const filtered = (data.products || []).filter((p) => p._id !== id);
-      setRelatedProducts(filtered.slice(0, 4));
+      setRecommendations(data.data ?? []);
     } catch {
-      // Related products failing silently — non-critical
-      setRelatedProducts([]);
+      setRecsError(true);
     } finally {
-      setRelatedLoading(false);
+      setRecsLoading(false);
     }
   };
 
@@ -470,12 +468,10 @@ export default function ProductPage() {
             {/* Divider */}
             <div className="border-t border-neutral-border" />
 
-            {/* Categories */}
-            {product.categories?.length > 0 && (
-              <div className="flex flex-wrap gap-2" aria-label="Categories">
-                {product.categories.map((cat) => (
-                  <CategoryPill key={cat} label={cat} />
-                ))}
+            {/* Category */}
+            {product.category && (
+              <div aria-label="Category">
+                <CategoryPill label={product.category} />
               </div>
             )}
 
@@ -523,10 +519,10 @@ export default function ProductPage() {
             )}
 
             {/* Category-specific profile */}
-            {product.type === 'perfume' && product.scentProfile && (
+            {product.type === 'perfume' && product.perfumeProfile && (
               <>
                 <div className="border-t border-neutral-border" />
-                <ScentProfileDisplay profile={product.scentProfile} />
+                <ScentProfileDisplay profile={product.perfumeProfile} />
               </>
             )}
 
@@ -548,16 +544,16 @@ export default function ProductPage() {
         </div>
       </section>
 
-      {/* ── Related Products ─────────────────────────────────────────────── */}
-      {(relatedLoading || relatedProducts.length > 0) && (
+      {/* ── Recommendations ──────────────────────────────────────────────── */}
+      {(recsLoading || recommendations.length > 0 || recsError) && (
         <section
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16"
-          aria-label="Related products"
+          aria-label="Recommended products"
         >
           {/* Section header */}
-          <div className="flex items-center gap-6 mb-8">
+          <div className="flex items-center gap-6 mb-2">
             <h2 className="text-xs uppercase tracking-[0.25em] text-text-muted whitespace-nowrap">
-              Related Products
+              Recommended for you
             </h2>
             <div
               className="flex-1 h-px"
@@ -569,10 +565,32 @@ export default function ProductPage() {
             />
           </div>
 
-          <ProductGrid
-            products={relatedProducts}
-            loading={relatedLoading}
-          />
+          {/* Score hint — shown when we have results */}
+          {!recsLoading && !recsError && recommendations.length > 0 && product?.type === 'perfume' && (
+            <p className="text-[11px] text-text-muted mb-6">Highly similar scent profile</p>
+          )}
+          {!recsLoading && !recsError && recommendations.length > 0 && product?.type === 'skincare' && (
+            <p className="text-[11px] text-text-muted mb-6">Shares key ingredients</p>
+          )}
+          {!recsLoading && !recsError && recommendations.length > 0 &&
+            product?.type !== 'perfume' && product?.type !== 'skincare' && (
+            <div className="mb-6" />
+          )}
+
+          {/* Error state */}
+          {recsError && (
+            <p className="text-sm text-text-muted py-6">Failed to load recommendations.</p>
+          )}
+
+          {/* Empty state — loaded but nothing returned */}
+          {!recsLoading && !recsError && recommendations.length === 0 && (
+            <p className="text-sm text-text-muted py-6">No recommendations available.</p>
+          )}
+
+          {/* Results */}
+          {!recsError && (
+            <ProductGrid products={recommendations} loading={recsLoading} />
+          )}
         </section>
       )}
 

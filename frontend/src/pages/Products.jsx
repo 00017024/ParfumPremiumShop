@@ -11,7 +11,7 @@ import Pagination from '@/components/product/Pagination';
 import FilterPanel from '@/components/product/FilterPanel';
 import toast from 'react-hot-toast';
 
-const ACCORD_KEYS = ['woody', 'musky', 'sweet', 'citrus', 'floral', 'spicy', 'powdery', 'fresh'];
+const ACCORD_KEYS = ['woody', 'oriental', 'sweet', 'citrus', 'floral', 'spicy', 'powdery', 'fresh'];
 const FILTER_PARAM_KEYS = ['filterType', 'skinTypes', 'ingredients', 'colors', ...ACCORD_KEYS];
 const ITEMS_PER_PAGE = 12;
 

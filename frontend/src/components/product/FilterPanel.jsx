@@ -3,14 +3,14 @@ import { useState } from 'react';
 // ─── Domain constants (mirror backend schema field names exactly) ──────────────
 
 const ACCORD_FIELDS = [
-  { key: 'woody',   label: 'Woody'   },
-  { key: 'musky',   label: 'Musky'   },
-  { key: 'sweet',   label: 'Sweet'   },
-  { key: 'citrus',  label: 'Citrus'  },
-  { key: 'floral',  label: 'Floral'  },
-  { key: 'spicy',   label: 'Spicy'   },
-  { key: 'powdery', label: 'Powdery' },
-  { key: 'fresh',   label: 'Fresh'   },
+  { key: 'woody',    label: 'Woody'    },
+  { key: 'oriental', label: 'Oriental' },
+  { key: 'sweet',    label: 'Sweet'    },
+  { key: 'citrus',   label: 'Citrus'   },
+  { key: 'floral',   label: 'Floral'   },
+  { key: 'spicy',    label: 'Spicy'    },
+  { key: 'powdery',  label: 'Powdery'  },
+  { key: 'fresh',    label: 'Fresh'    },
 ];
 
 const SKIN_TYPES  = ['dry', 'oily', 'combination', 'normal', 'sensitive'];

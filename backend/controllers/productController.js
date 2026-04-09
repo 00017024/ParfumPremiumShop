@@ -1,13 +1,14 @@
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
+const { profileToVector, hasAnyAccord, cosineSimilarity } = require("../utils/similarity");
 
 const ALLOWED_SORT_FIELDS = new Set(["createdAt", "price", "name"]);
-const ACCORD_FIELDS = ["woody", "musky", "sweet", "citrus", "floral", "spicy", "powdery", "fresh"];
+const ACCORD_FIELDS = ["woody", "oriental", "sweet", "citrus", "floral", "spicy", "powdery", "fresh"];
 
 // Maps each product type to its exclusive profile field.
 // Used to auto-unset incompatible profiles on type change.
 const PROFILE_FOR_TYPE = {
-  perfume:   "scentProfile",
+  perfume:   "perfumeProfile",
   skincare:  "skincareProfile",
   cosmetics: "cosmeticsProfile",
 };
@@ -41,7 +42,7 @@ exports.getProducts = async (req, res, next) => {
     }
 
     if (req.query.category) {
-      query.categories = req.query.category;
+      query.category = req.query.category;
     }
 
     if (req.query.type && ["perfume", "skincare", "cosmetics"].includes(req.query.type)) {
@@ -170,12 +171,12 @@ exports.filterPerfumes = async (req, res, next) => {
     // Eliminates clearly irrelevant products before JS scoring.
     const preFilter = { type: "perfume" };
     for (const key of prefKeys) {
-      preFilter[`scentProfile.${key}`] = { $gte: Math.max(0, Math.floor(preferences[key] / 2)) };
+      preFilter[`perfumeProfile.${key}`] = { $gte: Math.max(0, Math.floor(preferences[key] / 2)) };
     }
     const perfumes = await Product.find(preFilter);
 
     const scored = perfumes.map((p) => {
-      const profile = p.scentProfile || {};
+      const profile = p.perfumeProfile || {};
       const totalDiff = prefKeys.reduce(
         (sum, key) => sum + Math.abs((profile[key] ?? 0) - preferences[key]),
         0
@@ -243,6 +244,136 @@ exports.filterCosmetics = async (req, res, next) => {
 
     const products = await Product.find(query);
     res.json({ products, total: products.length });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /products/:id/recommendations
+// Returns similar products based on the source product's type:
+//   perfume   → cosine similarity on 8-dimensional accord vector
+//   skincare  → weighted overlap (ingredients ×2, skinTypes ×1)
+//   cosmetics → no recommendations (returns empty array)
+//
+// Query params:
+//   ?limit=N  — number of results to return (default 5, max 20)
+exports.getRecommendations = async (req, res, next) => {
+  try {
+    const source = await Product.findById(req.params.id).lean();
+    if (!source) throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
+
+    const limit = Math.min(20, Math.max(1, parseInt(req.query.limit, 10) || 5));
+
+    // ── Cosmetics: no recommendation algorithm defined ─────────────────────
+    if (source.type === "cosmetics") {
+      return res.json({ success: true, data: [] });
+    }
+
+    // ── Perfume: cosine similarity ─────────────────────────────────────────
+    if (source.type === "perfume") {
+      const sourceProfile = source.perfumeProfile || {};
+
+      // Pre-filter: source must have at least one non-zero accord.
+      // A zero vector has no direction — similarity against it is meaningless.
+      if (!hasAnyAccord(sourceProfile)) {
+        return res.json({ success: true, data: [] });
+      }
+
+      const sourceVec = profileToVector(sourceProfile);
+
+      // Fetch all other perfumes. MongoDB pre-filter: at least one accord
+      // field must be >= 1 to discard products with empty profiles early.
+      const candidates = await Product.find({
+        type: "perfume",
+        _id:  { $ne: source._id },
+        $or:  [
+          { "perfumeProfile.woody":   { $gte: 1 } },
+          { "perfumeProfile.oriental": { $gte: 1 } },
+          { "perfumeProfile.sweet":   { $gte: 1 } },
+          { "perfumeProfile.citrus":  { $gte: 1 } },
+          { "perfumeProfile.floral":  { $gte: 1 } },
+          { "perfumeProfile.spicy":   { $gte: 1 } },
+          { "perfumeProfile.powdery": { $gte: 1 } },
+          { "perfumeProfile.fresh":   { $gte: 1 } },
+        ],
+      }).lean();
+
+      const scored = candidates
+        // JS-level guard: skip anything that still has a zero vector
+        .filter((p) => hasAnyAccord(p.perfumeProfile))
+        .map((p) => ({
+          score:   cosineSimilarity(sourceVec, profileToVector(p.perfumeProfile)),
+          product: p,
+        }))
+        .filter((s) => s.score > 0)   // omit truly orthogonal profiles
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+
+      return res.json({
+        success: true,
+        data: scored.map(({ product, score }) => ({
+          _id:            product._id,
+          name:           product.name,
+          brand:          product.brand,
+          price:          product.price,
+          stock:          product.stock,
+          imageUrl:       product.imageUrl,
+          type:           product.type,
+          perfumeProfile: product.perfumeProfile,
+          score:          Math.round(score * 1000) / 1000,
+        })),
+      });
+    }
+
+    // ── Skincare: weighted ingredient + skinType overlap ───────────────────
+    if (source.type === "skincare") {
+      const srcProfile     = source.skincareProfile || {};
+      const srcIngredients = new Set((srcProfile.ingredients || []).map((s) => s.toLowerCase()));
+      const srcSkinTypes   = new Set((srcProfile.skinTypes   || []).map((s) => s.toLowerCase()));
+
+      const candidates = await Product.find({
+        type: "skincare",
+        _id:  { $ne: source._id },
+      }).lean();
+
+      const scored = candidates
+        .map((p) => {
+          const prof        = p.skincareProfile || {};
+          const ingredients = (prof.ingredients || []).map((s) => s.toLowerCase());
+          const skinTypes   = (prof.skinTypes   || []).map((s) => s.toLowerCase());
+
+          // Deduplicate before counting to be safe (enum toggle UI prevents
+          // duplicates at creation time, but guard here regardless).
+          const matchIngredients = [...new Set(ingredients)].filter((i) => srcIngredients.has(i)).length;
+          const matchSkinTypes   = [...new Set(skinTypes)]  .filter((s) => srcSkinTypes.has(s)).length;
+
+          return {
+            score:   matchIngredients * 2 + matchSkinTypes,
+            product: p,
+          };
+        })
+        .filter((s) => s.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+
+      return res.json({
+        success: true,
+        data: scored.map(({ product, score }) => ({
+          _id:             product._id,
+          name:            product.name,
+          brand:           product.brand,
+          price:           product.price,
+          stock:           product.stock,
+          imageUrl:        product.imageUrl,
+          type:            product.type,
+          skincareProfile: product.skincareProfile,
+          score,
+        })),
+      });
+    }
+
+    // Unknown type — return empty rather than 500
+    res.json({ success: true, data: [] });
   } catch (err) {
     next(err);
   }

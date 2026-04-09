@@ -8,13 +8,14 @@ const PRODUCT_TYPES = ['perfume', 'skincare', 'cosmetics'];
 
 /**
  * Maps each product `type` to its profile field name in the backend schema.
- * Backend uses: scentProfile (not perfumeProfile), skincareProfile, cosmeticsProfile.
  */
 const PROFILE_KEY = {
-  perfume:   'scentProfile',
+  perfume:   'perfumeProfile',
   skincare:  'skincareProfile',
   cosmetics: 'cosmeticsProfile',
 };
+
+const CATEGORY_OPTIONS = ['men', 'women', 'unisex'];
 
 const EMPTY_BASE = {
   name:        '',
@@ -23,7 +24,7 @@ const EMPTY_BASE = {
   stock:       '',
   description: '',
   imageUrl:    '',
-  categories:  '',  // comma-separated; split on submit
+  category:    '',
 };
 
 // ─── Backend error mapping ────────────────────────────────────────────────────
@@ -42,6 +43,7 @@ const DETAIL_FIELD_KEYWORDS = [
   ['stock',    ['"stock"']],
   ['imageUrl', ['"imageurl"', 'image url']],
   ['type',     ['"type"']],
+  ['category', ['"category"']],
 ];
 
 function mapDetailsToErrors(details = []) {
@@ -166,7 +168,7 @@ export default function ProductFormModal({
         stock:       product.stock?.toString()  ?? '',
         description: product.description ?? '',
         imageUrl:    product.imageUrl    ?? '',
-        categories:  (product.categories ?? []).join(', '),
+        category:    product.category    ?? '',
       });
 
       const type = product.type ?? '';
@@ -242,9 +244,7 @@ export default function ProductFormModal({
 
     if (form.description.trim()) payload.description = form.description.trim();
     if (form.imageUrl.trim())    payload.imageUrl    = form.imageUrl.trim();
-
-    const tags = form.categories.split(',').map((c) => c.trim()).filter(Boolean);
-    if (tags.length > 0) payload.categories = tags;
+    if (form.category)           payload.category    = form.category;
 
     // Attach type discriminator and the single matching profile key.
     if (productType) {
@@ -398,15 +398,23 @@ export default function ProductFormModal({
               />
             </Field>
 
-            {/* Categories (legacy free-form tags) */}
-            <Field label="Tags" error={errors.categories}>
-              <input
-                type="text"
-                placeholder="floral, woody, citrus (comma separated)"
-                value={form.categories}
-                onChange={handleChange('categories')}
-                className={inputClass('categories')}
-              />
+            {/* Audience category */}
+            <Field label="Category" error={errors.category}>
+              <select
+                value={form.category}
+                onChange={handleChange('category')}
+                className={`w-full bg-surface-dark border rounded-sm px-3 py-2.5 text-sm
+                  focus:outline-none focus:border-brand-gold transition-colors appearance-none
+                  ${errors.category ? 'border-red-500' : 'border-neutral-border'}
+                  ${form.category ? 'text-text-primary' : 'text-text-muted'}`}
+              >
+                <option value="">Select category…</option>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <option key={c} value={c} className="bg-surface-card capitalize">
+                    {c.charAt(0).toUpperCase() + c.slice(1)}
+                  </option>
+                ))}
+              </select>
             </Field>
 
             {/* ── Product Type + Profile ─────────────────────────────── */}
