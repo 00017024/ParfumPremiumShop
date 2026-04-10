@@ -146,15 +146,17 @@ exports.updateProduct = async (req, res, next) => {
 };
 
 // GET /products/filter/perfume
-// Scores perfumes by distance from user's accord preferences (lower = better match).
+// Ranks perfumes by cosine similarity against the user's accord preferences.
 exports.filterPerfumes = async (req, res, next) => {
   try {
+    // Collect only accords the user actively set (value > 0).
+    // Accords left at 0 mean "no preference" and must not anchor the vector.
     const preferences = {};
     for (const accord of ACCORD_FIELDS) {
       const raw = req.query[accord];
       if (raw !== undefined) {
         const val = parseFloat(raw);
-        if (!isNaN(val) && val >= 0 && val <= 10) {
+        if (!isNaN(val) && val > 0 && val <= 10) {
           preferences[accord] = val;
         }
       }
@@ -162,30 +164,34 @@ exports.filterPerfumes = async (req, res, next) => {
 
     const prefKeys = Object.keys(preferences);
 
+    // No active preferences — return all perfumes unscored.
     if (prefKeys.length === 0) {
       const all = await Product.find({ type: "perfume" });
       return res.json({ products: all, total: all.length });
     }
 
-    // Pre-filter in MongoDB: each selected accord must be >= floor(target/2).
-    // Eliminates clearly irrelevant products before JS scoring.
-    const preFilter = { type: "perfume" };
-    for (const key of prefKeys) {
-      preFilter[`perfumeProfile.${key}`] = { $gte: Math.max(0, Math.floor(preferences[key] / 2)) };
-    }
+    // Light pre-filter: product must have > 0 on at least one selected accord.
+    // Uses $or so a product only needs to match one dimension, not all of them.
+    // This avoids throwing away valid partial matches while still skipping
+    // products with zero overlap on every requested accord.
+    const preFilter = {
+      type: "perfume",
+      $or: prefKeys.map((key) => ({ [`perfumeProfile.${key}`]: { $gt: 0 } })),
+    };
     const perfumes = await Product.find(preFilter);
 
-    const scored = perfumes.map((p) => {
-      const profile = p.perfumeProfile || {};
-      const totalDiff = prefKeys.reduce(
-        (sum, key) => sum + Math.abs((profile[key] ?? 0) - preferences[key]),
-        0
-      );
-      // Normalized: average absolute difference across selected accords
-      return { product: p, score: totalDiff / prefKeys.length };
-    });
+    // Build the full 8-dimensional user preference vector.
+    // Unselected accords remain 0 — direction is set only by what the user chose.
+    const prefVector = profileToVector(preferences);
 
-    scored.sort((a, b) => a.score - b.score);
+    // Score by cosine similarity (range [0, 1]).
+    // Higher = closer directional match. Sort descending so best matches come first.
+    const scored = perfumes
+      .map((p) => ({
+        product: p,
+        score:   cosineSimilarity(prefVector, profileToVector(p.perfumeProfile || {})),
+      }))
+      .sort((a, b) => b.score - a.score);
 
     res.json({ products: scored.map((s) => s.product), total: scored.length });
   } catch (err) {
