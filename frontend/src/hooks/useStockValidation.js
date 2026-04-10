@@ -2,9 +2,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/lib/api';
 
 /**
- * @param {Array}  items      - Cart items from cartStore.
+ * @param {Array}    items          - Cart items from cartStore.
  * @param {Function} updateQuantity - cartStore.updateQuantity, used to auto-clamp.
- * @param {Function} removeItem    - cartStore.removeItem, used when product is gone.
+ * @param {Function} removeItem     - cartStore.removeItem, used when product is gone.
+ * @param {Function} updateProduct  - cartStore.updateProduct, used to refresh product data.
  * @returns {{ stockIssues, checking, revalidate }}
  */
 export function useStockValidation(items, updateQuantity, removeItem, updateProduct) {
@@ -19,8 +20,17 @@ export function useStockValidation(items, updateQuantity, removeItem, updateProd
   useEffect(() => { removeItemRef.current     = removeItem;     }, [removeItem]);
   useEffect(() => { updateProductRef.current  = updateProduct;  }, [updateProduct]);
 
+  // Keep items in a ref so validate() can read the current list without
+  // being recreated every time product data refreshes (which would cause
+  // an infinite loop: updateProduct → new items ref → validate recreated →
+  // useEffect fires → validate() → updateProduct → …).
+  const itemsRef = useRef(items);
+  useEffect(() => { itemsRef.current = items; }, [items]);
+
   const validate = useCallback(async () => {
-    if (items.length === 0) {
+    const currentItems = itemsRef.current;
+
+    if (currentItems.length === 0) {
       setStockIssues({});
       return;
     }
@@ -30,17 +40,17 @@ export function useStockValidation(items, updateQuantity, removeItem, updateProd
     try {
       // Fetch all cart products in one parallel batch
       const results = await Promise.allSettled(
-        items.map((item) => api.get(`/products/${item.product._id}`))
+        currentItems.map((item) => api.get(`/products/${item.product._id}`))
       );
 
       const issues = {};
 
       results.forEach((result, index) => {
-        const item = items[index];
+        const item      = currentItems[index];
         const productId = item.product._id;
 
         if (result.status === 'rejected') {
-          // Product fetch failed — treat as unavailable
+          // Product fetch failed (e.g. 404 after a DB reseed) — remove from cart
           issues[productId] = `${item.product.name} is no longer available.`;
           removeItemRef.current(productId);
           return;
@@ -49,7 +59,8 @@ export function useStockValidation(items, updateQuantity, removeItem, updateProd
         const liveProduct = result.value.data;
         const liveStock   = liveProduct.stock ?? 0;
 
-        // Refresh the cached product data (price, stock, etc.)
+        // Refresh the cached product data (price, stock, etc.) without
+        // triggering re-validation — the itemsKey below ignores data changes.
         updateProductRef.current(productId, liveProduct);
 
         if (liveStock === 0) {
@@ -64,16 +75,23 @@ export function useStockValidation(items, updateQuantity, removeItem, updateProd
 
       setStockIssues(issues);
     } catch {
-      // Network error — don't block checkout, let the backend be the final guard
+      // Network error — don't block checkout; backend is the final guard
       setStockIssues({});
     } finally {
       setChecking(false);
     }
-  }, [items]); // re-creates when items array reference changes
+  }, []); // stable — reads items via ref, cart mutations via refs
+
+  // Derive a key that changes only when cart composition changes
+  // (product IDs or quantities), NOT when product data is refreshed.
+  // This prevents the infinite loop: updateProduct creates a new items
+  // array reference but leaves IDs and quantities unchanged, so itemsKey
+  // stays the same and validate() is not re-triggered.
+  const itemsKey = items.map((i) => `${i.product._id}:${i.quantity}`).join(',');
 
   useEffect(() => {
     validate();
-  }, [validate]); // runs on mount and whenever items change
+  }, [itemsKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { stockIssues, checking, revalidate: validate };
 }
