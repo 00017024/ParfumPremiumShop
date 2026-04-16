@@ -27,6 +27,7 @@ import AdminOrdersPage     from '@/pages/admin/AdminOrdersPage';
 import AdminOrderDetailPage from '@/pages/admin/AdminOrderDetailPage';
 import AdminProductsPage   from '@/pages/admin/AdminProductsPage';
 import AdminUsersPage      from '@/pages/admin/AdminUsersPage';
+import AdminAnalyticsPage  from '@/pages/admin/AdminAnalyticsPage';
 
 export default function App() {
   return (
@@ -72,11 +73,12 @@ export default function App() {
         {/* /admin  →  /admin/dashboard */}
         <Route index element={<Navigate to="/admin/dashboard" replace />} />
 
-        <Route path="dashboard" element={<AdminDashboardPage />} />
-        <Route path="orders"    element={<AdminOrdersPage />} />
+        <Route path="dashboard"  element={<AdminDashboardPage />} />
+        <Route path="orders"     element={<AdminOrdersPage />} />
         <Route path="orders/:id" element={<AdminOrderDetailPage />} />
-        <Route path="products"  element={<AdminProductsPage />} />
-        <Route path="users"     element={<AdminUsersPage />} />
+        <Route path="products"   element={<AdminProductsPage />} />
+        <Route path="users"      element={<AdminUsersPage />} />
+        <Route path="analytics"  element={<AdminAnalyticsPage />} />
       </Route>
 
       {/* ── 404 — must be last ────────────────────────────────── */}

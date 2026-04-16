@@ -1,7 +1,21 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Loader2, ShoppingBag, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Loader2, ShoppingBag, ChevronRight, AlertTriangle, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet's broken default marker icons when bundled with Vite
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconUrl:       markerIconUrl,
+  iconRetinaUrl: markerIcon2x,
+  shadowUrl:     markerShadow,
+});
 
 import api from '@/lib/api';
 import { useCartStore } from '@/store/cartStore';
@@ -12,7 +26,7 @@ import EmptyState from '@/components/product/EmptyState';
 
 // ─── Validation ───────────────────────────────────────────────────────────────
 
-function validate(form) {
+function validate(form, location) {
   const errors = {};
 
   if (!form.name.trim() || form.name.trim().length < 2) {
@@ -31,8 +45,27 @@ function validate(form) {
     errors.address = 'Delivery address must be at least 5 characters.';
   }
 
+  if (!location) {
+    errors.location = 'Please pin your delivery location on the map.';
+  }
+
   return errors;
 }
+
+// ─── Map helpers ──────────────────────────────────────────────────────────────
+
+// Registers click events on the map and forwards them to the parent
+function MapClickHandler({ onPick }) {
+  useMapEvents({
+    click(e) {
+      onPick({ lat: e.latlng.lat, lng: e.latlng.lng });
+    },
+  });
+  return null;
+}
+
+const UZBEKISTAN_CENTER = [41.3, 64.6];
+const INITIAL_ZOOM = 6;
 
 // ─── FormField ────────────────────────────────────────────────────────────────
 
@@ -166,13 +199,14 @@ export default function CheckoutPage() {
 
   // ── Form state ─────────────────────────────────────────────────────────────
   const [form, setForm] = useState({
-  name: '',
-  phone: '',
-  city: 'Tashkent',
-  address: '',
-  notes: ''
-});
-  const [errors, setErrors] = useState({});
+    name: '',
+    phone: '',
+    city: 'Tashkent',
+    address: '',
+    notes: '',
+  });
+  const [location, setLocation]   = useState(null); // { lat, lng }
+  const [errors, setErrors]       = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   // Derived — no useState needed
@@ -192,7 +226,7 @@ export default function CheckoutPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationErrors = validate(form);
+    const validationErrors = validate(form, location);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -202,14 +236,15 @@ export default function CheckoutPage() {
     try {
       const payload = {
         items: items.map((i) => ({
-            productId: i.product._id,
-            quantity: i.quantity,
-      })),
+          productId: i.product._id,
+          quantity:  i.quantity,
+        })),
         customerName: form.name.trim(),
-        phone: form.phone.trim(),
-        city: form.city,
-        address: form.address.trim(),
-        notes: form.notes.trim() || undefined,
+        phone:        form.phone.trim(),
+        city:         form.city,
+        address:      form.address.trim(),
+        notes:        form.notes.trim() || undefined,
+        location,
       };
 
       await api.post('/orders', payload);
@@ -374,6 +409,55 @@ export default function CheckoutPage() {
                   className={`${inputClass(false)} resize-none`}
                 />
               </FormField>
+
+              {/* Delivery Location */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] uppercase tracking-widest text-text-muted">
+                  Delivery Location
+                  <span className="text-brand-gold ml-1" aria-hidden="true">*</span>
+                </label>
+                <p className="text-xs text-text-muted mb-1">
+                  Click on the map to pin your exact delivery location.
+                </p>
+
+                <div
+                  className={`rounded-sm overflow-hidden border ${
+                    errors.location ? 'border-red-500' : 'border-neutral-border'
+                  }`}
+                  style={{ height: '300px' }}
+                >
+                  <MapContainer
+                    center={UZBEKISTAN_CENTER}
+                    zoom={INITIAL_ZOOM}
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <TileLayer
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    />
+                    <MapClickHandler onPick={(coords) => {
+                      setLocation(coords);
+                      if (errors.location) setErrors((prev) => ({ ...prev, location: undefined }));
+                    }} />
+                    {location && (
+                      <Marker position={[location.lat, location.lng]} />
+                    )}
+                  </MapContainer>
+                </div>
+
+                {location ? (
+                  <p className="flex items-center gap-1.5 text-xs text-brand-gold mt-0.5">
+                    <MapPin className="w-3 h-3" aria-hidden="true" />
+                    {location.lat.toFixed(5)}, {location.lng.toFixed(5)}
+                  </p>
+                ) : null}
+
+                {errors.location && (
+                  <p className="text-xs text-red-500 mt-0.5" role="alert">
+                    {errors.location}
+                  </p>
+                )}
+              </div>
 
               {/* Submit */}
               <button

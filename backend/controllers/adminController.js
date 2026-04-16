@@ -101,6 +101,21 @@ exports.unblockUser = async (req, res, next) => {
   }
 };
 
+// GET /admin/order-locations
+exports.getOrderLocations = async (req, res, next) => {
+  try {
+    const orders = await Order.find(
+      { "location.lat": { $exists: true }, "location.lng": { $exists: true } },
+      { "location.lat": 1, "location.lng": 1, _id: 0 }
+    ).lean();
+
+    const locations = orders.map((o) => ({ lat: o.location.lat, lng: o.location.lng }));
+    res.json(locations);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /admin/stats
 exports.getStats = async (req, res, next) => {
   try {

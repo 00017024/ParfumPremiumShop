@@ -13,6 +13,13 @@ router.get(
 );
 
 router.get(
+  "/order-locations",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getOrderLocations
+);
+
+router.get(
   "/users",
   authMiddleware,
   adminMiddleware,

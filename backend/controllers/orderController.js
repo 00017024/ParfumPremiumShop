@@ -8,7 +8,7 @@ exports.createOrder = async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { items, customerName, phone, city, address, notes } = req.body;
+    const { items, customerName, phone, city, address, notes, location } = req.body;
 
     if (!items || items.length === 0) {
       throw new ApiError(400, "Order items missing", "ORDER_ITEMS_MISSING");
@@ -70,6 +70,7 @@ exports.createOrder = async (req, res, next) => {
       city,
       address,
       notes,
+      ...(location?.lat != null && location?.lng != null && { location }),
       items: orderItems,
       totalPrice,
       status: ORDER_STATUS.PENDING,

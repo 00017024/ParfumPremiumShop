@@ -6,6 +6,7 @@ import {
   Users,
   LogOut,
   X,
+  MapPin,
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
@@ -14,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/admin/orders',    icon: ShoppingBag,     label: 'Orders' },
   { to: '/admin/products',  icon: Package,         label: 'Products' },
   { to: '/admin/users',     icon: Users,           label: 'Users' },
+  { to: '/admin/analytics', icon: MapPin,          label: 'Analytics' },
 ];
 
 const activeClass =
