@@ -6,6 +6,9 @@ import AdminRoute          from '@/components/admin/AdminRoute';
 
 // ── User-facing pages ─────────────────────────────────────────────
 import Products            from './pages/Products';
+import Perfumes            from '@/pages/Perfumes';
+import Skincare            from '@/pages/Skincare';
+import Cosmetics           from '@/pages/Cosmetics';
 import ProductPage         from '@/pages/ProductPage';
 import CartPage            from '@/pages/CartPage';
 import LoginPage           from '@/pages/LoginPage';
@@ -32,6 +35,9 @@ export default function App() {
       {/* ── Public routes ─────────────────────────────────────────── */}
       <Route path="/"             element={<Navigate to="/products" replace />} />
       <Route path="/products"     element={<Products />} />
+      <Route path="/perfumes"     element={<Perfumes />} />
+      <Route path="/skincare"     element={<Skincare />} />
+      <Route path="/cosmetics"    element={<Cosmetics />} />
       <Route path="/products/:id" element={<ProductPage />} />
       <Route path="/cart"         element={<CartPage />} />
       <Route path="/login"        element={<LoginPage />} />

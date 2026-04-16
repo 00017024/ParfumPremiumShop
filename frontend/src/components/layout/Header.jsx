@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Package } from 'lucide-react';
+import { Link, NavLink } from 'react-router-dom';
+import { ShoppingCart, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useCartStore } from '@/store/cartStore';
 
@@ -19,13 +19,47 @@ export default function Header() {
 
         {/* Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className="text-text-secondary hover:text-text-primary transition-colors">
+          <NavLink
+            to="/products"
+            className={({ isActive }) =>
+              isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
+            }
+          >
             Home
-          </Link>
+          </NavLink>
+          <NavLink
+            to="/perfumes"
+            className={({ isActive }) =>
+              isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
+            }
+          >
+            Perfumes
+          </NavLink>
+          <NavLink
+            to="/skincare"
+            className={({ isActive }) =>
+              isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
+            }
+          >
+            Skin Care
+          </NavLink>
+          <NavLink
+            to="/cosmetics"
+            className={({ isActive }) =>
+              isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
+            }
+          >
+            Cosmetics
+          </NavLink>
           {user && (
-            <Link to="/orders" className="text-text-secondary hover:text-text-primary transition-colors">
+            <NavLink
+              to="/orders"
+              className={({ isActive }) =>
+                isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
+              }
+            >
               My Orders
-            </Link>
+            </NavLink>
           )}
         </nav>
 
