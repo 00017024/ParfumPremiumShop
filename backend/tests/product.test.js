@@ -104,7 +104,9 @@ describe("Product API", () => {
       brand: "Versace",
       price: 100,
       description: "Bold and confident",
-      stock: 20
+      stock: 20,
+      type: "perfume",
+      perfumeProfile: { woody: 6, oriental: 4, fresh: 2 }
     };
 
     it("should allow admin to create product", async () => {

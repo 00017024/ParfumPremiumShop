@@ -1,0 +1,16 @@
+import math
+
+
+def cosine_similarity(a, b):
+    """
+    Compute cosine similarity between two vectors.
+    Returns 0.0 if either vector is a zero vector.
+    """
+    dot = sum(x * y for x, y in zip(a, b))
+    norm_a = math.sqrt(sum(x ** 2 for x in a))
+    norm_b = math.sqrt(sum(x ** 2 for x in b))
+
+    if norm_a == 0.0 or norm_b == 0.0:
+        return 0.0
+
+    return dot / (norm_a * norm_b)

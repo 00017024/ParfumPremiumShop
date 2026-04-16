@@ -131,7 +131,7 @@ describe("Order API", () => {
         .send({ ...validOrderPayload(), items: [] });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.code).toBe("ORDER_ITEMS_MISSING");
+      expect(res.body.code).toBe("VALIDATION_ERROR"); // caught by Joi (items.min(1))
     });
 
     it("should reject order with missing customer details", async () => {
@@ -144,7 +144,7 @@ describe("Order API", () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.code).toBe("CUSTOMER_DETAILS_MISSING");
+      expect(res.body.code).toBe("VALIDATION_ERROR"); // caught by Joi
     });
 
     it("should reject order with invalid city", async () => {
@@ -153,7 +153,7 @@ describe("Order API", () => {
         .set("Authorization", `Bearer ${userToken}`)
         .send({ ...validOrderPayload(), city: "Bukhara" });
 
-      expect(res.statusCode).toBe(500); // Mongoose enum validation
+      expect(res.statusCode).toBe(400); // Joi validates city enum
     });
 
     it("should reject order when stock is insufficient", async () => {
@@ -193,7 +193,7 @@ describe("Order API", () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.code).toBe("INVALID_QUANTITY");
+      expect(res.body.code).toBe("VALIDATION_ERROR"); // caught by Joi (min:1)
     });
 
     it("should reject order with invalid quantity (float)", async () => {
@@ -206,7 +206,7 @@ describe("Order API", () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.code).toBe("INVALID_QUANTITY");
+      expect(res.body.code).toBe("VALIDATION_ERROR"); // caught by Joi (integer)
     });
   });
 
@@ -325,7 +325,8 @@ describe("Order API", () => {
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveLength(1);
+      expect(res.body.orders).toHaveLength(1); // paginated response: { orders, total, page, pages }
+      expect(res.body.total).toBe(1);
     });
 
     it("should reject non-admin user", async () => {

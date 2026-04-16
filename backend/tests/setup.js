@@ -4,11 +4,13 @@ const path = require("path");
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env.test") });
 
-// Connect
+// Connect and guarantee a clean slate before any tests run.
+// This handles the case where a previous run crashed before afterAll could clean up.
 beforeAll(async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("Test database connected");
+    await clearDatabase(); // purge any leftovers from a crashed prior run
   } catch (error) {
     console.error("Test DB connection failed:", error);
     throw error;

@@ -1,6 +1,30 @@
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 const { profileToVector, hasAnyAccord, cosineSimilarity } = require("../utils/similarity");
+const mlModel = require("../../ml/models/perfume_model.json");
+
+const ML_WEIGHTS = mlModel.weights;
+const ML_BIAS    = mlModel.bias;
+
+// Recreates the Python build_perfume_pair_features() used during training:
+//   8 element-wise products + 8 absolute differences + 1 cosine similarity = 17 features
+function buildPerfumePairFeatures(p1, p2) {
+  const v1 = profileToVector(p1.perfumeProfile || {});
+  const v2 = profileToVector(p2.perfumeProfile || {});
+  const elementwiseProduct  = v1.map((a, i) => a * v2[i]);
+  const absoluteDifference  = v1.map((a, i) => Math.abs(a - v2[i]));
+  const similarity          = cosineSimilarity(v1, v2);
+  return [...elementwiseProduct, ...absoluteDifference, similarity];
+}
+
+// Linear model: score = bias + sum(weight_i * feature_i)
+function computeMLScore(features) {
+  let score = ML_BIAS;
+  for (let i = 0; i < ML_WEIGHTS.length; i++) {
+    score += ML_WEIGHTS[i] * features[i];
+  }
+  return score;
+}
 
 const ALLOWED_SORT_FIELDS = new Set(["createdAt", "price", "name"]);
 const ACCORD_FIELDS = ["woody", "oriental", "sweet", "citrus", "floral", "spicy", "powdery", "fresh"];
@@ -285,22 +309,20 @@ exports.getRecommendations = async (req, res, next) => {
         return res.json({ success: true, data: [] });
       }
 
-      const sourceVec = profileToVector(sourceProfile);
-
       // Fetch all other perfumes. MongoDB pre-filter: at least one accord
       // field must be >= 1 to discard products with empty profiles early.
       const candidates = await Product.find({
         type: "perfume",
         _id:  { $ne: source._id },
         $or:  [
-          { "perfumeProfile.woody":   { $gte: 1 } },
+          { "perfumeProfile.woody":    { $gte: 1 } },
           { "perfumeProfile.oriental": { $gte: 1 } },
-          { "perfumeProfile.sweet":   { $gte: 1 } },
-          { "perfumeProfile.citrus":  { $gte: 1 } },
-          { "perfumeProfile.floral":  { $gte: 1 } },
-          { "perfumeProfile.spicy":   { $gte: 1 } },
-          { "perfumeProfile.powdery": { $gte: 1 } },
-          { "perfumeProfile.fresh":   { $gte: 1 } },
+          { "perfumeProfile.sweet":    { $gte: 1 } },
+          { "perfumeProfile.citrus":   { $gte: 1 } },
+          { "perfumeProfile.floral":   { $gte: 1 } },
+          { "perfumeProfile.spicy":    { $gte: 1 } },
+          { "perfumeProfile.powdery":  { $gte: 1 } },
+          { "perfumeProfile.fresh":    { $gte: 1 } },
         ],
       }).lean();
 
@@ -308,10 +330,9 @@ exports.getRecommendations = async (req, res, next) => {
         // JS-level guard: skip anything that still has a zero vector
         .filter((p) => hasAnyAccord(p.perfumeProfile))
         .map((p) => ({
-          score:   cosineSimilarity(sourceVec, profileToVector(p.perfumeProfile)),
+          score:   computeMLScore(buildPerfumePairFeatures(source, p)),
           product: p,
         }))
-        .filter((s) => s.score > 0)   // omit truly orthogonal profiles
         .sort((a, b) => b.score - a.score)
         .slice(0, limit);
 

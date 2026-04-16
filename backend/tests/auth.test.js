@@ -54,7 +54,10 @@ describe("Auth API", () => {
         });
 
       expect(res.statusCode).toBe(400);
-      expect(res.body.message).toContain("phone");
+      expect(res.body.code).toBe("VALIDATION_ERROR");
+      // phone-specific error is in the details array, not the top-level message
+      const allDetails = (res.body.details || []).join(" ");
+      expect(allDetails.toLowerCase()).toContain("phone");
     });
 
     it("should make first user an admin", async () => {
