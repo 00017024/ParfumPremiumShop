@@ -4,10 +4,12 @@ import { ShoppingCart, Minus, Plus, ArrowLeft, AlertCircle } from 'lucide-react'
 import toast from 'react-hot-toast';
 
 import api from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 import { useCartStore } from '@/store/cartStore';
 import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/product/ProductGrid';
 import ProductCardSkeleton from '@/components/product/ProductCardSkeleton';
+import StarRating from '@/components/product/StarRating';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -276,6 +278,7 @@ function QuantitySelector({ qty, setQty, max, disabled }) {
 
 export default function ProductPage() {
   const { id } = useParams();
+  const { user } = useAuth();
 
   // ── State ──────────────────────────────────────────────────────────────────
   const [product, setProduct] = useState(null);
@@ -286,6 +289,10 @@ export default function ProductPage() {
   const [error, setError] = useState(null);
   const [imgError, setImgError] = useState(false);
   const [qty, setQty] = useState(1);
+
+  // ── Rating state ───────────────────────────────────────────────────────────
+  const [userRating, setUserRating]           = useState(null);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   const addItem = useCartStore((state) => state.addItem);
 
@@ -305,6 +312,7 @@ export default function ProductPage() {
       setError(null);
       setImgError(false);
       setQty(1);
+      setUserRating(null);
 
       try {
         const { data } = await api.get(`/products/${id}`);
@@ -355,6 +363,31 @@ export default function ProductPage() {
       duration: 2000,
       style: { background: '#16a34a', color: '#fff' },
     });
+  };
+
+  // ── Rate product ──────────────────────────────────────────────────────────
+  const handleRate = async (stars) => {
+    if (!user || ratingSubmitting) return;
+    setRatingSubmitting(true);
+    try {
+      const { data } = await api.post(`/products/${product._id}/rate`, { rating: stars });
+      setUserRating(data.userRating);
+      setProduct((prev) => ({
+        ...prev,
+        averageRating: data.averageRating,
+        ratingCount:   data.ratingCount,
+      }));
+      toast.success('Rating submitted!', {
+        duration: 2000,
+        style: { background: '#16a34a', color: '#fff' },
+      });
+    } catch {
+      toast.error('Failed to submit rating. Please try again.', {
+        style: { background: '#dc2626', color: '#fff' },
+      });
+    } finally {
+      setRatingSubmitting(false);
+    }
   };
 
   // ── Render: loading ────────────────────────────────────────────────────────
@@ -454,6 +487,13 @@ export default function ProductPage() {
               ${product.price.toFixed(2)}
             </p>
 
+            {/* Rating display */}
+            <StarRating
+              value={product.averageRating ?? 0}
+              count={product.ratingCount  ?? 0}
+              size="md"
+            />
+
             {/* Stock status */}
             <div className="flex items-center gap-2" aria-live="polite">
               <span
@@ -539,6 +579,39 @@ export default function ProductPage() {
                 <CosmeticsProfileDisplay profile={product.cosmeticsProfile} />
               </>
             )}
+
+            {/* ── Rate this product ───────────────────────────────────────── */}
+            <div className="border-t border-neutral-border" />
+            <div>
+              <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-3">
+                Rate this product
+              </h2>
+
+              {user ? (
+                <div className="flex flex-col gap-2">
+                  <StarRating
+                    value={product.averageRating ?? 0}
+                    count={product.ratingCount  ?? 0}
+                    onChange={handleRate}
+                    userRating={userRating}
+                    disabled={ratingSubmitting}
+                    size="md"
+                  />
+                  {userRating && (
+                    <p className="text-xs text-text-muted">
+                      Your rating: {userRating} star{userRating !== 1 ? 's' : ''} — click to update
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-text-muted">
+                  <Link to="/login" className="text-brand-gold hover:underline">
+                    Login
+                  </Link>{' '}
+                  to rate this product
+                </p>
+              )}
+            </div>
 
           </div>
         </div>

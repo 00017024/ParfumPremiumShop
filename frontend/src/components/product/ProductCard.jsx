@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import toast from 'react-hot-toast';
+import StarRating from '@/components/product/StarRating';
 
 export default function ProductCard({ product }) {
   const addItem = useCartStore((state) => state.addItem);
@@ -67,6 +68,12 @@ export default function ProductCard({ product }) {
         <p className="text-2xl font-bold text-brand-gold">
           ${Number(product.price).toFixed(2)}
         </p>
+
+        {/* Rating */}
+        <StarRating
+          value={product.averageRating ?? 0}
+          count={product.ratingCount  ?? 0}
+        />
 
         {/* Add to Cart */}
         <button

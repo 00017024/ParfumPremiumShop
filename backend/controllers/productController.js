@@ -1,6 +1,6 @@
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
-const { profileToVector, hasAnyAccord, cosineSimilarity } = require("../utils/similarity");
+const { ACCORD_KEYS, profileToVector, hasAnyAccord, cosineSimilarity } = require("../utils/similarity");
 const mlModel = require("../../ml/models/perfume_model.json");
 
 const ML_WEIGHTS = mlModel.weights;
@@ -24,6 +24,27 @@ function computeMLScore(features) {
     score += ML_WEIGHTS[i] * features[i];
   }
   return score;
+}
+
+// ─── getRecommendationReason ──────────────────────────────────────────────────
+// Returns the top 2–3 accords shared most strongly between two perfumes.
+// "Shared strength" = MIN(source[accord], candidate[accord]) — the overlap each
+// accord actually contributes to both profiles.  Accords with no overlap (min=0)
+// are excluded.  Results are sorted descending so the most prominent accord comes first.
+//
+// @param  {object} source     - source product (lean Mongoose doc)
+// @param  {object} candidate  - candidate product (lean Mongoose doc)
+// @returns {string[]}         - up to 3 accord names, e.g. ["woody", "citrus"]
+function getRecommendationReason(source, candidate) {
+  const sp = source.perfumeProfile    || {};
+  const cp = candidate.perfumeProfile || {};
+
+  return ACCORD_KEYS
+    .map((accord) => ({ accord, shared: Math.min(sp[accord] ?? 0, cp[accord] ?? 0) }))
+    .filter(({ shared }) => shared > 0)
+    .sort((a, b) => b.shared - a.shared)
+    .slice(0, 3)
+    .map(({ accord }) => accord);
 }
 
 const ALLOWED_SORT_FIELDS = new Set(["createdAt", "price", "name"]);
@@ -94,7 +115,7 @@ exports.getProducts = async (req, res, next) => {
 // GET /products/:id
 exports.getProductById = async (req, res, next) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).select("-ratings");
 
     if (!product) {
       throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
@@ -338,17 +359,22 @@ exports.getRecommendations = async (req, res, next) => {
 
       return res.json({
         success: true,
-        data: scored.map(({ product, score }) => ({
-          _id:            product._id,
-          name:           product.name,
-          brand:          product.brand,
-          price:          product.price,
-          stock:          product.stock,
-          imageUrl:       product.imageUrl,
-          type:           product.type,
-          perfumeProfile: product.perfumeProfile,
-          score:          Math.round(score * 1000) / 1000,
-        })),
+        data: scored.map(({ product, score }) => {
+          const reason = getRecommendationReason(source, product);
+          return {
+            _id:            product._id,
+            name:           product.name,
+            brand:          product.brand,
+            price:          product.price,
+            stock:          product.stock,
+            imageUrl:       product.imageUrl,
+            type:           product.type,
+            perfumeProfile: product.perfumeProfile,
+            score:          Math.round(score * 1000) / 1000,
+            reason,
+            reasonText:     reason.length ? `Recommended because: ${reason.join(', ')}` : '',
+          };
+        }),
       });
     }
 
@@ -401,6 +427,53 @@ exports.getRecommendations = async (req, res, next) => {
 
     // Unknown type — return empty rather than 500
     res.json({ success: true, data: [] });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /products/:id/rate  (authenticated users)
+// Body: { rating: 1–5 }
+// Upserts the user's rating, recalculates averageRating + ratingCount, saves.
+exports.rateProduct = async (req, res, next) => {
+  try {
+    const value = parseInt(req.body.rating, 10);
+    if (!Number.isInteger(value) || value < 1 || value > 5) {
+      throw new ApiError(400, "Rating must be a whole number between 1 and 5", "INVALID_RATING");
+    }
+
+    const product = await Product.findById(req.params.id);
+    if (!product) throw new ApiError(404, "Product not found", "PRODUCT_NOT_FOUND");
+
+    const userId   = req.user._id.toString();
+    const existing = product.ratings.find((r) => r.user.toString() === userId);
+
+    // Early-return: same value already stored — nothing to change.
+    if (existing && existing.value === value) {
+      return res.json({
+        averageRating: Math.round(product.averageRating * 10) / 10,
+        ratingCount:   product.ratingCount,
+        userRating:    value,
+      });
+    }
+
+    if (existing) {
+      existing.value = value;           // update
+    } else {
+      product.ratings.push({ user: req.user._id, value }); // insert
+    }
+
+    product.ratingCount   = product.ratings.length;
+    product.averageRating =
+      product.ratings.reduce((sum, r) => sum + r.value, 0) / product.ratingCount;
+
+    await product.save();
+
+    res.json({
+      averageRating: Math.round(product.averageRating * 10) / 10,
+      ratingCount:   product.ratingCount,
+      userRating:    value,
+    });
   } catch (err) {
     next(err);
   }

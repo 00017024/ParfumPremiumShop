@@ -31,6 +31,20 @@ const cosmeticsProfileSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const ratingSchema = new mongoose.Schema(
+  {
+    user:  { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    value: {
+      type:     Number,
+      required: true,
+      min:      1,
+      max:      5,
+      validate: { validator: Number.isInteger, message: "Rating must be a whole number." },
+    },
+  },
+  { _id: false }
+);
+
 // ─── Profile map: which profile belongs to which type ─────────────────────────
 
 const PROFILE_FOR_TYPE = {
@@ -73,6 +87,13 @@ const productSchema = new mongoose.Schema(
     perfumeProfile:   { type: perfumeProfileSchema,   default: undefined },
     skincareProfile:  { type: skincareProfileSchema,  default: undefined },
     cosmeticsProfile: { type: cosmeticsProfileSchema, default: undefined },
+
+    // ── Ratings ────────────────────────────────────────────────────────────
+    // Embedded for efficiency — no join needed to show averageRating on listings.
+    // The full ratings array is excluded from public API responses (select -ratings).
+    ratings:       { type: [ratingSchema], default: [] },
+    averageRating: { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount:   { type: Number, default: 0, min: 0 },
   },
   { timestamps: true }
 );

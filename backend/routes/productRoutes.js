@@ -23,6 +23,8 @@ router.get("/filter/cosmetics", productController.filterCosmetics);
 // Two-segment route — no conflict with /:id, but kept above it for clarity.
 router.get("/:id/recommendations", productController.getRecommendations);
 
+router.post("/:id/rate", authMiddleware, productController.rateProduct);
+
 router.get(
   "/:id",
   productController.getProductById
