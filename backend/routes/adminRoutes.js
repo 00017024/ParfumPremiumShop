@@ -13,6 +13,13 @@ router.get(
 );
 
 router.get(
+  "/analytics",
+  authMiddleware,
+  adminMiddleware,
+  adminController.getAnalytics
+);
+
+router.get(
   "/order-locations",
   authMiddleware,
   adminMiddleware,

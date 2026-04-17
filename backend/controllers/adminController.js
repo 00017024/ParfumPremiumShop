@@ -3,6 +3,14 @@ const { Order, ORDER_STATUS } = require("../models/Order");
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 
+// Single source of truth for which statuses count as revenue-generating.
+// Used by both getStats and getAnalytics so they can never drift apart.
+const REVENUE_STATUSES = [
+  ORDER_STATUS.PAID,
+  ORDER_STATUS.CONFIRMED,
+  ORDER_STATUS.COMPLETED,
+];
+
 // GET /admin/users
 exports.getAllUsers = async (req, res, next) => {
   try {
@@ -101,8 +109,162 @@ exports.unblockUser = async (req, res, next) => {
   }
 };
 
+// GET /admin/analytics
+exports.getAnalytics = async (_req, res, next) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 29);
+    thirtyDaysAgo.setHours(0, 0, 0, 0);
+
+    const [
+      topByCategory,
+      mostActiveArr,
+      weeklySales,
+      userGrowth,
+      revenueOverTime,
+      buyersArr,
+      totalUsers,
+    ] = await Promise.all([
+
+      // A — top-selling product per product type
+      // $lookup and $unwind are NOT documented as sort-preserving stages, so
+      // $sort is placed immediately before the final $group — no intervening
+      // stages can disrupt the order that $first relies on.
+      Order.aggregate([
+        { $unwind: "$items" },
+        { $group: { _id: "$items.product", totalSold: { $sum: "$items.quantity" } } },
+        {
+          $lookup: {
+            from: "products",
+            localField: "_id",
+            foreignField: "_id",
+            as: "product",
+          },
+        },
+        { $unwind: "$product" },
+        { $sort: { totalSold: -1 } },          // ← right before $group
+        {
+          $group: {
+            _id:       "$product.type",
+            name:      { $first: "$product.name" },
+            brand:     { $first: "$product.brand" },
+            totalSold: { $first: "$totalSold" },
+          },
+        },
+      ]),
+
+      // B — user with the most orders
+      Order.aggregate([
+        { $group: { _id: "$user", orderCount: { $sum: 1 } } },
+        { $sort: { orderCount: -1 } },
+        { $limit: 1 },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+        {
+          $project: {
+            _id: 0,
+            name:       "$user.name",
+            email:      "$user.email",
+            orderCount: 1,
+          },
+        },
+      ]),
+
+      // C — order count per day for the last 7 days
+      Order.aggregate([
+        { $match: { createdAt: { $gte: sevenDaysAgo } } },
+        {
+          $group: {
+            _id:   { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, date: "$_id", count: 1 } },
+      ]),
+
+      // D — new user registrations per day for the last 30 days
+      User.aggregate([
+        { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+        {
+          $group: {
+            _id:   { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, date: "$_id", count: 1 } },
+      ]),
+
+      // E — daily revenue for the last 30 days (revenue-generating orders only)
+      Order.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: thirtyDaysAgo },
+            status:    { $in: REVENUE_STATUSES },
+          },
+        },
+        {
+          $group: {
+            _id:     { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+            revenue: { $sum: "$totalPrice" },
+            count:   { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+        { $project: { _id: 0, date: "$_id", revenue: 1, count: 1 } },
+      ]),
+
+      // F — distinct users who placed at least one order (for conversion rate)
+      Order.aggregate([
+        { $group: { _id: "$user" } },
+        { $count: "total" },
+      ]),
+
+      User.countDocuments(),
+    ]);
+
+    // Reshape array → { perfume: {...}, skincare: {...}, cosmetics: {...} }
+    const topProductsByCategory = {};
+    for (const item of topByCategory) {
+      topProductsByCategory[item._id] = {
+        name:      item.name,
+        brand:     item.brand,
+        totalSold: item.totalSold,
+      };
+    }
+
+    const buyers         = buyersArr[0]?.total ?? 0;
+    const conversionRate = totalUsers > 0
+      ? Math.round((buyers / totalUsers) * 100)
+      : 0;
+
+    res.json({
+      topProductsByCategory,
+      mostActiveUser:  mostActiveArr[0] ?? null,
+      weeklySales,
+      userGrowth,
+      revenueOverTime,
+      conversionRate: { rate: conversionRate, buyers, totalUsers },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // GET /admin/order-locations
-exports.getOrderLocations = async (req, res, next) => {
+exports.getOrderLocations = async (_req, res, next) => {
   try {
     const orders = await Order.find(
       { "location.lat": { $exists: true }, "location.lng": { $exists: true } },
@@ -117,7 +279,7 @@ exports.getOrderLocations = async (req, res, next) => {
 };
 
 // GET /admin/stats
-exports.getStats = async (req, res, next) => {
+exports.getStats = async (_req, res, next) => {
   try {
     const [orderStats, totalUsers, totalProducts] = await Promise.all([
       Order.aggregate([
@@ -127,15 +289,7 @@ exports.getStats = async (req, res, next) => {
 
             revenue: [
               {
-                $match: {
-                  status: {
-                    $in: [
-                      ORDER_STATUS.PAID,
-                      ORDER_STATUS.CONFIRMED,
-                      ORDER_STATUS.COMPLETED,
-                    ],
-                  },
-                },
+                $match: { status: { $in: REVENUE_STATUSES } },
               },
               { $group: { _id: null, total: { $sum: "$totalPrice" } } },
             ],
