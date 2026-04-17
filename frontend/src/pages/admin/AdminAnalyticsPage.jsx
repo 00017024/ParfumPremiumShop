@@ -1,24 +1,8 @@
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import { MapPin, Loader2 } from 'lucide-react';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-
-// Fix Leaflet's broken default marker icons when bundled with Vite
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl:       markerIconUrl,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl:     markerShadow,
-});
-
-const UZBEKISTAN_CENTER = [41.3, 64.6];
-const INITIAL_ZOOM = 6;
+import AdminMap from '@/components/AdminMap';
 
 export default function AdminAnalyticsPage() {
   const [locations, setLocations] = useState([]);
@@ -54,33 +38,17 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* ── Map ────────────────────────────────────────────────────────── */}
-      <div className="bg-surface-card border border-neutral-border rounded-sm overflow-hidden"
-           style={{ height: '560px' }}>
+      <div
+        className="bg-surface-card border border-neutral-border rounded-sm overflow-hidden"
+        style={{ height: '560px' }}
+      >
         {loading ? (
           <div className="flex items-center justify-center h-full text-text-muted gap-2">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="text-sm">Loading locations…</span>
           </div>
         ) : (
-          <MapContainer
-            center={UZBEKISTAN_CENTER}
-            zoom={INITIAL_ZOOM}
-            style={{ height: '100%', width: '100%' }}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
-            {locations.map((loc, i) => (
-              <Marker key={i} position={[loc.lat, loc.lng]}>
-                <Popup>
-                  <span className="text-xs">
-                    {loc.lat.toFixed(5)}, {loc.lng.toFixed(5)}
-                  </span>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          <AdminMap locations={locations} />
         )}
       </div>
 

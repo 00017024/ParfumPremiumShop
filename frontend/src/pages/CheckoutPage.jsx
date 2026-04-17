@@ -2,22 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2, ShoppingBag, ChevronRight, AlertTriangle, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix Leaflet's broken default marker icons when bundled with Vite
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconUrl:       markerIconUrl,
-  iconRetinaUrl: markerIcon2x,
-  shadowUrl:     markerShadow,
-});
-
 import api from '@/lib/api';
+import MapPicker from '@/components/MapPicker';
 import { useCartStore } from '@/store/cartStore';
 import { useStockValidation } from '@/hooks/useStockValidation';
 import { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } from '@/lib/validation';
@@ -51,21 +37,6 @@ function validate(form, location) {
 
   return errors;
 }
-
-// ─── Map helpers ──────────────────────────────────────────────────────────────
-
-// Registers click events on the map and forwards them to the parent
-function MapClickHandler({ onPick }) {
-  useMapEvents({
-    click(e) {
-      onPick({ lat: e.latlng.lat, lng: e.latlng.lng });
-    },
-  });
-  return null;
-}
-
-const UZBEKISTAN_CENTER = [41.3, 64.6];
-const INITIAL_ZOOM = 6;
 
 // ─── FormField ────────────────────────────────────────────────────────────────
 
@@ -426,23 +397,13 @@ export default function CheckoutPage() {
                   }`}
                   style={{ height: '300px' }}
                 >
-                  <MapContainer
-                    center={UZBEKISTAN_CENTER}
-                    zoom={INITIAL_ZOOM}
-                    style={{ height: '100%', width: '100%' }}
-                  >
-                    <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    />
-                    <MapClickHandler onPick={(coords) => {
+                  <MapPicker
+                    value={location}
+                    onChange={(coords) => {
                       setLocation(coords);
                       if (errors.location) setErrors((prev) => ({ ...prev, location: undefined }));
-                    }} />
-                    {location && (
-                      <Marker position={[location.lat, location.lng]} />
-                    )}
-                  </MapContainer>
+                    }}
+                  />
                 </div>
 
                 {location ? (

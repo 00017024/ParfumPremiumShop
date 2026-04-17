@@ -47,7 +47,11 @@ async function seed() {
   }
 
   // ── Insert ─────────────────────────────────────────────────────────────────
-  const inserted = await Product.insertMany(products, { ordered: true });
+  const productsWithStock = products.map((p) => ({
+    ...p,
+    stock: Math.floor(Math.random() * 51), // random 0–50
+  }));
+  const inserted = await Product.insertMany(productsWithStock, { ordered: true });
 
   // ── Summary ────────────────────────────────────────────────────────────────
   const byType = inserted.reduce((acc, p) => {
