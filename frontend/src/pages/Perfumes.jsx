@@ -1,17 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/product/ProductGrid';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = [
-  { label: 'All',   value: null },
-  { label: 'Men',   value: 'men' },
-  { label: 'Women', value: 'women' },
-  { label: 'Unisex', value: 'unisex' },
-];
+// Category values are backend params — labels come from i18n
+const CATEGORY_VALUES = [null, 'men', 'women', 'unisex'];
 
 export default function Perfumes() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [category, setCategory] = useState(null);
@@ -31,27 +29,30 @@ export default function Perfumes() {
       .then(({ data }) => setProducts(data.products))
       .catch((err) => {
         if (err.name === 'CanceledError') return;
-        toast.error('Failed to load perfumes', { style: { background: '#dc2626', color: '#fff' } });
+        toast.error(t('errors.load_perfumes'), { style: { background: '#dc2626', color: '#fff' } });
       })
       .finally(() => setLoading(false));
 
     return () => controller.abort();
-  }, [category]);
+  }, [category, t]);
+
+  const categoryLabel = (value) => {
+    if (value === null) return t('category.all');
+    return t(`category.${value}`);
+  };
 
   return (
     <Layout>
 
-      {/* ── Header bar ─────────────────────────────────────────────────── */}
       <div className="bg-surface-dark border-b border-neutral-border py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row sm:items-center gap-4">
 
-          <h1 className="text-xl font-semibold text-text-primary shrink-0">Perfumes</h1>
+          <h1 className="text-xl font-semibold text-text-primary shrink-0">{t('pages.perfumes')}</h1>
 
-          {/* Category filter */}
           <div className="flex gap-2">
-            {CATEGORIES.map(({ label, value }) => (
+            {CATEGORY_VALUES.map((value) => (
               <button
-                key={label}
+                key={String(value)}
                 onClick={() => setCategory(value)}
                 className={`px-4 py-2 text-sm rounded-sm border transition-colors ${
                   category === value
@@ -59,7 +60,7 @@ export default function Perfumes() {
                     : 'border-neutral-border text-text-secondary hover:border-brand-gold hover:text-brand-gold'
                 }`}
               >
-                {label}
+                {categoryLabel(value)}
               </button>
             ))}
           </div>
@@ -67,11 +68,10 @@ export default function Perfumes() {
         </div>
       </div>
 
-      {/* ── Grid ───────────────────────────────────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!loading && (
           <p className="text-sm text-text-muted mb-4">
-            {products.length} {products.length === 1 ? 'product' : 'products'}
+            {t(products.length === 1 ? 'pages.products_count_one' : 'pages.products_count_other', { count: products.length })}
           </p>
         )}
         <ProductGrid products={products} loading={loading} />

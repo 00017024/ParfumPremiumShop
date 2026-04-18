@@ -76,12 +76,41 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password, phone) => {
     try {
-      const { data } = await api.post('/auth/register', { name, email, password, phone });
+      await api.post('/auth/register', { name, email, password, phone });
+      return { success: true, email };
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Registration failed. Please try again.';
+      toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
+      return { success: false };
+    }
+  };
+
+  // ── Verify OTP ────────────────────────────────────────────────────────────
+
+  const verifyOtp = async (email, otp) => {
+    try {
+      const { data } = await api.post('/auth/verify-otp', { email, otp });
       persistSession(data.token, data.user);
       return { success: true };
     } catch (err) {
       const message =
-        err.response?.data?.message || 'Registration failed. Please try again.';
+        err.response?.data?.message || 'Verification failed. Please try again.';
+      toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
+      return { success: false };
+    }
+  };
+
+  // ── Resend OTP ────────────────────────────────────────────────────────────
+
+  const resendOtp = async (email) => {
+    try {
+      await api.post('/auth/resend-otp', { email });
+      toast.success('A new code has been sent to your email.');
+      return { success: true };
+    } catch (err) {
+      const message =
+        err.response?.data?.message || 'Could not resend OTP. Please try again.';
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
       return { success: false };
     }
@@ -102,7 +131,7 @@ export function AuthProvider({ children }) {
   // ── Context value ─────────────────────────────────────────────────────────
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, loading, login, register, verifyOtp, resendOtp, logout }}>
       {children}
     </AuthContext.Provider>
   );

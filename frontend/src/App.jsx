@@ -13,6 +13,7 @@ import ProductPage         from '@/pages/ProductPage';
 import CartPage            from '@/pages/CartPage';
 import LoginPage           from '@/pages/LoginPage';
 import RegisterPage        from '@/pages/RegisterPage';
+import VerifyOtpPage       from '@/pages/VerifyOtpPage';
 import CheckoutPage        from '@/pages/CheckoutPage';
 import OrderSuccessPage    from '@/pages/OrderSuccessPage';
 import MyOrdersPage        from '@/pages/MyOrdersPage';
@@ -43,6 +44,7 @@ export default function App() {
       <Route path="/cart"         element={<CartPage />} />
       <Route path="/login"        element={<LoginPage />} />
       <Route path="/register"     element={<RegisterPage />} />
+      <Route path="/verify-otp"   element={<VerifyOtpPage />} />
 
       {/* ── Protected user routes ─────────────────────────────────── */}
       <Route path="/checkout" element={

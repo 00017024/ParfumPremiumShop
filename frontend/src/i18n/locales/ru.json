@@ -29,7 +29,7 @@
   "cart": {
     "title": "Корзина",
     "items_count_one": "{{count}} товар",
-    "items_count_other": "{{count}} товара(ов)",
+    "items_count_other": "{{count}} товаров",
     "empty": "Ваша корзина пуста",
     "empty_description": "Просмотрите наши ароматы и найдите что-то, что вам понравится.",
     "continue_shopping": "Продолжить покупки",
@@ -90,5 +90,114 @@
     "en": "EN",
     "ru": "RU",
     "uz": "UZ"
+  },
+  "pagination": {
+    "previous": "Назад",
+    "next": "Далее"
+  },
+  "filter": {
+    "product_type": "Тип продукта",
+    "accord_preferences": "Предпочтения аккордов",
+    "accord_hint": "Аккорды со значением 0 исключены из поиска.",
+    "skin_type": "Тип кожи",
+    "ingredients": "Ингредиенты",
+    "color_family": "Цветовая гамма",
+    "cosmetics_hint": "Оставьте пустым для показа всей косметики.",
+    "clear": "Сбросить",
+    "apply": "Применить фильтры"
+  },
+  "type": {
+    "perfume": "Парфюмерия",
+    "skincare": "Уход за кожей",
+    "cosmetics": "Косметика"
+  },
+  "category": {
+    "all": "Все",
+    "men": "Мужские",
+    "women": "Женские",
+    "unisex": "Унисекс"
+  },
+  "accord": {
+    "woody": "Древесный",
+    "oriental": "Восточный",
+    "sweet": "Сладкий",
+    "citrus": "Цитрусовый",
+    "floral": "Цветочный",
+    "spicy": "Пряный",
+    "powdery": "Пудровый",
+    "fresh": "Свежий"
+  },
+  "skin_type": {
+    "dry": "Сухая",
+    "oily": "Жирная",
+    "combination": "Комбинированная",
+    "normal": "Нормальная",
+    "sensitive": "Чувствительная"
+  },
+  "ingredient": {
+    "aloe_vera": "Алоэ Вера",
+    "snail_mucin": "Муцин улитки",
+    "collagen": "Коллаген",
+    "hyaluronic_acid": "Гиалуроновая кислота",
+    "salicylic_acid": "Салициловая кислота",
+    "niacinamide": "Ниацинамид",
+    "vitamin_c": "Витамин C",
+    "retinol": "Ретинол"
+  },
+  "color": {
+    "nude": "Нюд",
+    "red": "Красный",
+    "pink": "Розовый",
+    "brown": "Коричневый",
+    "coral": "Коралловый"
+  },
+  "pages": {
+    "perfumes": "Парфюмерия",
+    "skincare": "Уход за кожей",
+    "cosmetics": "Косметика",
+    "products_count_one": "{{count}} товар",
+    "products_count_other": "{{count}} товаров"
+  },
+  "errors": {
+    "load_perfumes": "Не удалось загрузить парфюмерию",
+    "load_skincare": "Не удалось загрузить средства по уходу",
+    "load_cosmetics": "Не удалось загрузить косметику",
+    "load_product": "Не удалось загрузить товар. Попробуйте ещё раз.",
+    "load_recs": "Не удалось загрузить рекомендации.",
+    "product_not_found_title": "Товар не найден",
+    "product_not_found_msg": "Этот товар не существует или был удалён.",
+    "product_not_found_404": "Этот товар не найден.",
+    "submit_rating": "Не удалось отправить оценку. Попробуйте ещё раз."
+  },
+  "product_detail": {
+    "back_to_products": "Назад к товарам",
+    "scent_profile": "Профиль аромата",
+    "skin_types_label": "Типы кожи",
+    "key_ingredients": "Ключевые ингредиенты",
+    "color_family": "Цветовая гамма",
+    "about_fragrance": "Об этом аромате",
+    "about_product": "Об этом продукте",
+    "rate_this": "Оценить продукт",
+    "your_rating_one": "Ваша оценка: {{count}} звезда — нажмите для изменения",
+    "your_rating_other": "Ваша оценка: {{count}} звёзды — нажмите для изменения",
+    "login_to_rate": "чтобы оценить продукт",
+    "recommended": "Рекомендуем для вас",
+    "similar_scent": "Схожий профиль аромата",
+    "shares_ingredients": "Общие ключевые ингредиенты",
+    "no_recs": "Рекомендации недоступны.",
+    "out_of_stock": "Нет в наличии",
+    "low_stock": "Мало — осталось {{count}} шт.",
+    "in_stock": "В наличии",
+    "unavailable": "Недоступно",
+    "rating_submitted": "Оценка отправлена!",
+    "qty_selector": "Выбор количества",
+    "decrease_qty": "Уменьшить количество",
+    "increase_qty": "Увеличить количество",
+    "oos_aria": "Нет в наличии — нельзя добавить в корзину",
+    "add_aria": "Добавить {{name}} в корзину"
+  },
+  "breadcrumb": {
+    "home": "Главная",
+    "products": "Товары"
   }
 }

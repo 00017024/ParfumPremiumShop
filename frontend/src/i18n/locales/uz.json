@@ -90,5 +90,114 @@
     "en": "EN",
     "ru": "RU",
     "uz": "UZ"
+  },
+  "pagination": {
+    "previous": "Oldingi",
+    "next": "Keyingi"
+  },
+  "filter": {
+    "product_type": "Mahsulot turi",
+    "accord_preferences": "Akkord afzalliklari",
+    "accord_hint": "0 ga teng akkordlar qidiruvdan chiqariladi.",
+    "skin_type": "Teri turi",
+    "ingredients": "Tarkiblar",
+    "color_family": "Rang oilasi",
+    "cosmetics_hint": "Barcha kosmetikani ko'rish uchun bo'sh qoldiring.",
+    "clear": "Tozalash",
+    "apply": "Filtrlarni qo'llash"
+  },
+  "type": {
+    "perfume": "Atir",
+    "skincare": "Teri parvarishi",
+    "cosmetics": "Kosmetika"
+  },
+  "category": {
+    "all": "Hammasi",
+    "men": "Erkaklar",
+    "women": "Ayollar",
+    "unisex": "Uniseks"
+  },
+  "accord": {
+    "woody": "O'rmonli",
+    "oriental": "Sharqiy",
+    "sweet": "Shirin",
+    "citrus": "Sitrus",
+    "floral": "Gulli",
+    "spicy": "Ziravorli",
+    "powdery": "Pudra",
+    "fresh": "Yangi"
+  },
+  "skin_type": {
+    "dry": "Quruq",
+    "oily": "Yog'li",
+    "combination": "Kombinatsiyalangan",
+    "normal": "Normal",
+    "sensitive": "Sezgir"
+  },
+  "ingredient": {
+    "aloe_vera": "Aloe Vera",
+    "snail_mucin": "Salyangoz mukini",
+    "collagen": "Kollagen",
+    "hyaluronic_acid": "Gialuron kislota",
+    "salicylic_acid": "Salitsil kislota",
+    "niacinamide": "Niatsinamid",
+    "vitamin_c": "Vitamin C",
+    "retinol": "Retinol"
+  },
+  "color": {
+    "nude": "Nud",
+    "red": "Qizil",
+    "pink": "Pushti",
+    "brown": "Jigarrang",
+    "coral": "Marjon"
+  },
+  "pages": {
+    "perfumes": "Atirlar",
+    "skincare": "Teri parvarishi",
+    "cosmetics": "Kosmetika",
+    "products_count_one": "{{count}} ta mahsulot",
+    "products_count_other": "{{count}} ta mahsulot"
+  },
+  "errors": {
+    "load_perfumes": "Atirlarni yuklashda xato",
+    "load_skincare": "Teri parvarishi mahsulotlarini yuklashda xato",
+    "load_cosmetics": "Kosmetikani yuklashda xato",
+    "load_product": "Mahsulotni yuklashda xato. Qayta urinib ko'ring.",
+    "load_recs": "Tavsiyalarni yuklashda xato.",
+    "product_not_found_title": "Mahsulot topilmadi",
+    "product_not_found_msg": "Bu mahsulot mavjud emas yoki o'chirilgan.",
+    "product_not_found_404": "Bu mahsulot topilmadi.",
+    "submit_rating": "Bahoni yuborishda xato. Qayta urinib ko'ring."
+  },
+  "product_detail": {
+    "back_to_products": "Mahsulotlarga qaytish",
+    "scent_profile": "Hid profili",
+    "skin_types_label": "Teri turlari",
+    "key_ingredients": "Asosiy tarkiblar",
+    "color_family": "Rang oilasi",
+    "about_fragrance": "Bu atir haqida",
+    "about_product": "Bu mahsulot haqida",
+    "rate_this": "Mahsulotni baholang",
+    "your_rating_one": "Sizning bahoyingiz: {{count}} yulduz — o'zgartirish uchun bosing",
+    "your_rating_other": "Sizning bahoyingiz: {{count}} yulduz — o'zgartirish uchun bosing",
+    "login_to_rate": "mahsulotni baholash uchun",
+    "recommended": "Siz uchun tavsiyalar",
+    "similar_scent": "O'xshash hid profili",
+    "shares_ingredients": "Umumiy asosiy tarkiblar",
+    "no_recs": "Tavsiyalar mavjud emas.",
+    "out_of_stock": "Sotib bo'lindi",
+    "low_stock": "Kam qoldi — {{count}} ta",
+    "in_stock": "Mavjud",
+    "unavailable": "Mavjud emas",
+    "rating_submitted": "Baho yuborildi!",
+    "qty_selector": "Miqdor tanlash",
+    "decrease_qty": "Miqdorni kamaytirish",
+    "increase_qty": "Miqdorni ko'paytirish",
+    "oos_aria": "Sotib bo'lindi — savatga qo'shib bo'lmaydi",
+    "add_aria": "{{name}} savatga qo'shish"
+  },
+  "breadcrumb": {
+    "home": "Bosh sahifa",
+    "products": "Mahsulotlar"
   }
 }

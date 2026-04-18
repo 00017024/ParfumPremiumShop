@@ -1,6 +1,9 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
+  const { t } = useTranslation();
+
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;
@@ -26,17 +29,15 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
 
   return (
     <div className="flex justify-center items-center gap-2 py-8">
-      {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
         className="px-4 py-2 min-w-[48px] rounded-lg border border-neutral-border text-text-secondary hover:text-text-primary hover:border-brand-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
       >
         <ChevronLeft className="w-4 h-4" />
-        <span className="hidden sm:inline">Previous</span>
+        <span className="hidden sm:inline">{t('pagination.previous')}</span>
       </button>
 
-      {/* Page Numbers */}
       <div className="hidden sm:flex items-center gap-2">
         {getPageNumbers().map((page, index) => (
           page === '...' ? (
@@ -59,18 +60,16 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         ))}
       </div>
 
-      {/* Mobile: Show only current page */}
       <div className="sm:hidden px-4 py-2 text-text-primary">
         {currentPage} / {totalPages}
       </div>
 
-      {/* Next Button */}
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
         className="px-4 py-2 min-w-[48px] rounded-lg border border-neutral-border text-text-secondary hover:text-text-primary hover:border-brand-gold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
       >
-        <span className="hidden sm:inline">Next</span>
+        <span className="hidden sm:inline">{t('pagination.next')}</span>
         <ChevronRight className="w-4 h-4" />
       </button>
     </div>

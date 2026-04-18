@@ -90,5 +90,114 @@
     "en": "EN",
     "ru": "RU",
     "uz": "UZ"
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "filter": {
+    "product_type": "Product Type",
+    "accord_preferences": "Accord Preferences",
+    "accord_hint": "Accords left at 0 are excluded from matching.",
+    "skin_type": "Skin Type",
+    "ingredients": "Ingredients",
+    "color_family": "Color Family",
+    "cosmetics_hint": "Leave empty to show all cosmetics products.",
+    "clear": "Clear",
+    "apply": "Apply Filters"
+  },
+  "type": {
+    "perfume": "Perfume",
+    "skincare": "Skincare",
+    "cosmetics": "Cosmetics"
+  },
+  "category": {
+    "all": "All",
+    "men": "Men",
+    "women": "Women",
+    "unisex": "Unisex"
+  },
+  "accord": {
+    "woody": "Woody",
+    "oriental": "Oriental",
+    "sweet": "Sweet",
+    "citrus": "Citrus",
+    "floral": "Floral",
+    "spicy": "Spicy",
+    "powdery": "Powdery",
+    "fresh": "Fresh"
+  },
+  "skin_type": {
+    "dry": "Dry",
+    "oily": "Oily",
+    "combination": "Combination",
+    "normal": "Normal",
+    "sensitive": "Sensitive"
+  },
+  "ingredient": {
+    "aloe_vera": "Aloe Vera",
+    "snail_mucin": "Snail Mucin",
+    "collagen": "Collagen",
+    "hyaluronic_acid": "Hyaluronic Acid",
+    "salicylic_acid": "Salicylic Acid",
+    "niacinamide": "Niacinamide",
+    "vitamin_c": "Vitamin C",
+    "retinol": "Retinol"
+  },
+  "color": {
+    "nude": "Nude",
+    "red": "Red",
+    "pink": "Pink",
+    "brown": "Brown",
+    "coral": "Coral"
+  },
+  "pages": {
+    "perfumes": "Perfumes",
+    "skincare": "Skin Care",
+    "cosmetics": "Cosmetics",
+    "products_count_one": "{{count}} product",
+    "products_count_other": "{{count}} products"
+  },
+  "errors": {
+    "load_perfumes": "Failed to load perfumes",
+    "load_skincare": "Failed to load skin care products",
+    "load_cosmetics": "Failed to load cosmetics",
+    "load_product": "Failed to load product. Please try again.",
+    "load_recs": "Failed to load recommendations.",
+    "product_not_found_title": "Product Not Found",
+    "product_not_found_msg": "This product doesn't exist or may have been removed.",
+    "product_not_found_404": "This product could not be found.",
+    "submit_rating": "Failed to submit rating. Please try again."
+  },
+  "product_detail": {
+    "back_to_products": "Back to Products",
+    "scent_profile": "Scent Profile",
+    "skin_types_label": "Skin Types",
+    "key_ingredients": "Key Ingredients",
+    "color_family": "Color Family",
+    "about_fragrance": "About this fragrance",
+    "about_product": "About this product",
+    "rate_this": "Rate this product",
+    "your_rating_one": "Your rating: {{count}} star — click to update",
+    "your_rating_other": "Your rating: {{count}} stars — click to update",
+    "login_to_rate": "to rate this product",
+    "recommended": "Recommended for you",
+    "similar_scent": "Highly similar scent profile",
+    "shares_ingredients": "Shares key ingredients",
+    "no_recs": "No recommendations available.",
+    "out_of_stock": "Out of Stock",
+    "low_stock": "Low Stock — only {{count}} left",
+    "in_stock": "In Stock",
+    "unavailable": "Unavailable",
+    "rating_submitted": "Rating submitted!",
+    "qty_selector": "Quantity selector",
+    "decrease_qty": "Decrease quantity",
+    "increase_qty": "Increase quantity",
+    "oos_aria": "Out of stock — cannot add to cart",
+    "add_aria": "Add {{name}} to cart"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "products": "Products"
   }
 }

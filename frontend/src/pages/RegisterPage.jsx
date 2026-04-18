@@ -50,7 +50,7 @@ export default function RegisterPage() {
     const result = await register(form.name, form.email, form.password, form.phone);
     setSubmitting(false);
 
-    if (result.success) navigate('/products', { replace: true });
+    if (result.success) navigate(`/verify-otp?email=${encodeURIComponent(form.email)}`, { replace: true });
   };
 
   // ── Render ─────────────────────────────────────────────────────────────────

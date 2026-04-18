@@ -20,3 +20,12 @@ exports.changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
   newPassword: Joi.string().min(6).required(),
 });
+
+exports.verifyOtpSchema = Joi.object({
+  email: Joi.string().email().required(),
+  otp: Joi.string().length(6).pattern(/^\d{6}$/).required(),
+});
+
+exports.resendOtpSchema = Joi.object({
+  email: Joi.string().email().required(),
+});
