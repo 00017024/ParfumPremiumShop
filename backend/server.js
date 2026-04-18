@@ -43,8 +43,9 @@ const frontendDist = path.join(__dirname, "..", "frontend", "dist");
 app.use(express.static(frontendDist));
 
 // Serve index.html for all non-API routes so React Router handles navigation
+// app.get("*") is invalid in Express v5 — use app.use middleware instead
 const API_PREFIXES = ["/auth", "/products", "/orders", "/users", "/admin"];
-app.get("*", (req, res, next) => {
+app.use((req, res, next) => {
   if (API_PREFIXES.some((prefix) => req.path.startsWith(prefix))) {
     return next();
   }
