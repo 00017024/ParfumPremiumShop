@@ -1,31 +1,50 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import Map, { Marker, NavigationControl } from 'react-map-gl/maplibre';
-import 'maplibre-gl/dist/maplibre-gl.css';
-import Supercluster from 'supercluster';
-import { MapPin } from 'lucide-react';
+import { useCallback } from 'react';
+import { GoogleMap, MarkerClusterer, Marker } from '@react-google-maps/api';
+import { Loader2 } from 'lucide-react';
+import { useGoogleMaps } from '@/lib/googleMapsLoader';
 
-const MAP_STYLE = 'https://demotiles.maplibre.org/style.json';
+const INITIAL_CENTER = { lat: 41.3, lng: 64.6 };
+const INITIAL_ZOOM   = 6;
 
-const INITIAL_VIEW = {
-  longitude: 64.6,
-  latitude:  41.3,
-  zoom:      6,
+const MAP_OPTIONS = {
+  zoomControl: true,
+  streetViewControl: false,
+  mapTypeControl: false,
+  fullscreenControl: false,
 };
 
-/**
- * Build GeoJSON feature array from locations array [{ lat, lng }]
- */
-function toFeatures(locations) {
-  return locations.map((loc, i) => ({
-    type: 'Feature',
-    id:   i,
-    geometry: {
-      type:        'Point',
-      coordinates: [loc.lng, loc.lat],
-    },
-    properties: { lat: loc.lat, lng: loc.lng },
-  }));
+// Gold cluster bubbles using canvas → data URL, avoiding deprecated google.maps.Marker constructor
+function makeClusterIcon(count) {
+  const size   = Math.min(32 + Math.log2(Math.max(count, 1)) * 7, 60);
+  const canvas = document.createElement('canvas');
+  canvas.width  = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#D4AF37';
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - 1, 0, 2 * Math.PI);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+
+  ctx.fillStyle    = '#1a1a1a';
+  ctx.font         = `bold ${Math.max(10, Math.round(size * 0.32))}px sans-serif`;
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(String(count), size / 2, size / 2);
+
+  return { url: canvas.toDataURL(), size, anchor: size / 2 };
 }
+
+// Per-cluster-size style entries (pre-generated for common counts)
+const CLUSTERER_STYLES = [1, 2, 3, 4, 5].map((tier) => {
+  const count = Math.pow(10, tier - 1);
+  const { url, size } = makeClusterIcon(count);
+  return { url, height: size, width: size, textSize: 0 };
+});
 
 /**
  * AdminMap
@@ -34,129 +53,47 @@ function toFeatures(locations) {
  *   locations — Array<{ lat: number, lng: number }>
  */
 export default function AdminMap({ locations = [] }) {
-  const mapRef             = useRef(null);
-  const superclusterRef    = useRef(null);
-  const [viewState, setViewState] = useState(INITIAL_VIEW);
-  const [clusters, setClusters]   = useState([]);
+  const { isLoaded, loadError } = useGoogleMaps();
 
-  // ── Build supercluster index whenever locations change ──────────────────────
-  useEffect(() => {
-    if (!locations.length) {
-      setClusters([]);
-      superclusterRef.current = null;
-      return;
-    }
-
-    const sc = new Supercluster({ radius: 55, maxZoom: 17 });
-    sc.load(toFeatures(locations));
-    superclusterRef.current = sc;
-
-    // Compute initial clusters with world bounds (map may not be ready yet)
-    setClusters(sc.getClusters([-180, -90, 180, 90], Math.floor(INITIAL_VIEW.zoom)));
-  }, [locations]);
-
-  // ── Recompute clusters after any pan/zoom ───────────────────────────────────
-  const refreshClusters = useCallback((nextViewState) => {
-    const sc = superclusterRef.current;
-    if (!sc) return;
-
-    const map = mapRef.current?.getMap();
-    let bbox = [-180, -90, 180, 90];
-
-    if (map) {
-      const b = map.getBounds();
-      bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()];
-    }
-
-    setClusters(sc.getClusters(bbox, Math.floor(nextViewState.zoom)));
-  }, []);
-
-  const handleMoveEnd = useCallback(
-    (e) => {
-      setViewState(e.viewState);
-      refreshClusters(e.viewState);
-    },
-    [refreshClusters]
+  const renderMarkers = useCallback(
+    (clusterer) =>
+      locations.map((loc, i) => (
+        <Marker
+          key={i}
+          position={{ lat: loc.lat, lng: loc.lng }}
+          clusterer={clusterer}
+          title={`Order location ${i + 1}`}
+        />
+      )),
+    [locations]
   );
 
-  // ── Click a cluster → zoom in to its expansion zoom ────────────────────────
-  const handleClusterClick = useCallback((clusterId, lng, lat) => {
-    const sc = superclusterRef.current;
-    if (!sc) return;
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center h-full text-sm text-red-500">
+        Failed to load map.
+      </div>
+    );
+  }
 
-    const expansionZoom = Math.min(sc.getClusterExpansionZoom(clusterId), 17);
-    setViewState((v) => ({ ...v, longitude: lng, latitude: lat, zoom: expansionZoom }));
-  }, []);
-
-  return (
-    <Map
-      ref={mapRef}
-      {...viewState}
-      onMove={(e) => setViewState(e.viewState)}
-      onMoveEnd={handleMoveEnd}
-      mapStyle={MAP_STYLE}
-      style={{ width: '100%', height: '100%' }}
-      attributionControl={false}
-    >
-      <NavigationControl position="top-right" showCompass={false} />
-
-      {clusters.map((cluster) => {
-        const [lng, lat]            = cluster.geometry.coordinates;
-        const { cluster: isCluster, point_count, cluster_id } = cluster.properties;
-
-        if (isCluster) {
-          return (
-            <Marker
-              key={`cluster-${cluster_id}`}
-              longitude={lng}
-              latitude={lat}
-              anchor="center"
-              onClick={() => handleClusterClick(cluster_id, lng, lat)}
-            >
-              <ClusterBubble count={point_count} />
-            </Marker>
-          );
-        }
-
-        return (
-          <Marker
-            key={`pin-${cluster.id}`}
-            longitude={lng}
-            latitude={lat}
-            anchor="bottom"
-          >
-            <MapPin
-              className="w-5 h-5 drop-shadow"
-              style={{ color: '#D4AF37', fill: '#D4AF37' }}
-            />
-          </Marker>
-        );
-      })}
-    </Map>
-  );
-}
-
-// ── ClusterBubble ─────────────────────────────────────────────────────────────
-
-function ClusterBubble({ count }) {
-  // Scale circle size logarithmically with point count
-  const size = Math.min(18 + Math.log2(count) * 8, 56);
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-6 h-6 animate-spin text-brand-gold" />
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="flex items-center justify-center rounded-full font-semibold text-brand-black
-                 cursor-pointer select-none transition-transform hover:scale-110 active:scale-95
-                 shadow-md"
-      style={{
-        width:           size,
-        height:          size,
-        fontSize:        Math.max(10, size * 0.32),
-        backgroundColor: '#D4AF37',
-        border:          '2px solid rgba(255,255,255,0.35)',
-      }}
-      title={`${count} orders — click to expand`}
+    <GoogleMap
+      mapContainerStyle={{ width: '100%', height: '100%' }}
+      center={INITIAL_CENTER}
+      zoom={INITIAL_ZOOM}
+      options={MAP_OPTIONS}
     >
-      {count}
-    </div>
+      <MarkerClusterer styles={CLUSTERER_STYLES}>
+        {renderMarkers}
+      </MarkerClusterer>
+    </GoogleMap>
   );
 }

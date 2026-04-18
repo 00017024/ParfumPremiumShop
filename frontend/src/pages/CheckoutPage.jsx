@@ -388,7 +388,7 @@ export default function CheckoutPage() {
                   <span className="text-brand-gold ml-1" aria-hidden="true">*</span>
                 </label>
                 <p className="text-xs text-text-muted mb-1">
-                  Click on the map to pin your exact delivery location.
+                  Search for your address or click/drag the pin on the map.
                 </p>
 
                 <div
@@ -402,6 +402,10 @@ export default function CheckoutPage() {
                     onChange={(coords) => {
                       setLocation(coords);
                       if (errors.location) setErrors((prev) => ({ ...prev, location: undefined }));
+                    }}
+                    onAddressChange={(addr) => {
+                      setForm((prev) => ({ ...prev, address: addr }));
+                      if (errors.address) setErrors((prev) => ({ ...prev, address: undefined }));
                     }}
                   />
                 </div>
