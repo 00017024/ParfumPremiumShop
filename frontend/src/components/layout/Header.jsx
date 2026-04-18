@@ -1,9 +1,46 @@
+import { Fragment } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { ShoppingCart, User } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import { useCartStore } from '@/store/cartStore';
 
+const LANGS = ['en', 'ru', 'uz'];
+const STORAGE_KEY = 'parfum_lang';
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+
+  const change = (lang) => {
+    i18n.changeLanguage(lang);
+    localStorage.setItem(STORAGE_KEY, lang);
+  };
+
+  return (
+    <div className="flex items-center gap-1 text-xs select-none">
+      {LANGS.map((lang, idx) => (
+        <Fragment key={lang}>
+          <button
+            onClick={() => change(lang)}
+            className={`uppercase tracking-wide transition-colors ${
+              i18n.language === lang
+                ? 'text-brand-gold font-semibold'
+                : 'text-text-muted hover:text-text-primary'
+            }`}
+          >
+            {lang}
+          </button>
+          {idx < LANGS.length - 1 && (
+            <span className="text-neutral-border" aria-hidden="true">|</span>
+          )}
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
 export default function Header() {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
   const getTotalItems = useCartStore((state) => state.getTotalItems);
   const cartItemCount = getTotalItems();
@@ -25,7 +62,7 @@ export default function Header() {
               isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
             }
           >
-            Home
+            {t('nav.home')}
           </NavLink>
           <NavLink
             to="/perfumes"
@@ -33,7 +70,7 @@ export default function Header() {
               isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
             }
           >
-            Perfumes
+            {t('nav.perfumes')}
           </NavLink>
           <NavLink
             to="/skincare"
@@ -41,7 +78,7 @@ export default function Header() {
               isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
             }
           >
-            Skin Care
+            {t('nav.skincare')}
           </NavLink>
           <NavLink
             to="/cosmetics"
@@ -49,7 +86,7 @@ export default function Header() {
               isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
             }
           >
-            Cosmetics
+            {t('nav.cosmetics')}
           </NavLink>
           {user && (
             <NavLink
@@ -58,13 +95,15 @@ export default function Header() {
                 isActive ? 'text-brand-gold transition-colors' : 'text-text-secondary hover:text-text-primary transition-colors'
               }
             >
-              My Orders
+              {t('nav.my_orders')}
             </NavLink>
           )}
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-5">
+          <LanguageSwitcher />
+
           {/* Cart */}
           <Link to="/cart" className="relative group">
             <ShoppingCart className="w-6 h-6 text-text-secondary group-hover:text-text-primary transition-colors" />
@@ -74,9 +113,10 @@ export default function Header() {
               </span>
             )}
           </Link>
-            {user?.role === 'admin' && (
-          <Link to="/admin" className="text-brand-gold text-sm">Admin</Link>
-           )}
+
+          {user?.role === 'admin' && (
+            <Link to="/admin" className="text-brand-gold text-sm">{t('nav.admin')}</Link>
+          )}
 
           {/* User */}
           {user ? (
@@ -91,13 +131,13 @@ export default function Header() {
                 onClick={logout}
                 className="text-text-secondary hover:text-text-primary transition-colors text-sm"
               >
-                Logout
+                {t('nav.logout')}
               </button>
             </div>
           ) : (
             <Link to="/login" className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors">
               <User className="w-6 h-6" />
-              <span className="hidden sm:block text-sm">Login</span>
+              <span className="hidden sm:block text-sm">{t('nav.login')}</span>
             </Link>
           )}
         </div>

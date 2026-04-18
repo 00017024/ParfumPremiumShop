@@ -1,4 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 export default function Footer() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -8,10 +11,10 @@ export default function Footer() {
           PARFUM PREMIUM
         </h3>
         <p className="text-text-secondary text-sm mb-6">
-          Luxury Fragrances Since 2024
+          {t('footer.tagline')}
         </p>
         <p className="text-text-muted text-xs">
-          © {currentYear} All Rights Reserved
+          {t('footer.rights', { year: currentYear })}
         </p>
       </div>
     </footer>

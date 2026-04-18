@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "home": "Bosh sahifa",
+    "perfumes": "Atirlar",
+    "skincare": "Teri parvarishi",
+    "cosmetics": "Kosmetika",
+    "my_orders": "Buyurtmalarim",
+    "admin": "Admin",
+    "login": "Kirish",
+    "logout": "Chiqish"
+  },
+  "product": {
+    "add_to_cart": "Savatga qo'shish",
+    "out_of_stock": "Sotib bo'lindi",
+    "sold_out": "Tugagan",
+    "no_ratings": "Baholash yo'q",
+    "saved": "Saqlandi",
+    "rate_product": "Mahsulotni baholang",
+    "rated_out_of": "{{value}} / 5 baho berildi",
+    "rate_star": "{{star}} yulduz bering",
+    "added_to_cart_toast": "{{name}} savatga qo'shildi!"
+  },
+  "search": {
+    "placeholder": "Mahsulotlarni qidirish...",
+    "sort_newest": "Eng yangi",
+    "sort_price_asc": "Narx: arzondan qimmatga",
+    "sort_price_desc": "Narx: qimmatdan arzonga"
+  },
+  "cart": {
+    "title": "Savat",
+    "items_count_one": "{{count}} ta mahsulot",
+    "items_count_other": "{{count}} ta mahsulot",
+    "empty": "Savatingiz bo'sh",
+    "empty_description": "Atirlarimizni ko'rib chiqing va o'zingizga yoqqanini toping.",
+    "continue_shopping": "Xaridni davom ettirish",
+    "order_summary": "Buyurtma xulosasi",
+    "subtotal": "Oraliq summa",
+    "shipping": "Yetkazib berish",
+    "shipping_info": "Rasmiylashtirish vaqtida hisoblanadi",
+    "total": "Jami",
+    "proceed_checkout": "Rasmiylashtirish",
+    "removed": "{{name}} savatdan o'chirildi"
+  },
+  "checkout": {
+    "title": "Buyurtma berish",
+    "breadcrumb_cart": "Savat",
+    "delivery_info": "Yetkazib berish ma'lumotlari",
+    "full_name": "To'liq ism",
+    "phone": "Telefon raqami",
+    "city": "Shahar",
+    "address": "Yetkazib berish manzili",
+    "notes": "Buyurtma izohlari",
+    "location": "Yetkazib berish joyi",
+    "location_hint": "Manzilni qidiring yoki xaritada belgini bosing/torting.",
+    "place_order": "Buyurtma berish",
+    "checking": "Mavjudlik tekshirilmoqda…",
+    "processing": "Qayta ishlanmoqda…",
+    "fix_stock": "Zaxira muammolarini hal qiling",
+    "browse_products": "Mahsulotlarni ko'rish"
+  },
+  "auth": {
+    "sign_in": "Kirish",
+    "welcome_back": "Xush kelibsiz. Davom etish uchun ma'lumotlaringizni kiriting.",
+    "email": "Elektron pochta",
+    "password": "Parol",
+    "email_placeholder": "you@example.com",
+    "no_account": "Hisobingiz yo'qmi?",
+    "create_one": "Yarating",
+    "signing_in": "Kirish…"
+  },
+  "validation": {
+    "email_required": "Elektron pochta kiritilishi shart.",
+    "password_required": "Parol kiritilishi shart.",
+    "name_min": "To'liq ism kamida 2 ta belgidan iborat bo'lishi kerak.",
+    "phone_invalid": "To'g'ri o'zbek telefon raqamini kiriting (+998XXXXXXXXX)",
+    "city_invalid": "Yetkazib berish faqat Toshkent yoki Samarqandda mavjud.",
+    "address_min": "Manzil kamida 5 ta belgidan iborat bo'lishi kerak.",
+    "location_required": "Iltimos, xaritada yetkazib berish joyini belgilang."
+  },
+  "footer": {
+    "tagline": "2024 yildan beri hashamatli atirlar",
+    "rights": "© {{year}} Barcha huquqlar himoyalangan"
+  },
+  "empty": {
+    "default_message": "Mahsulotlar topilmadi",
+    "default_description": "Kerakli narsani topish uchun qidiruv yoki filtrlarni o'zgartiring.",
+    "cart_empty": "Savatingiz bo'sh"
+  },
+  "lang": {
+    "en": "EN",
+    "ru": "RU",
+    "uz": "UZ"
+  }
+}

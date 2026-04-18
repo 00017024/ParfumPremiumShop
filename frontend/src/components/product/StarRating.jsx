@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Star } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * StarRating
@@ -23,42 +24,35 @@ export default function StarRating({
   disabled   = false,
   size       = 'sm',
 }) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(0);
-  // Briefly true right after a successful save — shows "Saved" and blocks re-click
   const [saved, setSaved] = useState(false);
   const prevDisabled = useRef(false);
 
   const isInteractive = !!onChange;
 
-  // Detect when `disabled` flips from true → false (submission just completed).
-  // Show a short "Saved" confirmation to prevent double-clicks and improve clarity.
   useEffect(() => {
     if (prevDisabled.current && !disabled && isInteractive) {
       setSaved(true);
-      const t = setTimeout(() => setSaved(false), 1500);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setSaved(false), 1500);
+      return () => clearTimeout(timer);
     }
     prevDisabled.current = disabled;
   }, [disabled, isInteractive]);
 
-  // Block interaction while submitting OR during the brief post-save window
   const isBlocked = disabled || saved;
 
-  // Stars to highlight:
-  //   interactive → live hover  >  already-submitted rating  >  nothing
-  //   display     → Math.round(average)
   const activeStars = isInteractive
     ? (hovered > 0 ? hovered : (userRating ?? 0))
     : Math.round(value);
 
   const starSize = size === 'md' ? 'w-5 h-5' : 'w-4 h-4';
 
-  // ── Label text ──────────────────────────────────────────────────────────────
   let label;
   if (saved) {
-    label = 'Saved';
+    label = t('product.saved');
   } else if (count === 0) {
-    label = 'No ratings yet';
+    label = t('product.no_ratings');
   } else {
     label = `${Number(value).toFixed(1)} (${count})`;
   }
@@ -73,10 +67,10 @@ export default function StarRating({
         role={isInteractive ? 'group' : undefined}
         aria-label={
           isInteractive
-            ? 'Rate this product'
+            ? t('product.rate_product')
             : count > 0
-              ? `Rated ${Number(value).toFixed(1)} out of 5`
-              : 'No ratings yet'
+              ? t('product.rated_out_of', { value: Number(value).toFixed(1) })
+              : t('product.no_ratings')
         }
       >
         {[1, 2, 3, 4, 5].map((star) => (
@@ -86,7 +80,7 @@ export default function StarRating({
             disabled={!isInteractive || isBlocked}
             onClick={() => isInteractive && !isBlocked && onChange(star)}
             onMouseEnter={() => isInteractive && !isBlocked && setHovered(star)}
-            aria-label={isInteractive ? `Rate ${star} out of 5` : undefined}
+            aria-label={isInteractive ? t('product.rate_star', { star }) : undefined}
             className={[
               'focus:outline-none focus-visible:ring-1 focus-visible:ring-brand-gold rounded-sm',
               isInteractive && !isBlocked

@@ -1,28 +1,27 @@
 import { Link } from 'react-router-dom';
 import { ShoppingCart } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useCartStore } from '@/store/cartStore';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/product/StarRating';
 
 export default function ProductCard({ product }) {
+  const { t } = useTranslation();
   const addItem = useCartStore((state) => state.addItem);
 
   const isOutOfStock = product.stock === 0;
 
   const handleAddToCart = (e) => {
-    e.preventDefault(); // prevents Link navigation
+    e.preventDefault();
     e.stopPropagation();
 
     if (isOutOfStock) return;
 
     addItem(product, 1);
 
-    toast.success(`${product.name} added to cart!`, {
+    toast.success(t('product.added_to_cart_toast', { name: product.name }), {
       duration: 2000,
-      style: {
-        background: '#16a34a',
-        color: '#fff',
-      },
+      style: { background: '#16a34a', color: '#fff' },
     });
   };
 
@@ -43,7 +42,7 @@ export default function ProductCard({ product }) {
 
           {isOutOfStock && (
             <div className="absolute top-2 right-2 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold">
-              Sold Out
+              {t('product.sold_out')}
             </div>
           )}
         </div>
@@ -82,7 +81,7 @@ export default function ProductCard({ product }) {
           className="w-full bg-brand-gold text-brand-black font-semibold py-3 rounded-lg hover:bg-opacity-90 transition-all disabled:bg-neutral-border disabled:text-text-muted disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           <ShoppingCart className="w-4 h-4" />
-          {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+          {isOutOfStock ? t('product.out_of_stock') : t('product.add_to_cart')}
         </button>
 
       </div>
