@@ -13,6 +13,7 @@ exports.sendOtpEmail = async (to, otp) => {
     from: `"Parfum Premium" <${process.env.EMAIL_USER}>`,
     to,
     subject: 'Your verification code',
+    text: `Your Parfum Premium verification code is: ${otp}\n\nThis code expires in 10 minutes. Do not share it with anyone.`,
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:auto;padding:32px;border:1px solid #e5e5e5;border-radius:4px">
         <h2 style="margin:0 0 8px;font-weight:300;letter-spacing:2px;text-transform:uppercase">Parfum Premium</h2>

@@ -52,8 +52,13 @@ exports.register = async (req, res, next) => {
       otpExpires: new Date(Date.now() + OTP_TTL_MS),
     });
 
+    try {
+      await sendOtpEmail(email, otp);
+    } catch {
+      throw new ApiError(500, "Failed to send verification email", "EMAIL_SEND_FAILED");
+    }
+
     await user.save();
-    await sendOtpEmail(email, otp);
 
     res.status(201).json({ message: "OTP sent. Please verify your email." });
   } catch (err) {
