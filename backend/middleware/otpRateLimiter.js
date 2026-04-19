@@ -11,7 +11,7 @@ const otpRateLimiter = process.env.NODE_ENV === "test"
         const email = (req.body && req.body.email) ? req.body.email.toLowerCase() : "unknown";
         return `${req.ip}:${email}`;
       },
-      standardHeaders: true,
+      standardHeaders: false,
       legacyHeaders: false,
       handler: (_req, res) => {
         res.status(429).json({

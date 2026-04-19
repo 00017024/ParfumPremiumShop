@@ -1,7 +1,10 @@
+const dotenv = require("dotenv");
+dotenv.config();
+
 const express = require("express");
 const helmet = require("helmet");
-const dotenv = require("dotenv");
 
+const validateEnv = require("./utils/validateEnv");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorMiddleware");
 const corsMiddleware = require("./middleware/corsConfig");
@@ -13,14 +16,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
-
-dotenv.config();
-
-// Validate
-if (!process.env.JWT_SECRET) {
-  console.error("FATAL ERROR: JWT_SECRET is not defined");
-  process.exit(1);
-}
+validateEnv();
 
 if (process.env.NODE_ENV !== "test") {
   connectDB();
@@ -37,7 +33,8 @@ app.use(helmet({
     : false,
 }));
 app.use(corsMiddleware);
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
+app.use(express.urlencoded({ limit: "10kb", extended: true }));
 app.use("/auth",     authLimiter,       authRoutes);
 app.use("/products", publicReadLimiter, productRoutes);
 app.use("/orders",   userLimiter,       orderRoutes);

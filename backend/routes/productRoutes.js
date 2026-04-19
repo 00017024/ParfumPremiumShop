@@ -5,6 +5,7 @@ const productController = require("../controllers/productController");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const validate = require("../middleware/validate");
+const validateObjectId = require("../middleware/validateObjectId");
 const {
   createProductSchema,
   updateProductSchema
@@ -21,12 +22,13 @@ router.get("/filter/skincare",  productController.filterSkincare);
 router.get("/filter/cosmetics", productController.filterCosmetics);
 
 // Two-segment route — no conflict with /:id, but kept above it for clarity.
-router.get("/:id/recommendations", productController.getRecommendations);
+router.get("/:id/recommendations", validateObjectId("id"), productController.getRecommendations);
 
-router.post("/:id/rate", authMiddleware, productController.rateProduct);
+router.post("/:id/rate", validateObjectId("id"), authMiddleware, productController.rateProduct);
 
 router.get(
   "/:id",
+  validateObjectId("id"),
   productController.getProductById
 );
 
@@ -40,6 +42,7 @@ router.post(
 
 router.put(
   "/:id",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   validate(updateProductSchema),
@@ -50,6 +53,7 @@ router.put(
 // Both route to the same controller action; the schema handles the distinction.
 router.patch(
   "/:id",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   validate(updateProductSchema),
@@ -58,6 +62,7 @@ router.patch(
 
 router.delete(
   "/:id",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   productController.deleteProduct

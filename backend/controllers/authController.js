@@ -72,7 +72,9 @@ exports.verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
 
-    const user = await User.findOne({ email }).select("+otpCode +otpExpires");
+    const user = await User.findOne({ email }).select(
+      "+otpCode +otpExpires +otpAttempts +otpAttemptsExpires"
+    );
 
     if (!user) {
       throw new ApiError(400, "Invalid or expired OTP", "OTP_INVALID");
@@ -82,14 +84,30 @@ exports.verifyOtp = async (req, res, next) => {
       throw new ApiError(400, "OTP has expired", "OTP_EXPIRED");
     }
 
+    // Reset attempt window if it has expired
+    const now = Date.now();
+    if (!user.otpAttemptsExpires || now > user.otpAttemptsExpires.getTime()) {
+      user.otpAttempts = 0;
+      user.otpAttemptsExpires = new Date(now + OTP_TTL_MS);
+    }
+
+    if (user.otpAttempts >= 5) {
+      await user.save();
+      throw new ApiError(429, "Too many attempts. Try again later.", "OTP_LIMIT");
+    }
+
     const isMatch = await bcrypt.compare(otp, user.otpCode);
     if (!isMatch) {
+      user.otpAttempts += 1;
+      await user.save();
       throw new ApiError(400, "Invalid OTP", "OTP_INVALID");
     }
 
     user.isVerified = true;
     user.otpCode = undefined;
     user.otpExpires = undefined;
+    user.otpAttempts = 0;
+    user.otpAttemptsExpires = undefined;
     await user.save();
 
     const { token } = signToken({ id: user._id, role: user.role });
@@ -111,27 +129,25 @@ exports.verifyOtp = async (req, res, next) => {
 
 // POST /auth/resend-otp
 exports.resendOtp = async (req, res, next) => {
+  const MIN_RESPONSE_MS = 500;
+  const start = Date.now();
+  const genericReply = async () => {
+    const elapsed = Date.now() - start;
+    const wait = Math.max(0, MIN_RESPONSE_MS - elapsed);
+    await new Promise((resolve) => setTimeout(resolve, wait));
+    res.json({ success: true, message: "If an account exists, an OTP has been sent." });
+  };
+
   try {
     const { email } = req.body;
-
     const user = await User.findOne({ email }).select("+otpCode +otpExpires");
 
-    if (!user) {
-      // Don't reveal whether the email exists
-      return res.json({ message: "If that email exists, a new OTP has been sent." });
-    }
+    // Silently bail for unknown emails, verified accounts, and cooldown — all
+    // return the same response so the caller learns nothing about account state.
+    if (!user || user.isVerified) return genericReply();
 
-    if (user.isVerified) {
-      throw new ApiError(400, "Account already verified", "ALREADY_VERIFIED");
-    }
-
-    // Rate limit: don't resend if previous OTP was issued less than 1 minute ago
-    const issuedAt = user.otpExpires
-      ? user.otpExpires.getTime() - OTP_TTL_MS
-      : 0;
-    if (Date.now() - issuedAt < RESEND_COOLDOWN_MS) {
-      throw new ApiError(429, "Please wait before requesting another OTP", "OTP_RESEND_COOLDOWN");
-    }
+    const issuedAt = user.otpExpires ? user.otpExpires.getTime() - OTP_TTL_MS : 0;
+    if (Date.now() - issuedAt < RESEND_COOLDOWN_MS) return genericReply();
 
     const otp = generateOtp();
     const hashedOtp = await bcrypt.hash(otp, 10);
@@ -142,7 +158,7 @@ exports.resendOtp = async (req, res, next) => {
 
     await sendOtpEmail(email, otp);
 
-    res.json({ message: "A new OTP has been sent to your email." });
+    return genericReply();
   } catch (err) {
     next(err);
   }
@@ -192,7 +208,7 @@ exports.logout = async (req, res, next) => {
       try {
         decoded = jwt.verify(rawToken, process.env.JWT_SECRET);
       } catch {
-        return res.status(401).json({ message: "Invalid or expired token" });
+        return next(new ApiError(401, "Invalid or expired token", "TOKEN_INVALID"));
       }
 
       if (decoded.jti && decoded.exp) {

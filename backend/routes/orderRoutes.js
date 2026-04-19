@@ -5,6 +5,7 @@ const orderController = require("../controllers/orderController");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
 const validate = require("../middleware/validate");
+const validateObjectId = require("../middleware/validateObjectId");
 const {
   createOrderSchema,
   updateOrderStatusSchema,
@@ -32,12 +33,14 @@ router.get(
 
 router.get(
   "/:id",
+  validateObjectId("id"),
   authMiddleware,
   orderController.getOrderById
 );
 
 router.put(
   "/:id/status",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   validate(updateOrderStatusSchema),
