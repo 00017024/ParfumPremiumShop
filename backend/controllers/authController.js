@@ -7,6 +7,7 @@ const User = require("../models/User");
 const BlacklistedToken = require("../models/BlacklistedToken");
 const ApiError = require("../utils/ApiError");
 const { sendOtpEmail } = require("../utils/email");
+const generateOtp = require("../utils/generateOtp");
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute
@@ -20,9 +21,6 @@ const signToken = (payload) => {
   );
   return { token, jti };
 };
-
-const generateOtp = () =>
-  String(Math.floor(100000 + Math.random() * 900000));
 
 // POST /auth/register
 exports.register = async (req, res, next) => {
