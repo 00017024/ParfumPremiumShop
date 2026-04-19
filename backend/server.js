@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require("helmet");
 const dotenv = require("dotenv");
 
 const connectDB = require("./config/db");
@@ -29,6 +30,12 @@ const app = express();
 app.set("trust proxy", 1);
 
 // ── Global middleware ──────────────────────────────────────────────────────────
+app.use(helmet({
+  contentSecurityPolicy: false,
+  hsts: process.env.NODE_ENV === "production"
+    ? { maxAge: 31536000, includeSubDomains: true }
+    : false,
+}));
 app.use(corsMiddleware);
 app.use(express.json());
 app.use("/auth",     authLimiter,       authRoutes);
