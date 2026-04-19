@@ -4,6 +4,7 @@ const router = express.Router();
 const adminController = require("../controllers/adminController");
 const authMiddleware = require("../middleware/authMiddleware");
 const adminMiddleware = require("../middleware/adminMiddleware");
+const validateObjectId = require("../middleware/validateObjectId");
 
 router.get(
   "/stats",
@@ -35,6 +36,7 @@ router.get(
 
 router.get(
   "/users/:id",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   adminController.getUserById
@@ -42,6 +44,7 @@ router.get(
 
 router.put(
   "/users/:id",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   adminController.updateUser
@@ -49,6 +52,7 @@ router.put(
 
 router.post(
   "/users/:id/block",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   adminController.blockUser
@@ -56,6 +60,7 @@ router.post(
 
 router.post(
   "/users/:id/unblock",
+  validateObjectId("id"),
   authMiddleware,
   adminMiddleware,
   adminController.unblockUser

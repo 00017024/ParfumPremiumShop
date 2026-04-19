@@ -92,7 +92,6 @@ exports.verifyOtp = async (req, res, next) => {
     }
 
     if (user.otpAttempts >= 5) {
-      await user.save();
       throw new ApiError(429, "Too many attempts. Try again later.", "OTP_LIMIT");
     }
 
@@ -219,7 +218,7 @@ exports.logout = async (req, res, next) => {
       }
     }
 
-    res.json({ message: "Logged out successfully" });
+    res.json({ success: true, message: "Logged out successfully" });
   } catch (err) {
     next(err);
   }
