@@ -190,9 +190,14 @@ exports.logout = async (req, res, next) => {
     const rawToken = req.header("Authorization")?.replace("Bearer ", "");
 
     if (rawToken) {
-      const decoded = jwt.decode(rawToken);
+      let decoded;
+      try {
+        decoded = jwt.verify(rawToken, process.env.JWT_SECRET);
+      } catch {
+        return res.status(401).json({ message: "Invalid or expired token" });
+      }
 
-      if (decoded?.jti && decoded?.exp) {
+      if (decoded.jti && decoded.exp) {
         await BlacklistedToken.create({
           jti: decoded.jti,
           expiresAt: new Date(decoded.exp * 1000),

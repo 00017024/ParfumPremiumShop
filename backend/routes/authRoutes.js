@@ -3,6 +3,7 @@ const router = express.Router();
 
 const authController = require("../controllers/authController");
 const validate = require("../middleware/validate");
+const otpRateLimiter = require("../middleware/otpRateLimiter");
 const {
   registerSchema,
   loginSchema,
@@ -12,7 +13,7 @@ const {
 
 router.post("/register",    validate(registerSchema),   authController.register);
 router.post("/login",       validate(loginSchema),      authController.login);
-router.post("/verify-otp",  validate(verifyOtpSchema),  authController.verifyOtp);
+router.post("/verify-otp",  otpRateLimiter, validate(verifyOtpSchema),  authController.verifyOtp);
 router.post("/resend-otp",  validate(resendOtpSchema),  authController.resendOtp);
 
 /*
