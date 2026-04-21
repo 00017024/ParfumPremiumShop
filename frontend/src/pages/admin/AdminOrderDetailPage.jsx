@@ -1,11 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, RotateCcw, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAdminOrderDetail } from '@/hooks/admin/useAdminOrderDetail';
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge';
 import OrderStatusSelect from '@/components/admin/OrderStatusSelect';
 
-// ─── Section wrapper (same design as user-facing OrderDetailsPage) ────────────
+// ─── Section wrapper ──────────────────────────────────────────────────────────
 
 function Section({ title, children }) {
   return (
@@ -50,6 +51,7 @@ function PageSkeleton() {
 // ─── AdminOrderDetailPage ─────────────────────────────────────────────────────
 
 export default function AdminOrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
   const { order, loading, error, updating, reload, changeStatus } =
     useAdminOrderDetail(id);
@@ -63,20 +65,20 @@ export default function AdminOrderDetailPage() {
         className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-text-muted hover:text-brand-gold transition-colors mb-8"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        All Orders
+        {t('admin.order_detail.back')}
       </Link>
 
       {loading && <PageSkeleton />}
 
       {!loading && error && (
         <div className="flex flex-col items-center gap-6 py-20 text-center">
-          <p className="text-text-muted text-sm">Failed to load order.</p>
+          <p className="text-text-muted text-sm">{t('admin.order_detail.load_error')}</p>
           <button
             onClick={reload}
             className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all"
           >
             <RotateCcw className="w-4 h-4" />
-            Retry
+            {t('admin.order_detail.retry')}
           </button>
         </div>
       )}
@@ -94,8 +96,7 @@ export default function AdminOrderDetailPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h1 className="text-2xl font-light text-text-primary tracking-wide">
-                  Order{' '}
-                  <span className="text-brand-gold">#{shortId}</span>
+                  #{shortId}
                 </h1>
                 <p className="text-xs text-text-muted mt-0.5">{date}</p>
               </div>
@@ -108,12 +109,12 @@ export default function AdminOrderDetailPage() {
             </div>
 
             {/* ── Status management ────────────────────────────────────── */}
-            <Section title="Update Status">
+            <Section title={t('admin.order_detail.update_status')}>
               <div className="flex items-center gap-4 flex-wrap">
                 <p className="text-sm text-text-secondary">
-                  Current:{' '}
+                  {t('admin.order_detail.current')}{' '}
                   <span className="text-text-primary font-medium">
-                    {order.status}
+                    {t(`admin.status.${order.status}`, { defaultValue: order.status })}
                   </span>
                 </p>
                 <OrderStatusSelect
@@ -125,30 +126,27 @@ export default function AdminOrderDetailPage() {
             </Section>
 
             {/* ── Order information ────────────────────────────────────── */}
-            <Section title="Order Information">
-              <InfoRow label="Order ID" value={`#${shortId}`} />
-              <InfoRow label="Date"     value={date} />
-              <InfoRow label="Status"   value={order.status} />
-              <InfoRow
-                label="Total"
-                value={`$${Number(order.totalPrice).toFixed(2)}`}
-              />
+            <Section title={t('admin.order_detail.section_info')}>
+              <InfoRow label={t('admin.order_detail.label_order_id')} value={`#${shortId}`} />
+              <InfoRow label={t('admin.order_detail.label_date')}     value={date} />
+              <InfoRow label={t('admin.order_detail.label_status')}   value={t(`admin.status.${order.status}`, { defaultValue: order.status })} />
+              <InfoRow label={t('admin.order_detail.label_total')}    value={`$${Number(order.totalPrice).toFixed(2)}`} />
             </Section>
 
             {/* ── Customer details ─────────────────────────────────────── */}
-            <Section title="Customer & Delivery">
-              <InfoRow label="Name"    value={order.customerName} />
-              <InfoRow label="Phone"   value={order.phone} />
-              <InfoRow label="City"    value={order.city} />
-              <InfoRow label="Address" value={order.address} />
+            <Section title={t('admin.order_detail.section_customer')}>
+              <InfoRow label={t('admin.order_detail.label_name')}    value={order.customerName} />
+              <InfoRow label={t('admin.order_detail.label_phone')}   value={order.phone} />
+              <InfoRow label={t('admin.order_detail.label_city')}    value={order.city} />
+              <InfoRow label={t('admin.order_detail.label_address')} value={order.address} />
               {order.notes && (
-                <InfoRow label="Notes" value={order.notes} />
+                <InfoRow label={t('admin.order_detail.label_notes')} value={order.notes} />
               )}
             </Section>
 
             {/* ── Items ───────────────────────────────────────────────── */}
-            <Section title="Ordered Items">
-              <ul className="flex flex-col divide-y divide-neutral-border" aria-label="Order items">
+            <Section title={t('admin.order_detail.section_items')}>
+              <ul className="flex flex-col divide-y divide-neutral-border" aria-label={t('admin.order_detail.section_items')}>
                 {order.items.map((item, idx) => {
                   const product = item.product;
                   const lineTotal = (product.price * item.quantity).toFixed(2);
@@ -178,7 +176,7 @@ export default function AdminOrderDetailPage() {
                         <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
                           <span>${Number(product.price).toFixed(2)}</span>
                           <span className="opacity-30">·</span>
-                          <span>Qty: {item.quantity}</span>
+                          <span>{t('admin.order_detail.qty', { count: item.quantity })}</span>
                         </div>
                       </div>
                       <p className="text-sm font-medium text-text-primary flex-shrink-0">
@@ -191,7 +189,7 @@ export default function AdminOrderDetailPage() {
 
               <div className="border-t border-neutral-border pt-4 flex justify-between items-baseline">
                 <span className="text-xs uppercase tracking-widest text-text-muted">
-                  Order Total
+                  {t('admin.order_detail.order_total')}
                 </span>
                 <span className="text-xl font-light text-brand-gold">
                   ${Number(order.totalPrice).toFixed(2)}

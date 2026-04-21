@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { RotateCcw, Search, ShieldOff, ShieldCheck, Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAdminUsers } from '@/hooks/admin/useAdminUsers';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
@@ -23,6 +24,7 @@ function RoleBadge({ role }) {
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ isActive }) {
+  const { t } = useTranslation();
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider ${
@@ -37,7 +39,7 @@ function StatusBadge({ isActive }) {
         }`}
         aria-hidden="true"
       />
-      {isActive ? 'Active' : 'Blocked'}
+      {isActive ? t('admin.users.active') : t('admin.users.blocked')}
     </span>
   );
 }
@@ -59,13 +61,10 @@ function SkeletonRow() {
 // ─── AdminUsersPage ───────────────────────────────────────────────────────────
 
 export default function AdminUsersPage() {
+  const { t } = useTranslation();
   const { users, loading, error, togglingId, reload, toggleBlock } = useAdminUsers();
 
-  // ── Local search (client-side — the full user list is fetched once) ────────
   const [search, setSearch] = useState('');
-
-  // ── Block/unblock confirmation ─────────────────────────────────────────────
-  // target: { _id, name, isActive }
   const [confirmTarget, setConfirmTarget] = useState(null);
 
   const filteredUsers = useMemo(() => {
@@ -85,6 +84,15 @@ export default function AdminUsersPage() {
     setConfirmTarget(null);
   };
 
+  const COLUMNS = [
+    t('admin.users.col_name'),
+    t('admin.users.col_email'),
+    t('admin.users.col_phone'),
+    t('admin.users.col_role'),
+    t('admin.users.col_status'),
+    t('admin.users.col_actions'),
+  ];
+
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
 
@@ -92,11 +100,11 @@ export default function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-light text-text-primary tracking-wide">
-            Users
+            {t('admin.users.title')}
           </h1>
           {!loading && (
             <p className="text-sm text-text-muted mt-1">
-              {users.length} registered user{users.length !== 1 ? 's' : ''}
+              {t('admin.users.total', { count: users.length })}
             </p>
           )}
         </div>
@@ -105,10 +113,10 @@ export default function AdminUsersPage() {
           onClick={reload}
           disabled={loading}
           className="self-start flex items-center gap-2 text-xs text-text-muted hover:text-brand-gold transition-colors disabled:opacity-40"
-          aria-label="Refresh users list"
+          aria-label={t('admin.users.refresh')}
         >
           <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('admin.users.refresh')}
         </button>
       </div>
 
@@ -117,7 +125,7 @@ export default function AdminUsersPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" aria-hidden="true" />
         <input
           type="text"
-          placeholder="Search by name, email or phone…"
+          placeholder={t('admin.users.search_placeholder')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-surface-card border border-neutral-border rounded-sm pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-gold transition-colors"
@@ -134,10 +142,10 @@ export default function AdminUsersPage() {
       {/* ── Table ───────────────────────────────────────────────────── */}
       <div className="bg-surface-card border border-neutral-border rounded-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Users table">
+          <table className="w-full text-sm" aria-label={t('admin.users.title')}>
             <thead>
               <tr className="border-b border-neutral-border">
-                {['Name', 'Email', 'Phone', 'Role', 'Status', 'Actions'].map((h) => (
+                {COLUMNS.map((h) => (
                   <th
                     key={h}
                     className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-text-muted font-medium whitespace-nowrap"
@@ -158,7 +166,7 @@ export default function AdminUsersPage() {
                       colSpan={6}
                       className="px-4 py-12 text-center text-sm text-text-muted"
                     >
-                      {search ? 'No users match your search.' : 'No users found.'}
+                      {search ? t('admin.users.no_match') : t('admin.users.no_users')}
                     </td>
                   </tr>
                 )
@@ -176,44 +184,32 @@ export default function AdminUsersPage() {
                         isToggling ? 'opacity-50' : 'hover:bg-surface-dark/40'
                       }`}
                     >
-                      {/* Name */}
                       <td className="px-4 py-3.5">
                         <div>
                           <p className="text-text-primary font-medium">
                             {user.name}
                           </p>
                           <p className="text-[11px] text-text-muted mt-0.5">
-                            Joined {joinDate}
+                            {t('admin.users.joined', { date: joinDate })}
                           </p>
                         </div>
                       </td>
-
-                      {/* Email */}
                       <td className="px-4 py-3.5 text-text-secondary">
                         {user.email}
                       </td>
-
-                      {/* Phone */}
                       <td className="px-4 py-3.5 text-text-secondary whitespace-nowrap">
                         {user.phone}
                       </td>
-
-                      {/* Role */}
                       <td className="px-4 py-3.5">
                         <RoleBadge role={user.role} />
                       </td>
-
-                      {/* Status */}
                       <td className="px-4 py-3.5">
                         <StatusBadge isActive={user.isActive} />
                       </td>
-
-                      {/* Actions */}
                       <td className="px-4 py-3.5">
-                        {/* Prevent admins from blocking themselves or other admins */}
                         {user.role === 'admin' ? (
                           <span className="text-xs text-text-muted italic">
-                            Protected
+                            {t('admin.users.protected')}
                           </span>
                         ) : isToggling ? (
                           <Loader2 className="w-4 h-4 text-brand-gold animate-spin" />
@@ -233,19 +229,19 @@ export default function AdminUsersPage() {
                             }`}
                             aria-label={
                               user.isActive
-                                ? `Block ${user.name}`
-                                : `Unblock ${user.name}`
+                                ? `${t('admin.users.block')} ${user.name}`
+                                : `${t('admin.users.unblock')} ${user.name}`
                             }
                           >
                             {user.isActive ? (
                               <>
                                 <ShieldOff className="w-3 h-3" aria-hidden="true" />
-                                Block
+                                {t('admin.users.block')}
                               </>
                             ) : (
                               <>
                                 <ShieldCheck className="w-3 h-3" aria-hidden="true" />
-                                Unblock
+                                {t('admin.users.unblock')}
                               </>
                             )}
                           </button>
@@ -263,15 +259,15 @@ export default function AdminUsersPage() {
       {/* ── Block/Unblock Confirmation ───────────────────────────────── */}
       <ConfirmDialog
         open={Boolean(confirmTarget)}
-        title={confirmTarget?.isActive ? 'Block User' : 'Unblock User'}
+        title={confirmTarget?.isActive ? t('admin.users.block_title') : t('admin.users.unblock_title')}
         description={
           confirmTarget
             ? confirmTarget.isActive
-              ? `"${confirmTarget.name}" will be blocked and will no longer be able to log in.`
-              : `"${confirmTarget.name}" will be unblocked and will regain access to their account.`
+              ? t('admin.users.block_description', { name: confirmTarget.name })
+              : t('admin.users.unblock_description', { name: confirmTarget.name })
             : ''
         }
-        confirmLabel={confirmTarget?.isActive ? 'Block User' : 'Unblock User'}
+        confirmLabel={confirmTarget?.isActive ? t('admin.users.block_confirm') : t('admin.users.unblock_confirm')}
         loading={Boolean(togglingId)}
         onConfirm={handleToggleConfirm}
         onCancel={() => {

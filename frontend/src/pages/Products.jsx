@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useSearchParams } from 'react-router-dom';
 import { SlidersHorizontal, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import api from '@/lib/api';
 import Layout from '@/components/layout/Layout';
 import SearchBar from '@/components/product/SearchBar';
@@ -50,6 +51,7 @@ function getFilterConfig(searchParams) {
 // ─── Products page ────────────────────────────────────────────────────────────
 
 export default function Products() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts]         = useState([]);
   const [loading, setLoading]           = useState(true);
@@ -97,7 +99,7 @@ export default function Products() {
       })
       .catch((error) => {
         if (error.name === 'CanceledError') return;
-        toast.error('Failed to load products', { style: { background: '#dc2626', color: '#fff' } });
+        toast.error(t('errors.load_products'), { style: { background: '#dc2626', color: '#fff' } });
       })
       .finally(() => setLoading(false));
 
@@ -117,7 +119,7 @@ export default function Products() {
 
     if (type === 'perfume') {
       endpoint    = '/products/filter/perfume';
-      queryParams = params; // accord keys sent directly
+      queryParams = params;
     } else if (type === 'skincare') {
       endpoint    = '/products/filter/skincare';
       queryParams = {
@@ -134,12 +136,11 @@ export default function Products() {
     api.get(endpoint, { signal: controller.signal, params: queryParams })
       .then(({ data }) => {
         setProducts(data.products);
-        // Client-side pagination: total pages derived from result count
         setTotalPages(Math.max(1, Math.ceil(data.products.length / ITEMS_PER_PAGE)));
       })
       .catch((error) => {
         if (error.name === 'CanceledError') return;
-        toast.error('Failed to apply filters', { style: { background: '#dc2626', color: '#fff' } });
+        toast.error(t('errors.load_filters'), { style: { background: '#dc2626', color: '#fff' } });
       })
       .finally(() => setLoading(false));
 
@@ -148,7 +149,7 @@ export default function Products() {
 
   // ── Client-side pagination for filter results ─────────────────────────────
   const displayedProducts = useMemo(() => {
-    if (!filterConfig) return products; // backend already handles pagination
+    if (!filterConfig) return products;
     const start = (page - 1) * ITEMS_PER_PAGE;
     return products.slice(start, start + ITEMS_PER_PAGE);
   }, [products, page, filterConfig]);
@@ -179,7 +180,6 @@ export default function Products() {
   const handleFilterApply = ({ type, params }) => {
     const newParams = new URLSearchParams(searchParams);
 
-    // Clear all existing filter params before writing new ones
     for (const key of FILTER_PARAM_KEYS) newParams.delete(key);
     newParams.set('filterType', type);
     newParams.set('page', '1');
@@ -210,7 +210,7 @@ export default function Products() {
   // ── Filter label ──────────────────────────────────────────────────────────
 
   const filterLabel = filterConfig
-    ? `${filterConfig.type.charAt(0).toUpperCase() + filterConfig.type.slice(1)} filter active`
+    ? t('products_page.filter_active', { type: t(`type.${filterConfig.type}`) })
     : '';
 
   return (
@@ -238,10 +238,10 @@ export default function Products() {
                 <button
                   onClick={handleFilterClear}
                   className="flex items-center gap-1.5 px-3 py-2 text-sm text-text-muted border border-neutral-border hover:border-text-secondary hover:text-text-primary transition-colors rounded-sm"
-                  aria-label="Clear active filter"
+                  aria-label={t('filter.clear')}
                 >
                   <X className="w-3.5 h-3.5" aria-hidden="true" />
-                  Clear
+                  {t('filter.clear')}
                 </button>
               </div>
             )}
@@ -258,7 +258,7 @@ export default function Products() {
               }`}
             >
               <SlidersHorizontal className="w-4 h-4" aria-hidden="true" />
-              Filters
+              {t('products_page.filters')}
             </button>
 
           </div>
@@ -278,7 +278,7 @@ export default function Products() {
 
         {filterConfig && !loading && (
           <p className="text-sm text-text-muted mb-4">
-            {products.length} {products.length === 1 ? 'result' : 'results'} found
+            {t('products_page.results', { count: products.length })}
           </p>
         )}
 

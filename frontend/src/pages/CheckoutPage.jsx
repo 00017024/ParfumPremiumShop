@@ -1,42 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Loader2, ShoppingBag, ChevronRight, AlertTriangle, MapPin } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import MapPicker from '@/components/MapPicker';
 import { useCartStore } from '@/store/cartStore';
 import { useStockValidation } from '@/hooks/useStockValidation';
-import { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } from '@/lib/validation';
+import { UZ_PHONE_REGEX } from '@/lib/validation';
 import Layout from '@/components/layout/Layout';
 import EmptyState from '@/components/product/EmptyState';
-
-// ─── Validation ───────────────────────────────────────────────────────────────
-
-function validate(form, location) {
-  const errors = {};
-
-  if (!form.name.trim() || form.name.trim().length < 2) {
-    errors.name = 'Full name must be at least 2 characters.';
-  }
-
-  if (!UZ_PHONE_REGEX.test(form.phone.trim())) {
-    errors.phone = UZ_PHONE_MESSAGE;
-  }
-
-  if (!['Tashkent', 'Samarkand'].includes(form.city)) {
-    errors.city = 'Delivery is only available in Tashkent or Samarkand.';
-  }
-
-  if (!form.address.trim() || form.address.trim().length < 5) {
-    errors.address = 'Delivery address must be at least 5 characters.';
-  }
-
-  if (!location) {
-    errors.location = 'Please pin your delivery location on the map.';
-  }
-
-  return errors;
-}
 
 // ─── FormField ────────────────────────────────────────────────────────────────
 
@@ -70,17 +43,19 @@ const inputClass = (hasError) =>
 // ─── OrderSummaryPanel ────────────────────────────────────────────────────────
 
 function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
+  const { t } = useTranslation();
+
   return (
     <aside
       className="bg-surface-card border border-neutral-border rounded-sm p-6 flex flex-col gap-5 h-fit"
-      aria-label="Order summary"
+      aria-label={t('cart.order_summary')}
     >
       <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted">
-        Order Summary
+        {t('cart.order_summary')}
       </h2>
 
       {/* Item list */}
-      <ul className="flex flex-col gap-4" aria-label="Items in order">
+      <ul className="flex flex-col gap-4" aria-label={t('cart.order_summary')}>
         {items.map((item) => {
           const { product, quantity } = item;
           const fallback = `https://placehold.co/80x80/2A2A2A/D4AF37?text=${encodeURIComponent(product.brand)}`;
@@ -105,7 +80,7 @@ function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
                   {product.brand}
                 </p>
                 <p className="text-sm text-text-primary truncate">{product.name}</p>
-                <p className="text-xs text-text-muted mt-0.5">Qty: {quantity}</p>
+                <p className="text-xs text-text-muted mt-0.5">{t('checkout.qty', { count: quantity })}</p>
                 {stockIssues[product._id] && (
                   <p className="flex items-start gap-1 text-xs text-red-400 mt-1.5 leading-tight">
                     <AlertTriangle className="w-3 h-3 flex-shrink-0 mt-px" aria-hidden="true" />
@@ -127,21 +102,21 @@ function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
 
       {/* Subtotal */}
       <div className="flex justify-between text-sm">
-        <span className="text-text-secondary">Subtotal</span>
+        <span className="text-text-secondary">{t('cart.subtotal')}</span>
         <span className="text-text-primary">${subtotal.toFixed(2)}</span>
       </div>
 
       {/* Shipping */}
       <div className="flex justify-between text-sm">
-        <span className="text-text-secondary">Shipping</span>
-        <span className="text-xs text-text-muted italic">After confirmation</span>
+        <span className="text-text-secondary">{t('cart.shipping')}</span>
+        <span className="text-xs text-text-muted italic">{t('checkout.shipping_after')}</span>
       </div>
 
       <div className="border-t border-neutral-border" />
 
       {/* Total */}
       <div className="flex justify-between items-baseline">
-        <span className="text-xs uppercase tracking-widest text-text-secondary">Total</span>
+        <span className="text-xs uppercase tracking-widest text-text-secondary">{t('cart.total')}</span>
         <span className="text-xl font-light text-brand-gold">${subtotal.toFixed(2)}</span>
       </div>
     </aside>
@@ -151,6 +126,7 @@ function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
 // ─── CheckoutPage ─────────────────────────────────────────────────────────────
 
 export default function CheckoutPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const items          = useCartStore((state) => state.items);
   const clearCart      = useCartStore((state) => state.clearCart);
@@ -159,7 +135,7 @@ export default function CheckoutPage() {
   const updateProduct  = useCartStore((state) => state.updateProduct);
 
   // ── Stock validation ────────────────────────────────────────────────────────
-  const { stockIssues, checking, revalidate } = useStockValidation(
+  const { stockIssues, checking } = useStockValidation(
     items,
     updateQuantity,
     removeItem,
@@ -176,21 +152,35 @@ export default function CheckoutPage() {
     address: '',
     notes: '',
   });
-  const [location, setLocation]   = useState(null); // { lat, lng }
+  const [location, setLocation]   = useState(null);
   const [errors, setErrors]       = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Derived — no useState needed
   const subtotal = items.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
     0
   );
   const isCartEmpty = items.length === 0;
 
+  // ── Validation ─────────────────────────────────────────────────────────────
+  const validate = (form, location) => {
+    const e = {};
+    if (!form.name.trim() || form.name.trim().length < 2)
+      e.name = t('validation.name_min');
+    if (!UZ_PHONE_REGEX.test(form.phone.trim()))
+      e.phone = t('validation.phone_invalid');
+    if (!['Tashkent', 'Samarkand'].includes(form.city))
+      e.city = t('validation.city_invalid');
+    if (!form.address.trim() || form.address.trim().length < 5)
+      e.address = t('validation.address_min');
+    if (!location)
+      e.location = t('validation.location_required');
+    return e;
+  };
+
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleChange = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    // Clear field error on change
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
@@ -222,10 +212,8 @@ export default function CheckoutPage() {
 
       clearCart();
       navigate('/order-success', { state: { fromCheckout: true } });
-    } catch (err) {
-      const msg =
-        err.response?.data?.message || 'Failed to place order. Please try again.';
-      toast.error(msg, {
+    } catch {
+      toast.error(t('checkout.submit_error'), {
         style: { background: '#dc2626', color: '#fff' },
       });
     } finally {
@@ -238,12 +226,12 @@ export default function CheckoutPage() {
     return (
       <Layout>
         <div className="flex flex-col items-center pt-10">
-          <EmptyState message="Your cart is empty" />
+          <EmptyState message={t('cart.empty')} />
           <Link
             to="/products"
             className="mt-2 inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all duration-200"
           >
-            Browse Products
+            {t('checkout.browse_products')}
           </Link>
         </div>
       </Layout>
@@ -259,11 +247,11 @@ export default function CheckoutPage() {
           <ol className="flex items-center gap-2 text-xs text-text-muted uppercase tracking-widest">
             <li>
               <Link to="/cart" className="hover:text-brand-gold transition-colors">
-                Cart
+                {t('checkout.breadcrumb_cart')}
               </Link>
             </li>
             <li aria-hidden="true"><ChevronRight className="w-3 h-3 opacity-40" /></li>
-            <li className="text-text-secondary" aria-current="page">Checkout</li>
+            <li className="text-text-secondary" aria-current="page">{t('checkout.title')}</li>
           </ol>
         </nav>
 
@@ -271,7 +259,7 @@ export default function CheckoutPage() {
         <div className="flex items-center gap-3 mb-10">
           <ShoppingBag className="w-5 h-5 text-brand-gold" aria-hidden="true" />
           <h1 className="text-2xl font-light text-text-primary tracking-wide">
-            Checkout
+            {t('checkout.title')}
           </h1>
         </div>
 
@@ -279,32 +267,31 @@ export default function CheckoutPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-14 items-start">
 
           {/* ── Left: Form ────────────────────────────────────────────── */}
-          <section className="lg:col-span-2" aria-label="Delivery information">
+          <section className="lg:col-span-2" aria-label={t('checkout.delivery_info')}>
             <form
               onSubmit={handleSubmit}
               noValidate
               className="flex flex-col gap-6"
             >
               <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted pb-2 border-b border-neutral-border">
-                Delivery Information
+                {t('checkout.delivery_info')}
               </h2>
 
               {/* Customer Name */}
               <FormField
                 id="checkout-name"
-                label="Full Name"
+                label={t('checkout.full_name')}
                 required
                 error={errors.name}
               >
                 <input
                   id="checkout-name"
                   type="text"
-                  placeholder="Jane Doe"
+                  placeholder={t('auth.full_name_placeholder')}
                   value={form.name}
                   onChange={handleChange('name')}
                   autoComplete="name"
                   aria-required="true"
-                  aria-describedby={errors.name ? 'name-error' : undefined}
                   className={inputClass(!!errors.name)}
                 />
               </FormField>
@@ -312,14 +299,14 @@ export default function CheckoutPage() {
               {/* Phone */}
               <FormField
                 id="checkout-phone"
-                label="Phone Number"
+                label={t('checkout.phone')}
                 required
                 error={errors.phone}
               >
                 <input
                   id="checkout-phone"
                   type="tel"
-                  placeholder="+998901234567"
+                  placeholder={t('auth.phone_placeholder')}
                   value={form.phone}
                   onChange={handleChange('phone')}
                   autoComplete="tel"
@@ -327,35 +314,36 @@ export default function CheckoutPage() {
                   className={inputClass(!!errors.phone)}
                 />
               </FormField>
-                {/* City */}
-                <FormField
+
+              {/* City */}
+              <FormField
                 id="checkout-city"
-                label="City"
+                label={t('checkout.city')}
                 required
                 error={errors.city}
-                >
+              >
                 <select
-                    id="checkout-city"
-                    value={form.city}
-                    onChange={handleChange('city')}
-                    className={inputClass(!!errors.city)}
+                  id="checkout-city"
+                  value={form.city}
+                  onChange={handleChange('city')}
+                  className={inputClass(!!errors.city)}
                 >
-                    <option value="Tashkent">Tashkent</option>
-                    <option value="Samarkand">Samarkand</option>
+                  <option value="Tashkent">Tashkent</option>
+                  <option value="Samarkand">Samarkand</option>
                 </select>
-                </FormField>
+              </FormField>
 
               {/* Address */}
               <FormField
                 id="checkout-address"
-                label="Delivery Address"
+                label={t('checkout.address')}
                 required
                 error={errors.address}
               >
                 <textarea
                   id="checkout-address"
                   rows={3}
-                  placeholder="Street, district, city…"
+                  placeholder={t('checkout.address_placeholder')}
                   value={form.address}
                   onChange={handleChange('address')}
                   autoComplete="street-address"
@@ -367,14 +355,14 @@ export default function CheckoutPage() {
               {/* Notes */}
               <FormField
                 id="checkout-notes"
-                label="Order Notes"
+                label={t('checkout.notes')}
                 required={false}
                 error={undefined}
               >
                 <textarea
                   id="checkout-notes"
                   rows={2}
-                  placeholder="Gift wrapping, delivery instructions… (optional)"
+                  placeholder={t('checkout.notes_placeholder')}
                   value={form.notes}
                   onChange={handleChange('notes')}
                   className={`${inputClass(false)} resize-none`}
@@ -384,11 +372,11 @@ export default function CheckoutPage() {
               {/* Delivery Location */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] uppercase tracking-widest text-text-muted">
-                  Delivery Location
+                  {t('checkout.location')}
                   <span className="text-brand-gold ml-1" aria-hidden="true">*</span>
                 </label>
                 <p className="text-xs text-text-muted mb-1">
-                  Search for your address or click/drag the pin on the map.
+                  {t('checkout.location_hint')}
                 </p>
 
                 <div
@@ -429,10 +417,10 @@ export default function CheckoutPage() {
                 type="submit"
                 disabled={submitting || isCartEmpty || checking || hasStockIssues}
                 aria-label={
-                  checking        ? 'Checking stock availability…' :
-                  hasStockIssues  ? 'Some items have stock issues — review your order' :
-                  submitting      ? 'Processing order…' :
-                  'Place order'
+                  checking        ? t('checkout.checking_aria') :
+                  hasStockIssues  ? t('checkout.stock_issues_aria') :
+                  submitting      ? t('checkout.processing_aria') :
+                  t('checkout.place_order_aria')
                 }
                 className="mt-2 flex items-center justify-center gap-2.5 w-full py-4 text-sm uppercase tracking-widest font-medium transition-all duration-200
                   bg-brand-gold text-brand-black
@@ -443,17 +431,17 @@ export default function CheckoutPage() {
                 {checking ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                    Checking availability…
+                    {t('checkout.checking')}
                   </>
                 ) : submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-                    Processing…
+                    {t('checkout.processing')}
                   </>
                 ) : hasStockIssues ? (
-                  'Fix stock issues to continue'
+                  t('checkout.fix_stock')
                 ) : (
-                  'Place Order'
+                  t('checkout.place_order')
                 )}
               </button>
             </form>

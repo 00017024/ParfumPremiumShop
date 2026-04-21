@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, RotateCcw, Search } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAdminProducts } from '@/hooks/admin/useAdminProducts';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -27,6 +28,7 @@ function SkeletonRow() {
 // ─── AdminProductsPage ────────────────────────────────────────────────────────
 
 export default function AdminProductsPage() {
+  const { t } = useTranslation();
   const {
     products,
     total,
@@ -43,18 +45,17 @@ export default function AdminProductsPage() {
   } = useAdminProducts({ page: 1, limit: 12 });
 
   // ── Modal state ────────────────────────────────────────────────────────────
-  const [modalOpen, setModalOpen]       = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // null = create mode
+  const [modalOpen, setModalOpen]           = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
 
   // ── Delete confirmation state ──────────────────────────────────────────────
-  const [deleteTarget, setDeleteTarget] = useState(null); // { _id, name }
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting]         = useState(false);
 
   // ── Search ─────────────────────────────────────────────────────────────────
   const [searchInput, setSearchInput] = useState(params.search ?? '');
   const debouncedSearch = useDebounce(searchInput, 350);
 
-  // Sync debounced value → query params (fires only when typing stops)
   useEffect(() => {
     updateParams({ search: debouncedSearch || undefined, page: 1 });
   }, [debouncedSearch]);
@@ -63,19 +64,16 @@ export default function AdminProductsPage() {
     setSearchInput(e.target.value);
   }, []);
 
-  // ── Open create modal ──────────────────────────────────────────────────────
   const openCreate = () => {
     setEditingProduct(null);
     setModalOpen(true);
   };
 
-  // ── Open edit modal ────────────────────────────────────────────────────────
   const openEdit = (product) => {
     setEditingProduct(product);
     setModalOpen(true);
   };
 
-  // ── Handle save (create or update) ────────────────────────────────────────
   const handleSave = async (payload) => {
     let result;
     if (editingProduct) {
@@ -89,7 +87,6 @@ export default function AdminProductsPage() {
     }
   };
 
-  // ── Handle delete ──────────────────────────────────────────────────────────
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
@@ -98,6 +95,16 @@ export default function AdminProductsPage() {
     if (result.success) setDeleteTarget(null);
   };
 
+  const COLUMNS = [
+    t('admin.products.col_image'),
+    t('admin.products.col_name'),
+    t('admin.products.col_brand'),
+    t('admin.products.col_price'),
+    t('admin.products.col_stock'),
+    t('admin.products.col_category'),
+    t('admin.products.col_actions'),
+  ];
+
   return (
     <div className="flex flex-col gap-6 max-w-7xl">
 
@@ -105,11 +112,11 @@ export default function AdminProductsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-light text-text-primary tracking-wide">
-            Products
+            {t('admin.products.title')}
           </h1>
           {!loading && (
             <p className="text-sm text-text-muted mt-1">
-              {total} product{total !== 1 ? 's' : ''}
+              {t('admin.products.total', { count: total })}
             </p>
           )}
         </div>
@@ -119,10 +126,10 @@ export default function AdminProductsPage() {
             onClick={reload}
             disabled={loading}
             className="flex items-center gap-2 text-xs text-text-muted hover:text-brand-gold transition-colors disabled:opacity-40"
-            aria-label="Refresh product list"
+            aria-label={t('admin.products.refresh')}
           >
             <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
+            {t('admin.products.refresh')}
           </button>
 
           <button
@@ -130,7 +137,7 @@ export default function AdminProductsPage() {
             className="flex items-center gap-2 px-4 py-2 bg-brand-gold text-brand-black text-sm font-medium hover:bg-opacity-90 transition-all rounded-sm"
           >
             <Plus className="w-4 h-4" aria-hidden="true" />
-            Add Product
+            {t('admin.products.add')}
           </button>
         </div>
       </div>
@@ -140,7 +147,7 @@ export default function AdminProductsPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted pointer-events-none" aria-hidden="true" />
         <input
           type="text"
-          placeholder="Search by name or brand…"
+          placeholder={t('admin.products.search_placeholder')}
           value={searchInput}
           onChange={handleSearchChange}
           className="w-full bg-surface-card border border-neutral-border rounded-sm pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-gold transition-colors"
@@ -157,19 +164,17 @@ export default function AdminProductsPage() {
       {/* ── Table ───────────────────────────────────────────────────── */}
       <div className="bg-surface-card border border-neutral-border rounded-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Products table">
+          <table className="w-full text-sm" aria-label={t('admin.products.title')}>
             <thead>
               <tr className="border-b border-neutral-border">
-                {['Image', 'Name', 'Brand', 'Price', 'Stock', 'Category', 'Actions'].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-text-muted font-medium whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                {COLUMNS.map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-text-muted font-medium whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
 
@@ -183,7 +188,7 @@ export default function AdminProductsPage() {
                       colSpan={7}
                       className="px-4 py-12 text-center text-sm text-text-muted"
                     >
-                      No products found.
+                      {t('admin.products.no_products')}
                     </td>
                   </tr>
                 )
@@ -195,7 +200,6 @@ export default function AdminProductsPage() {
                       key={product._id}
                       className="border-b border-neutral-border last:border-0 hover:bg-surface-dark/40 transition-colors"
                     >
-                      {/* Thumbnail */}
                       <td className="px-4 py-3">
                         <div className="w-10 h-10 rounded-sm overflow-hidden bg-surface-dark flex-shrink-0">
                           <img
@@ -207,25 +211,17 @@ export default function AdminProductsPage() {
                           />
                         </div>
                       </td>
-
-                      {/* Name */}
                       <td className="px-4 py-3">
                         <span className="text-text-primary font-medium line-clamp-1 max-w-[180px] block">
                           {product.name}
                         </span>
                       </td>
-
-                      {/* Brand */}
                       <td className="px-4 py-3 text-text-secondary whitespace-nowrap">
                         {product.brand}
                       </td>
-
-                      {/* Price */}
                       <td className="px-4 py-3 text-brand-gold whitespace-nowrap">
                         ${Number(product.price).toFixed(2)}
                       </td>
-
-                      {/* Stock */}
                       <td className="px-4 py-3 whitespace-nowrap">
                         <span
                           className={
@@ -239,8 +235,6 @@ export default function AdminProductsPage() {
                           {product.stock}
                         </span>
                       </td>
-
-                      {/* Category */}
                       <td className="px-4 py-3">
                         {product.category
                           ? (
@@ -251,15 +245,12 @@ export default function AdminProductsPage() {
                           : <span className="text-xs text-text-muted italic">—</span>
                         }
                       </td>
-
-                      {/* Actions */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openEdit(product)}
                             className="p-1.5 text-text-muted hover:text-brand-gold transition-colors rounded-sm hover:bg-brand-gold/10"
-                            aria-label={`Edit ${product.name}`}
-                            title="Edit"
+                            aria-label={`${t('admin.products.col_actions')} ${product.name}`}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
@@ -268,8 +259,7 @@ export default function AdminProductsPage() {
                               setDeleteTarget({ _id: product._id, name: product.name })
                             }
                             className="p-1.5 text-text-muted hover:text-red-400 transition-colors rounded-sm hover:bg-red-500/10"
-                            aria-label={`Delete ${product.name}`}
-                            title="Delete"
+                            aria-label={`${t('admin.products.delete_confirm')} ${product.name}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -292,7 +282,7 @@ export default function AdminProductsPage() {
             disabled={params.page <= 1}
             className="px-3 py-1.5 text-xs border border-neutral-border text-text-secondary hover:border-brand-gold transition-all rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Previous
+            {t('pagination.previous')}
           </button>
           <span className="text-xs text-text-muted px-2">
             {params.page} / {pages}
@@ -302,7 +292,7 @@ export default function AdminProductsPage() {
             disabled={params.page >= pages}
             className="px-3 py-1.5 text-xs border border-neutral-border text-text-secondary hover:border-brand-gold transition-all rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Next
+            {t('pagination.next')}
           </button>
         </div>
       )}
@@ -324,13 +314,13 @@ export default function AdminProductsPage() {
       {/* ── Delete Confirmation ──────────────────────────────────────── */}
       <ConfirmDialog
         open={Boolean(deleteTarget)}
-        title="Delete Product"
+        title={t('admin.products.delete_title')}
         description={
           deleteTarget
-            ? `"${deleteTarget.name}" will be permanently deleted. This cannot be undone.`
+            ? t('admin.products.delete_description', { name: deleteTarget.name })
             : ''
         }
-        confirmLabel="Delete"
+        confirmLabel={t('admin.products.delete_confirm')}
         loading={deleting}
         onConfirm={handleDeleteConfirm}
         onCancel={() => {

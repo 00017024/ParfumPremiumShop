@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchStats } from '@/services/admin/ordersService';
+import i18n from '@/i18n';
 
 /*
 Single MongoDB aggregation pipeline on the backend — no bulk data transfer.
@@ -19,7 +20,7 @@ export function useAdminStats() {
         const data = await fetchStats();
         if (!cancelled) setStats(data);
       } catch {
-        if (!cancelled) setError('Failed to load dashboard stats.');
+        if (!cancelled) setError(i18n.t('admin.dashboard.load_error'));
       } finally {
         if (!cancelled) setLoading(false);
       }

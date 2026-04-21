@@ -3,6 +3,7 @@ import {
   ShoppingBag, Package, Users, DollarSign,
   Clock, ArrowRight, UserCheck, Award, TrendingUp,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAdminStats }     from '@/hooks/admin/useAdminStats';
 import { useAdminAnalytics } from '@/hooks/admin/useAdminAnalytics';
@@ -11,8 +12,6 @@ import OrderStatusBadge      from '@/components/admin/OrderStatusBadge';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
-// Fill every calendar date in the last `days` days, merging in real data.
-// Guarantees bar charts always show a continuous range even on days with no data.
 function fillDates(data, days) {
   const map = Object.fromEntries((data || []).map((d) => [d.date, d]));
   return Array.from({ length: days }, (_, i) => {
@@ -23,7 +22,6 @@ function fillDates(data, days) {
   });
 }
 
-// Noon pin avoids UTC-vs-local off-by-one-day issues
 function shortDay(dateStr) {
   return new Date(`${dateStr}T12:00:00`)
     .toLocaleDateString('en-US', { weekday: 'short' });
@@ -37,6 +35,7 @@ function shortDate(dateStr) {
 // ─── AdminDashboardPage ───────────────────────────────────────────────────────
 
 export default function AdminDashboardPage() {
+  const { t } = useTranslation();
   const { stats, loading, error }                        = useAdminStats();
   const { analytics, loading: aLoading, error: aError } = useAdminAnalytics();
 
@@ -46,10 +45,10 @@ export default function AdminDashboardPage() {
       {/* ── Page header ─────────────────────────────────────────────── */}
       <div>
         <h1 className="text-2xl font-light text-text-primary tracking-wide">
-          Dashboard
+          {t('admin.dashboard.title')}
         </h1>
         <p className="text-sm text-text-muted mt-1">
-          Overview of your store's performance
+          {t('admin.dashboard.subtitle')}
         </p>
       </div>
 
@@ -64,13 +63,13 @@ export default function AdminDashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           icon={<ShoppingBag className="w-4 h-4" />}
-          label="Total Orders"
+          label={t('admin.dashboard.total_orders')}
           value={loading ? '—' : stats?.totalOrders?.toLocaleString() ?? '0'}
           loading={loading}
         />
         <StatCard
           icon={<DollarSign className="w-4 h-4" />}
-          label="Revenue"
+          label={t('admin.dashboard.revenue')}
           value={
             loading
               ? '—'
@@ -79,35 +78,35 @@ export default function AdminDashboardPage() {
                   maximumFractionDigits: 2,
                 })}`
           }
-          sub="Paid & completed orders"
+          sub={t('admin.dashboard.revenue_sub')}
           loading={loading}
         />
         <StatCard
           icon={<Clock className="w-4 h-4" />}
-          label="Pending Orders"
+          label={t('admin.dashboard.pending_orders')}
           value={loading ? '—' : stats?.pendingOrders?.toLocaleString() ?? '0'}
-          sub="Awaiting action"
+          sub={t('admin.dashboard.pending_sub')}
           loading={loading}
         />
         <StatCard
           icon={<Package className="w-4 h-4" />}
-          label="Products"
+          label={t('admin.dashboard.products')}
           value={loading ? '—' : stats?.totalProducts?.toLocaleString() ?? '0'}
           loading={loading}
         />
       </div>
 
       {/* ── Recent orders ────────────────────────────────────────────── */}
-      <section aria-label="Recent orders">
+      <section aria-label={t('admin.dashboard.recent_orders')}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted">
-            Recent Orders
+            {t('admin.dashboard.recent_orders')}
           </h2>
           <Link
             to="/admin/orders"
             className="text-xs text-brand-gold hover:underline underline-offset-4 flex items-center gap-1"
           >
-            View all <ArrowRight className="w-3 h-3" />
+            {t('admin.dashboard.view_all')} <ArrowRight className="w-3 h-3" />
           </Link>
         </div>
 
@@ -125,7 +124,7 @@ export default function AdminDashboardPage() {
           </div>
         ) : !stats?.recentOrders?.length ? (
           <div className="bg-surface-card border border-neutral-border rounded-sm py-10 text-center text-sm text-text-muted">
-            No orders yet.
+            {t('admin.dashboard.no_orders')}
           </div>
         ) : (
           <div className="bg-surface-card border border-neutral-border rounded-sm divide-y divide-neutral-border overflow-hidden">
@@ -160,26 +159,22 @@ export default function AdminDashboardPage() {
       </section>
 
       {/* ── Quick links ──────────────────────────────────────────────── */}
-      <section aria-label="Quick actions">
+      <section aria-label={t('admin.dashboard.quick_actions')}>
         <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted mb-4">
-          Quick Actions
+          {t('admin.dashboard.quick_actions')}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <QuickLink to="/admin/orders"   icon={<ShoppingBag className="w-4 h-4" />} label="Manage Orders" />
-          <QuickLink to="/admin/products" icon={<Package     className="w-4 h-4" />} label="Manage Products" />
-          <QuickLink to="/admin/users"    icon={<Users       className="w-4 h-4" />} label="Manage Users" />
+          <QuickLink to="/admin/orders"   icon={<ShoppingBag className="w-4 h-4" />} label={t('admin.dashboard.manage_orders')} />
+          <QuickLink to="/admin/products" icon={<Package     className="w-4 h-4" />} label={t('admin.dashboard.manage_products')} />
+          <QuickLink to="/admin/users"    icon={<Users       className="w-4 h-4" />} label={t('admin.dashboard.manage_users')} />
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════════════════════════
-          ANALYTICS — appended below existing content, never replacing it
-      ══════════════════════════════════════════════════════════════ */}
-      <section aria-label="Analytics">
-
-        {/* Section divider heading */}
+      {/* ── Analytics ─────────────────────────────────────────────────── */}
+      <section aria-label={t('admin.dashboard.analytics')}>
         <div className="flex items-center gap-4 mb-6">
           <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted whitespace-nowrap">
-            Analytics
+            {t('admin.dashboard.analytics')}
           </h2>
           <div
             className="flex-1 h-px"
@@ -194,29 +189,27 @@ export default function AdminDashboardPage() {
           </div>
         ) : (
           <div className="flex flex-col gap-6">
-
-            {/* Row 1 — Conversion Rate + Most Active Buyer */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <ConversionRateCard data={analytics?.conversionRate} loading={aLoading} />
               <MostActiveUserCard data={analytics?.mostActiveUser}  loading={aLoading} />
             </div>
 
-            {/* Row 2 — Top sold product per category */}
             <TopProductsSection data={analytics?.topProductsByCategory} loading={aLoading} />
 
-            {/* Row 3 — Weekly Sales + User Growth */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <BarChartCard
-                title="Weekly Sales"
-                subtitle="Orders per day — last 7 days"
+                title={t('admin.dashboard.weekly_sales')}
+                subtitle={t('admin.dashboard.weekly_subtitle')}
+                noDataText={t('admin.dashboard.no_data')}
                 data={fillDates(analytics?.weeklySales, 7)}
                 valueKey="count"
                 loading={aLoading}
                 showDayLabels
               />
               <BarChartCard
-                title="User Growth"
-                subtitle="Registrations — last 30 days"
+                title={t('admin.dashboard.user_growth')}
+                subtitle={t('admin.dashboard.user_growth_subtitle')}
+                noDataText={t('admin.dashboard.no_data')}
                 data={fillDates(analytics?.userGrowth, 30)}
                 valueKey="count"
                 loading={aLoading}
@@ -224,10 +217,10 @@ export default function AdminDashboardPage() {
               />
             </div>
 
-            {/* Row 4 — Revenue over time (full width) */}
             <BarChartCard
-              title="Revenue"
-              subtitle="Paid orders — last 30 days"
+              title={t('admin.dashboard.revenue_title')}
+              subtitle={t('admin.dashboard.revenue_subtitle')}
+              noDataText={t('admin.dashboard.no_data')}
               data={fillDates(analytics?.revenueOverTime, 30)}
               valueKey="revenue"
               loading={aLoading}
@@ -239,7 +232,6 @@ export default function AdminDashboardPage() {
               }
               showEndDates
             />
-
           </div>
         )}
       </section>
@@ -270,12 +262,13 @@ function QuickLink({ to, icon, label }) {
 // ─── ConversionRateCard ───────────────────────────────────────────────────────
 
 function ConversionRateCard({ data, loading }) {
+  const { t } = useTranslation();
   const rate = data?.rate ?? 0;
   return (
     <div className="bg-surface-card border border-neutral-border rounded-sm p-5">
       <div className="flex items-center gap-2 mb-3">
         <UserCheck className="w-4 h-4 text-text-muted" aria-hidden="true" />
-        <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Conversion Rate</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-text-muted">{t('admin.dashboard.conversion_rate')}</p>
       </div>
 
       {loading ? (
@@ -285,7 +278,7 @@ function ConversionRateCard({ data, loading }) {
           <div className="h-3 w-44 bg-surface-dark rounded animate-pulse" />
         </div>
       ) : !data || data.totalUsers === 0 ? (
-        <p className="text-sm text-text-muted py-2">No users yet</p>
+        <p className="text-sm text-text-muted py-2">{t('admin.dashboard.no_users')}</p>
       ) : (
         <>
           <p className="text-3xl font-light text-brand-gold mb-2">{rate}%</p>
@@ -296,7 +289,7 @@ function ConversionRateCard({ data, loading }) {
             />
           </div>
           <p className="text-xs text-text-muted">
-            {data.buyers} of {data.totalUsers} users placed an order
+            {t('admin.dashboard.buyers_of', { buyers: data.buyers, total: data.totalUsers })}
           </p>
         </>
       )}
@@ -307,11 +300,12 @@ function ConversionRateCard({ data, loading }) {
 // ─── MostActiveUserCard ───────────────────────────────────────────────────────
 
 function MostActiveUserCard({ data, loading }) {
+  const { t } = useTranslation();
   return (
     <div className="bg-surface-card border border-neutral-border rounded-sm p-5">
       <div className="flex items-center gap-2 mb-3">
         <Award className="w-4 h-4 text-text-muted" aria-hidden="true" />
-        <p className="text-xs uppercase tracking-[0.2em] text-text-muted">Most Active Buyer</p>
+        <p className="text-xs uppercase tracking-[0.2em] text-text-muted">{t('admin.dashboard.most_active_buyer')}</p>
       </div>
 
       {loading ? (
@@ -321,14 +315,14 @@ function MostActiveUserCard({ data, loading }) {
           <div className="h-8 w-16 bg-surface-dark rounded animate-pulse mt-3" />
         </div>
       ) : !data ? (
-        <p className="text-sm text-text-muted py-2">No active users yet</p>
+        <p className="text-sm text-text-muted py-2">{t('admin.dashboard.no_active_users')}</p>
       ) : (
         <>
           <p className="text-base font-medium text-text-primary truncate">{data.name}</p>
           <p className="text-xs text-text-muted mt-0.5 truncate">{data.email}</p>
           <p className="text-3xl font-light text-brand-gold mt-3">
             {data.orderCount}
-            <span className="text-sm text-text-muted font-normal ml-1.5">orders</span>
+            <span className="text-sm text-text-muted font-normal ml-1.5">{t('admin.dashboard.orders_count')}</span>
           </p>
         </>
       )}
@@ -338,16 +332,16 @@ function MostActiveUserCard({ data, loading }) {
 
 // ─── TopProductsSection ───────────────────────────────────────────────────────
 
-const CATEGORY_LABELS = { perfume: 'Perfume', skincare: 'Skincare', cosmetics: 'Cosmetics' };
-const CATEGORIES      = ['perfume', 'skincare', 'cosmetics'];
+const CATEGORIES = ['perfume', 'skincare', 'cosmetics'];
 
 function TopProductsSection({ data, loading }) {
+  const { t } = useTranslation();
   return (
     <div>
       <div className="flex items-center gap-2 mb-3">
         <TrendingUp className="w-4 h-4 text-text-muted" aria-hidden="true" />
         <h3 className="text-xs uppercase tracking-[0.2em] text-text-muted">
-          Top Sold by Category
+          {t('admin.dashboard.top_sold')}
         </h3>
       </div>
 
@@ -360,7 +354,7 @@ function TopProductsSection({ data, loading }) {
               className="bg-surface-card border border-neutral-border rounded-sm p-4"
             >
               <p className="text-[10px] uppercase tracking-widest text-brand-gold/70 mb-3">
-                {CATEGORY_LABELS[cat]}
+                {t(`type.${cat}`)}
               </p>
 
               {loading ? (
@@ -370,14 +364,14 @@ function TopProductsSection({ data, loading }) {
                   <div className="h-7 w-16 bg-surface-dark rounded animate-pulse mt-2" />
                 </div>
               ) : !product ? (
-                <p className="text-xs text-text-muted py-1">No sales data yet</p>
+                <p className="text-xs text-text-muted py-1">{t('admin.dashboard.no_sales')}</p>
               ) : (
                 <>
                   <p className="text-sm font-medium text-text-primary truncate">{product.name}</p>
                   <p className="text-[11px] text-text-muted mt-0.5">{product.brand}</p>
                   <p className="text-2xl font-light text-brand-gold mt-2">
                     {product.totalSold}
-                    <span className="text-xs text-text-muted font-normal ml-1">units sold</span>
+                    <span className="text-xs text-text-muted font-normal ml-1">{t('admin.dashboard.units_sold')}</span>
                   </p>
                 </>
               )}
@@ -391,20 +385,10 @@ function TopProductsSection({ data, loading }) {
 
 // ─── BarChartCard ─────────────────────────────────────────────────────────────
 
-/**
- * Generic CSS bar chart.
- *
- * Props:
- *   data          — filled date array from fillDates()
- *   valueKey      — 'count' | 'revenue'
- *   loading       — render skeleton
- *   formatValue   — (n) => string   for the hover tooltip
- *   showDayLabels — weekday abbreviations under each bar (≤ 7 bars)
- *   showEndDates  — first/last date label on x-axis (30-bar charts)
- */
 function BarChartCard({
   title,
   subtitle,
+  noDataText,
   data,
   valueKey,
   loading,
@@ -424,11 +408,10 @@ function BarChartCard({
         <div className="h-28 bg-surface-dark rounded animate-pulse" />
       ) : !hasData ? (
         <div className="h-28 flex items-center justify-center">
-          <p className="text-xs text-text-muted">No data available yet</p>
+          <p className="text-xs text-text-muted">{noDataText}</p>
         </div>
       ) : (
         <>
-          {/* Bars */}
           <div className={`flex items-end gap-[2px] ${showDayLabels ? 'h-20' : 'h-28'}`}>
             {data.map((d, i) => {
               const val = d[valueKey] ?? 0;
@@ -446,7 +429,6 @@ function BarChartCard({
             })}
           </div>
 
-          {/* Weekday labels — for 7-bar charts */}
           {showDayLabels && (
             <div className="flex gap-[2px] mt-1">
               {data.map((d, i) => (
@@ -459,7 +441,6 @@ function BarChartCard({
             </div>
           )}
 
-          {/* First / last date — for 30-bar charts */}
           {showEndDates && data.length > 0 && (
             <div className="flex justify-between mt-1">
               <span className="text-[9px] text-text-muted">{shortDate(data[0].date)}</span>

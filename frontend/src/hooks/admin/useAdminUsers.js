@@ -5,6 +5,7 @@ import {
   blockUser,
   unblockUser,
 } from '@/services/admin/usersService';
+import i18n from '@/i18n';
 
 /**
  * Manages admin user list with block/unblock operations.
@@ -27,7 +28,7 @@ export function useAdminUsers(initialParams = { page: 1, limit: 20 }) {
       setTotal(data.total ?? 0);
       setPages(data.pages ?? 1);
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to load users.';
+      const message = i18n.t('admin.users.load_error');
       setError(message);
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
     } finally {
@@ -60,12 +61,12 @@ export function useAdminUsers(initialParams = { page: 1, limit: 20 }) {
     try {
       if (currentlyActive) {
         await blockUser(userId);
-        toast.success('User blocked.', {
+        toast.success(i18n.t('admin.users.block_success'), {
           style: { background: '#16a34a', color: '#fff' },
         });
       } else {
         await unblockUser(userId);
-        toast.success('User unblocked.', {
+        toast.success(i18n.t('admin.users.unblock_success'), {
           style: { background: '#16a34a', color: '#fff' },
         });
       }
@@ -76,7 +77,7 @@ export function useAdminUsers(initialParams = { page: 1, limit: 20 }) {
           u._id === userId ? { ...u, isActive: currentlyActive } : u
         )
       );
-      const message = err.response?.data?.message || 'Action failed.';
+      const message = i18n.t('admin.users.action_error');
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
     } finally {
       setTogglingId(null);

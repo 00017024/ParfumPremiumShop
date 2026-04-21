@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { PackageSearch, RotateCcw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 import api from '@/lib/api';
@@ -18,10 +19,11 @@ const STATUS_STYLES = {
 };
 
 function StatusBadge({ status }) {
+  const { t } = useTranslation();
   const styles = STATUS_STYLES[status] ?? 'bg-neutral-700 text-text-muted border border-neutral-600';
   return (
     <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${styles}`}>
-      {status}
+      {t(`status.${status}`, { defaultValue: status })}
     </span>
   );
 }
@@ -56,6 +58,7 @@ function SkeletonCard() {
 // ─── OrderCard ────────────────────────────────────────────────────────────────
 
 function OrderCard({ order }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const shortId = order._id.slice(-6).toUpperCase();
@@ -75,13 +78,13 @@ function OrderCard({ order }) {
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleNavigate(); }}
       tabIndex={0}
       role="button"
-      aria-label={`View order #${shortId} placed on ${formattedDate}`}
+      aria-label={`${t('orders.order_prefix')} #${shortId} — ${formattedDate}`}
     >
       {/* ── Header row ──────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-text-primary">
-            Order <span className="text-brand-gold">#{shortId}</span>
+            {t('orders.order_prefix')} <span className="text-brand-gold">#{shortId}</span>
           </p>
           <p className="text-xs text-text-muted">{formattedDate}</p>
         </div>
@@ -108,7 +111,7 @@ function OrderCard({ order }) {
                 <p className="text-[11px] text-text-muted uppercase tracking-wider">
                   {item.product?.brand}
                 </p>
-                <p className="text-xs text-text-muted mt-0.5">Qty: {item.quantity}</p>
+                <p className="text-xs text-text-muted mt-0.5">{t('orders.qty', { count: item.quantity })}</p>
               </div>
             </div>
           );
@@ -116,7 +119,7 @@ function OrderCard({ order }) {
 
         {extraCount > 0 && (
           <p className="text-xs text-text-muted italic pl-1">
-            +{extraCount} more {extraCount === 1 ? 'item' : 'items'}
+            {t('orders.more_items', { count: extraCount })}
           </p>
         )}
       </div>
@@ -128,10 +131,10 @@ function OrderCard({ order }) {
         </p>
         <button
           onClick={(e) => { e.stopPropagation(); handleNavigate(); }}
-          aria-label={`View details for order #${shortId}`}
+          aria-label={`${t('orders.view_details')} #${shortId}`}
           className="text-sm text-brand-gold hover:underline underline-offset-4 transition-all flex items-center gap-1"
         >
-          View Details →
+          {t('orders.view_details')}
         </button>
       </div>
     </article>
@@ -141,6 +144,7 @@ function OrderCard({ order }) {
 // ─── MyOrdersPage ─────────────────────────────────────────────────────────────
 
 export default function MyOrdersPage() {
+  const { t } = useTranslation();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -153,7 +157,7 @@ export default function MyOrdersPage() {
       setOrders(res.data);
     } catch {
       setError(true);
-      toast.error('Failed to load orders', {
+      toast.error(t('orders.load_toast_error'), {
         style: { background: '#dc2626', color: '#fff' },
       });
     } finally {
@@ -173,11 +177,11 @@ export default function MyOrdersPage() {
         <div className="flex items-center gap-3 mb-2">
           <PackageSearch className="w-5 h-5 text-brand-gold" aria-hidden="true" />
           <h1 className="text-2xl font-light text-text-primary tracking-wide">
-            My Orders
+            {t('orders.title')}
           </h1>
         </div>
         <p className="text-sm text-text-muted mb-10 pl-8">
-          Track your purchases and order status
+          {t('orders.subtitle')}
         </p>
 
         {/* ── Loading ───────────────────────────────────────────────── */}
@@ -192,14 +196,14 @@ export default function MyOrdersPage() {
         {/* ── Error ─────────────────────────────────────────────────── */}
         {!loading && error && (
           <div className="flex flex-col items-center gap-6 py-20">
-            <p className="text-text-muted text-sm">Something went wrong loading your orders.</p>
+            <p className="text-text-muted text-sm">{t('orders.load_error')}</p>
             <button
               onClick={fetchOrders}
-              aria-label="Retry loading orders"
+              aria-label={t('orders.retry')}
               className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all duration-200"
             >
               <RotateCcw className="w-4 h-4" />
-              Retry
+              {t('orders.retry')}
             </button>
           </div>
         )}
@@ -208,14 +212,14 @@ export default function MyOrdersPage() {
         {!loading && !error && orders.length === 0 && (
           <div className="flex flex-col items-center">
             <EmptyState
-              message="No orders yet"
-              description="When you purchase perfumes, your orders will appear here."
+              message={t('orders.empty_title')}
+              description={t('orders.empty_description')}
             />
             <Link
               to="/products"
               className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all duration-200"
             >
-              Browse Perfumes
+              {t('orders.browse')}
             </Link>
           </div>
         )}
@@ -225,7 +229,7 @@ export default function MyOrdersPage() {
           <div
             className="flex flex-col gap-4"
             role="list"
-            aria-label="Your orders"
+            aria-label={t('orders.title')}
           >
             {orders.map((order) => (
               <div key={order._id} role="listitem">

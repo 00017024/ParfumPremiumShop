@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { RotateCcw, ClipboardList, ArrowLeft, XCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 import api from '@/lib/api';
@@ -8,7 +9,6 @@ import Layout from '@/components/layout/Layout';
 import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 // ─── Status badge config ──────────────────────────────────────────────────────
-// Shared with MyOrdersPage — consider extracting to a shared util if reused further
 
 const STATUS_STYLES = {
   PENDING:   'bg-brand-gold/15 text-brand-gold border border-brand-gold/30',
@@ -19,10 +19,11 @@ const STATUS_STYLES = {
 };
 
 function StatusBadge({ status }) {
+  const { t } = useTranslation();
   const styles = STATUS_STYLES[status] ?? 'bg-neutral-700 text-text-muted border border-neutral-600';
   return (
     <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider ${styles}`}>
-      {status}
+      {t(`status.${status}`, { defaultValue: status })}
     </span>
   );
 }
@@ -62,20 +63,18 @@ function InfoRow({ label, value }) {
 function PageSkeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
-      {/* Header */}
       <div className="flex flex-col gap-2">
         <div className="h-4 w-40 bg-neutral-800 rounded" />
         <div className="h-3 w-28 bg-neutral-800 rounded" />
       </div>
 
-      {/* Three section cards */}
       {[80, 120, 160].map((h, i) => (
         <div
           key={i}
           className="bg-surface-card border border-neutral-border rounded-sm p-6 flex flex-col gap-3"
         >
           <div className="h-3 w-32 bg-neutral-800 rounded" />
-          <div className={`bg-neutral-800 rounded`} style={{ height: h }} />
+          <div className="bg-neutral-800 rounded" style={{ height: h }} />
         </div>
       ))}
     </div>
@@ -87,12 +86,14 @@ function PageSkeleton() {
 const CANCELLABLE_STATUSES = ['PENDING', 'PAID'];
 
 export default function OrderDetailsPage() {
+  const { t } = useTranslation();
   const { id } = useParams();
 
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const fetchOrder = async () => {
     setLoading(true);
@@ -102,7 +103,7 @@ export default function OrderDetailsPage() {
       setOrder(data);
     } catch {
       setError(true);
-      toast.error('Failed to load order', {
+      toast.error(t('order_detail.load_toast_error'), {
         style: { background: '#dc2626', color: '#fff' },
       });
     } finally {
@@ -114,23 +115,17 @@ export default function OrderDetailsPage() {
     fetchOrder();
   }, [id]);
 
-  // ─── Cancel order ─────────────────────────────────────────────────────────
-  // Only available for PENDING or PAID orders. The ConfirmDialog gates the
-  // action — cancelOrder itself only runs the API call.
-
-  const [confirmOpen, setConfirmOpen] = useState(false);
-
   const cancelOrder = async () => {
     setConfirmOpen(false);
     setCancelling(true);
     try {
       await api.put(`/orders/${id}/status`, { status: 'CANCELLED' });
-      toast.success('Order cancelled successfully', {
+      toast.success(t('orders.cancel_success'), {
         style: { background: '#16a34a', color: '#fff' },
       });
       fetchOrder();
     } catch {
-      toast.error('Failed to cancel order', {
+      toast.error(t('orders.cancel_error'), {
         style: { background: '#dc2626', color: '#fff' },
       });
     } finally {
@@ -146,10 +141,9 @@ export default function OrderDetailsPage() {
         <Link
           to="/orders"
           className="inline-flex items-center gap-1.5 text-xs uppercase tracking-widest text-text-muted hover:text-brand-gold transition-colors mb-8"
-          aria-label="Back to my orders"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          My Orders
+          {t('order_detail.back')}
         </Link>
 
         {/* ── Loading ───────────────────────────────────────────────── */}
@@ -158,14 +152,14 @@ export default function OrderDetailsPage() {
         {/* ── Error ─────────────────────────────────────────────────── */}
         {!loading && error && (
           <div className="flex flex-col items-center gap-6 py-24 text-center">
-            <p className="text-text-muted text-sm">Unable to load order details.</p>
+            <p className="text-text-muted text-sm">{t('order_detail.load_error')}</p>
             <button
               onClick={fetchOrder}
-              aria-label="Retry loading order details"
+              aria-label={t('order_detail.retry')}
               className="inline-flex items-center gap-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black transition-all duration-200"
             >
               <RotateCcw className="w-4 h-4" />
-              Retry
+              {t('order_detail.retry')}
             </button>
           </div>
         )}
@@ -186,7 +180,7 @@ export default function OrderDetailsPage() {
                   <ClipboardList className="w-5 h-5 text-brand-gold" aria-hidden="true" />
                   <div>
                     <h1 className="text-2xl font-light text-text-primary tracking-wide">
-                      Order Details
+                      {t('order_detail.title')}
                     </h1>
                     <p className="text-xs text-text-muted mt-0.5">
                       <span className="text-brand-gold">#{shortId}</span>
@@ -199,42 +193,41 @@ export default function OrderDetailsPage() {
               </div>
 
               {/* ── Section 1: Order Information ──────────────────────── */}
-              <Section title="Order Information">
-                <InfoRow label="Order ID"   value={`#${shortId}`} />
-                <InfoRow label="Date"       value={formattedDate} />
-                <InfoRow label="Status"     value={order.status} />
-                <InfoRow label="Total"      value={`$${Number(order.totalPrice).toFixed(2)}`} />
+              <Section title={t('order_detail.section_info')}>
+                <InfoRow label={t('order_detail.label_order_id')} value={`#${shortId}`} />
+                <InfoRow label={t('order_detail.label_date')}     value={formattedDate} />
+                <InfoRow label={t('order_detail.label_status')}   value={t(`status.${order.status}`, { defaultValue: order.status })} />
+                <InfoRow label={t('order_detail.label_total')}    value={`$${Number(order.totalPrice).toFixed(2)}`} />
 
-                {/* ── Cancel button — only for PENDING or PAID orders ─── */}
                 {CANCELLABLE_STATUSES.includes(order.status) && (
                   <div className="pt-2">
                     <button
                       onClick={() => setConfirmOpen(true)}
                       disabled={cancelling}
-                      aria-label="Cancel order"
+                      aria-label={t('order_detail.cancel')}
                       className="inline-flex items-center gap-2 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all duration-200 uppercase tracking-widest text-xs px-5 py-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <XCircle className="w-3.5 h-3.5" aria-hidden="true" />
-                      {cancelling ? 'Cancelling…' : 'Cancel Order'}
+                      {cancelling ? t('order_detail.cancelling') : t('order_detail.cancel')}
                     </button>
                   </div>
                 )}
               </Section>
 
               {/* ── Section 2: Delivery Information ───────────────────── */}
-              <Section title="Delivery Information">
-                <InfoRow label="Name"    value={order.customerName} />
-                <InfoRow label="Phone"   value={order.phone} />
-                <InfoRow label="City"    value={order.city} />
-                <InfoRow label="Address" value={order.address} />
+              <Section title={t('order_detail.section_delivery')}>
+                <InfoRow label={t('order_detail.label_name')}    value={order.customerName} />
+                <InfoRow label={t('order_detail.label_phone')}   value={order.phone} />
+                <InfoRow label={t('order_detail.label_city')}    value={order.city} />
+                <InfoRow label={t('order_detail.label_address')} value={order.address} />
                 {order.notes && (
-                  <InfoRow label="Notes" value={order.notes} />
+                  <InfoRow label={t('order_detail.label_notes')} value={order.notes} />
                 )}
               </Section>
 
               {/* ── Section 3: Ordered Items ───────────────────────────── */}
-              <Section title="Ordered Items">
-                <ul className="flex flex-col divide-y divide-neutral-border" aria-label="Order items">
+              <Section title={t('order_detail.section_items')}>
+                <ul className="flex flex-col divide-y divide-neutral-border" aria-label={t('order_detail.section_items')}>
                   {order.items.map((item, idx) => {
                     const product = item.product;
                     const lineTotal = (product.price * item.quantity).toFixed(2);
@@ -265,7 +258,7 @@ export default function OrderDetailsPage() {
                           <div className="flex items-center gap-3 mt-1.5 text-xs text-text-muted">
                             <span>${Number(product.price).toFixed(2)}</span>
                             <span className="opacity-30">·</span>
-                            <span>Qty: {item.quantity}</span>
+                            <span>{t('order_detail.qty', { count: item.quantity })}</span>
                           </div>
                         </div>
 
@@ -281,7 +274,7 @@ export default function OrderDetailsPage() {
                 {/* Order total */}
                 <div className="border-t border-neutral-border pt-4 flex justify-between items-baseline">
                   <span className="text-xs uppercase tracking-widest text-text-muted">
-                    Order Total
+                    {t('order_detail.order_total')}
                   </span>
                   <span className="text-xl font-light text-brand-gold">
                     ${Number(order.totalPrice).toFixed(2)}
@@ -297,9 +290,9 @@ export default function OrderDetailsPage() {
 
       <ConfirmDialog
         open={confirmOpen}
-        title="Cancel Order"
-        description="This order will be permanently cancelled. This action cannot be undone."
-        confirmLabel="Cancel Order"
+        title={t('order_detail.cancel_title')}
+        description={t('order_detail.cancel_description')}
+        confirmLabel={t('order_detail.cancel_confirm')}
         loading={cancelling}
         onConfirm={cancelOrder}
         onCancel={() => setConfirmOpen(false)}

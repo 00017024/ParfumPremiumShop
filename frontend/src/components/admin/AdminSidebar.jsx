@@ -8,15 +8,8 @@ import {
   X,
   MapPin,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
-
-const NAV_ITEMS = [
-  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/orders',    icon: ShoppingBag,     label: 'Orders' },
-  { to: '/admin/products',  icon: Package,         label: 'Products' },
-  { to: '/admin/users',     icon: Users,           label: 'Users' },
-  { to: '/admin/analytics', icon: MapPin,          label: 'Analytics' },
-];
 
 const activeClass =
   'bg-brand-gold/10 text-brand-gold border-l-2 border-brand-gold';
@@ -30,7 +23,16 @@ const inactiveClass =
  * @param {function} onClose 
  */
 export default function AdminSidebar({ mobileOpen, onClose }) {
+  const { t } = useTranslation();
   const { user, logout } = useAuth();
+
+  const NAV_ITEMS = [
+    { to: '/admin/dashboard', icon: LayoutDashboard, label: t('admin.sidebar.dashboard') },
+    { to: '/admin/orders',    icon: ShoppingBag,     label: t('admin.sidebar.orders') },
+    { to: '/admin/products',  icon: Package,         label: t('admin.sidebar.products') },
+    { to: '/admin/users',     icon: Users,           label: t('admin.sidebar.users') },
+    { to: '/admin/analytics', icon: MapPin,          label: t('admin.sidebar.analytics') },
+  ];
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -38,10 +40,10 @@ export default function AdminSidebar({ mobileOpen, onClose }) {
       {/* Branding */}
       <div className="h-16 flex items-center px-5 border-b border-neutral-border flex-shrink-0">
         <span className="text-base font-bold text-brand-gold tracking-wide">
-          PARFUM
+          {t('admin.title').split(' ')[0]}
         </span>
         <span className="text-base font-light text-text-secondary tracking-wide ml-1">
-          ADMIN
+          {t('admin.title').split(' ')[1]}
         </span>
       </div>
 
@@ -77,7 +79,7 @@ export default function AdminSidebar({ mobileOpen, onClose }) {
           </div>
           <div className="min-w-0">
             <p className="text-xs text-text-primary truncate">{user?.name}</p>
-            <p className="text-[10px] text-text-muted uppercase tracking-wider">Admin</p>
+            <p className="text-[10px] text-text-muted uppercase tracking-wider">{t('admin.sidebar.admin_role')}</p>
           </div>
         </div>
         <button
@@ -85,7 +87,7 @@ export default function AdminSidebar({ mobileOpen, onClose }) {
           className="flex items-center gap-2 text-xs text-text-muted hover:text-red-400 transition-colors w-full"
         >
           <LogOut className="w-3.5 h-3.5" aria-hidden="true" />
-          Sign out
+          {t('admin.sidebar.sign_out')}
         </button>
       </div>
 
@@ -114,7 +116,7 @@ export default function AdminSidebar({ mobileOpen, onClose }) {
             <button
               onClick={onClose}
               className="absolute top-4 right-4 text-text-muted hover:text-text-primary"
-              aria-label="Close navigation"
+              aria-label={t('admin.sidebar.close_nav', { defaultValue: 'Close navigation' })}
             >
               <X className="w-4 h-4" />
             </button>

@@ -1,4 +1,5 @@
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Valid transitions mirrored from the backend ORDER_TRANSITIONS map.
@@ -24,13 +25,14 @@ const ALL_STATUSES = ['PENDING', 'PAID', 'CONFIRMED', 'COMPLETED', 'CANCELLED'];
  * @param {boolean}  loading        - Whether an update is in-flight.
  */
 export default function OrderStatusSelect({ currentStatus, onChange, loading = false }) {
+  const { t } = useTranslation();
   const allowed = TRANSITIONS[currentStatus] ?? [];
   const hasTransitions = allowed.length > 0;
 
   if (!hasTransitions) {
     return (
       <span className="text-xs text-text-muted italic">
-        No further transitions
+        {t('admin.status.no_transitions')}
       </span>
     );
   }
@@ -44,14 +46,14 @@ export default function OrderStatusSelect({ currentStatus, onChange, loading = f
           if (e.target.value) onChange(e.target.value);
         }}
         className="bg-surface-dark border border-neutral-border text-text-primary text-sm rounded-sm px-3 py-1.5 focus:outline-none focus:border-brand-gold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        aria-label="Change order status"
+        aria-label={t('admin.status.move_to')}
       >
         <option value="" disabled>
-          Move to…
+          {t('admin.status.move_to')}
         </option>
         {allowed.map((s) => (
           <option key={s} value={s}>
-            {s}
+            {t(`admin.status.${s}`, { defaultValue: s })}
           </option>
         ))}
       </select>

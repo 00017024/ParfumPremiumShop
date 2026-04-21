@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { User, Lock, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 import api from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
-import { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } from '@/lib/validation';
+import { UZ_PHONE_REGEX } from '@/lib/validation';
 import Layout from '@/components/layout/Layout';
 
 // ─── Shared styles ────────────────────────────────────────────────────────────
@@ -33,14 +34,15 @@ function FormField({ id, label, error, children }) {
 // ─── Profile Details Panel ────────────────────────────────────────────────────
 
 function ProfilePanel({ user, onUpdated }) {
+  const { t } = useTranslation();
   const [form, setForm]     = useState({ name: user.name ?? '', phone: user.phone ?? '' });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
 
   const validate = () => {
     const e = {};
-    if (!form.name.trim() || form.name.trim().length < 2) e.name = 'Name must be at least 2 characters.';
-    if (!UZ_PHONE_REGEX.test(form.phone.trim())) e.phone = UZ_PHONE_MESSAGE;
+    if (!form.name.trim() || form.name.trim().length < 2) e.name = t('validation.name_profile');
+    if (!UZ_PHONE_REGEX.test(form.phone.trim())) e.phone = t('validation.phone_invalid');
     return e;
   };
 
@@ -56,10 +58,9 @@ function ProfilePanel({ user, onUpdated }) {
         phone: form.phone.trim(),
       });
       onUpdated(data.user);
-      toast.success('Profile updated.', { style: { background: '#16a34a', color: '#fff' } });
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to update profile.';
-      toast.error(msg, { style: { background: '#dc2626', color: '#fff' } });
+      toast.success(t('profile.update_success'), { style: { background: '#16a34a', color: '#fff' } });
+    } catch {
+      toast.error(t('profile.update_error'), { style: { background: '#dc2626', color: '#fff' } });
     } finally {
       setSaving(false);
     }
@@ -68,10 +69,10 @@ function ProfilePanel({ user, onUpdated }) {
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted pb-2 border-b border-neutral-border">
-        Profile Details
+        {t('profile.details')}
       </h2>
 
-      <FormField id="profile-name" label="Full Name" error={errors.name}>
+      <FormField id="profile-name" label={t('auth.full_name')} error={errors.name}>
         <input
           id="profile-name"
           type="text"
@@ -81,7 +82,7 @@ function ProfilePanel({ user, onUpdated }) {
         />
       </FormField>
 
-      <FormField id="profile-email" label="Email">
+      <FormField id="profile-email" label={t('auth.email')}>
         <input
           id="profile-email"
           type="email"
@@ -91,11 +92,11 @@ function ProfilePanel({ user, onUpdated }) {
         />
       </FormField>
 
-      <FormField id="profile-phone" label="Phone Number" error={errors.phone}>
+      <FormField id="profile-phone" label={t('auth.phone')} error={errors.phone}>
         <input
           id="profile-phone"
           type="tel"
-          placeholder="+998901234567"
+          placeholder={t('auth.phone_placeholder')}
           value={form.phone}
           onChange={(e) => { setForm((p) => ({ ...p, phone: e.target.value })); setErrors((p) => ({ ...p, phone: undefined })); }}
           className={inputClass(!!errors.phone)}
@@ -107,7 +108,7 @@ function ProfilePanel({ user, onUpdated }) {
         disabled={saving}
         className="flex items-center justify-center gap-2 py-3 text-sm uppercase tracking-widest font-medium bg-brand-gold text-brand-black hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
-        {saving ? 'Saving…' : 'Save Changes'}
+        {saving ? t('profile.saving') : t('profile.save_changes')}
       </button>
     </form>
   );
@@ -116,6 +117,7 @@ function ProfilePanel({ user, onUpdated }) {
 // ─── Change Password Panel ────────────────────────────────────────────────────
 
 function PasswordPanel() {
+  const { t } = useTranslation();
   const [form, setForm]     = useState({ current: '', next: '', confirm: '' });
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -123,9 +125,9 @@ function PasswordPanel() {
 
   const validate = () => {
     const e = {};
-    if (!form.current) e.current = 'Current password is required.';
-    if (form.next.length < 6) e.next = 'New password must be at least 6 characters.';
-    if (form.next !== form.confirm) e.confirm = 'Passwords do not match.';
+    if (!form.current) e.current = t('validation.current_password_required');
+    if (form.next.length < 6) e.next = t('validation.new_password_min');
+    if (form.next !== form.confirm) e.confirm = t('validation.passwords_mismatch');
     return e;
   };
 
@@ -142,21 +144,20 @@ function PasswordPanel() {
       });
       setDone(true);
       setForm({ current: '', next: '', confirm: '' });
-      toast.success('Password changed.', { style: { background: '#16a34a', color: '#fff' } });
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to change password.';
-      toast.error(msg, { style: { background: '#dc2626', color: '#fff' } });
+      toast.success(t('profile.password_success'), { style: { background: '#16a34a', color: '#fff' } });
+    } catch {
+      toast.error(t('profile.password_error'), { style: { background: '#dc2626', color: '#fff' } });
     } finally {
       setSaving(false);
     }
   };
 
-  const field = (key, id, label, placeholder) => (
+  const field = (key, id, label) => (
     <FormField id={id} label={label} error={errors[key]}>
       <input
         id={id}
         type="password"
-        placeholder={placeholder}
+        placeholder="••••••••"
         value={form[key]}
         onChange={(e) => { setForm((p) => ({ ...p, [key]: e.target.value })); setErrors((p) => ({ ...p, [key]: undefined })); setDone(false); }}
         className={inputClass(!!errors[key])}
@@ -167,16 +168,16 @@ function PasswordPanel() {
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-5">
       <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted pb-2 border-b border-neutral-border">
-        Change Password
+        {t('profile.change_password')}
       </h2>
 
-      {field('current', 'pwd-current', 'Current Password', '••••••••')}
-      {field('next',    'pwd-next',    'New Password',     '••••••••')}
-      {field('confirm', 'pwd-confirm', 'Confirm New Password', '••••••••')}
+      {field('current', 'pwd-current', t('profile.current_password'))}
+      {field('next',    'pwd-next',    t('profile.new_password'))}
+      {field('confirm', 'pwd-confirm', t('profile.confirm_password'))}
 
       {done && (
         <p className="flex items-center gap-2 text-sm text-green-400">
-          <CheckCircle className="w-4 h-4" /> Password updated successfully.
+          <CheckCircle className="w-4 h-4" /> {t('profile.password_updated')}
         </p>
       )}
 
@@ -185,7 +186,7 @@ function PasswordPanel() {
         disabled={saving}
         className="flex items-center justify-center gap-2 py-3 text-sm uppercase tracking-widest font-medium border border-brand-gold text-brand-gold hover:bg-brand-gold hover:text-brand-black disabled:opacity-50 disabled:cursor-not-allowed transition-all"
       >
-        {saving ? 'Updating…' : 'Update Password'}
+        {saving ? t('profile.updating') : t('profile.update_password')}
       </button>
     </form>
   );
@@ -194,13 +195,11 @@ function PasswordPanel() {
 // ─── ProfilePage ──────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
-  const { user, login } = useAuth();
+  const { t } = useTranslation();
+  const { user } = useAuth();
 
-  // Sync local display when profile is saved
   const handleUpdated = (updatedUser) => {
-    // Persist the refreshed user object to localStorage so AuthContext picks it up
     localStorage.setItem('user', JSON.stringify(updatedUser));
-    // Force a lightweight re-render by re-reading from storage on next mount
   };
 
   if (!user) return null;
@@ -212,7 +211,7 @@ export default function ProfilePage() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-10">
           <User className="w-5 h-5 text-brand-gold" aria-hidden="true" />
-          <h1 className="text-2xl font-light text-text-primary tracking-wide">My Profile</h1>
+          <h1 className="text-2xl font-light text-text-primary tracking-wide">{t('profile.title')}</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

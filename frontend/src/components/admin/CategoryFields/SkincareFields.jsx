@@ -1,4 +1,5 @@
-// Enum values — must match backend EXACTLY (case-sensitive).
+import { useTranslation } from 'react-i18next';
+
 const SKIN_TYPES = ['dry', 'oily', 'combination', 'normal', 'sensitive'];
 
 const INGREDIENTS = [
@@ -12,14 +13,20 @@ const INGREDIENTS = [
   'retinol',
 ];
 
-/**
- * Renders skin type and ingredient toggles for a skincare product.
- *
- * @param {{ skinTypes: string[], ingredients: string[] }} profile
- * @param {function}                                       onChange
- * @param {{ ingredients?: string }}                       errors
- */
+const INGREDIENT_KEY_MAP = {
+  'aloe vera':      'aloe_vera',
+  'snail mucin':    'snail_mucin',
+  'collagen':       'collagen',
+  'hyaluronic acid':'hyaluronic_acid',
+  'salicylic acid': 'salicylic_acid',
+  'niacinamide':    'niacinamide',
+  'vitamin C':      'vitamin_c',
+  'retinol':        'retinol',
+};
+
 export default function SkincareFields({ profile, onChange, errors }) {
+  const { t } = useTranslation();
+
   const toggle = (field, value) => {
     const current = profile[field] ?? [];
     const updated = current.includes(value)
@@ -34,8 +41,8 @@ export default function SkincareFields({ profile, onChange, errors }) {
       {/* ── Skin Types (optional) ─────────────────────────────────────── */}
       <div className="flex flex-col gap-2.5">
         <label className="text-[11px] uppercase tracking-widest text-text-muted">
-          Skin Types
-          <span className="ml-2 text-text-muted normal-case tracking-normal">(optional)</span>
+          {t('admin.skincare_fields.skin_types')}
+          <span className="ml-2 text-text-muted normal-case tracking-normal">{t('admin.skincare_fields.optional')}</span>
         </label>
         <div className="flex flex-wrap gap-2">
           {SKIN_TYPES.map((type) => {
@@ -52,7 +59,7 @@ export default function SkincareFields({ profile, onChange, errors }) {
                 }`}
                 aria-pressed={active}
               >
-                {type}
+                {t(`skin_type.${type}`, { defaultValue: type })}
               </button>
             );
           })}
@@ -62,12 +69,13 @@ export default function SkincareFields({ profile, onChange, errors }) {
       {/* ── Ingredients (required, min 1) ─────────────────────────────── */}
       <div className="flex flex-col gap-2.5">
         <label className="text-[11px] uppercase tracking-widest text-text-muted">
-          Ingredients
+          {t('admin.skincare_fields.ingredients')}
           <span className="text-brand-gold ml-1">*</span>
         </label>
         <div className="flex flex-wrap gap-2">
           {INGREDIENTS.map((ing) => {
             const active = (profile.ingredients ?? []).includes(ing);
+            const key = INGREDIENT_KEY_MAP[ing] ?? ing;
             return (
               <button
                 key={ing}
@@ -80,7 +88,7 @@ export default function SkincareFields({ profile, onChange, errors }) {
                 }`}
                 aria-pressed={active}
               >
-                {ing}
+                {t(`ingredient.${key}`, { defaultValue: ing })}
               </button>
             );
           })}

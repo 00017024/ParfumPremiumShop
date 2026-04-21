@@ -4,6 +4,7 @@ import {
   fetchAllOrders,
   updateOrderStatus,
 } from '@/services/admin/ordersService';
+import i18n from '@/i18n';
 
 /**
  * Manages the admin orders list.
@@ -36,7 +37,7 @@ export function useAdminOrders(initialParams = { page: 1, limit: 15 }) {
         setPages(result.pages ?? 1);
       }
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to load orders.';
+      const message = i18n.t('admin.orders.load_error');
       setError(message);
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
     } finally {
@@ -64,7 +65,7 @@ export function useAdminOrders(initialParams = { page: 1, limit: 15 }) {
 
     try {
       await updateOrderStatus(orderId, newStatus);
-      toast.success(`Order status updated to ${newStatus}`, {
+      toast.success(i18n.t('admin.orders.status_updated', { status: i18n.t(`admin.status.${newStatus}`, { defaultValue: newStatus }) }), {
         style: { background: '#16a34a', color: '#fff' },
       });
     } catch (err) {
@@ -72,7 +73,7 @@ export function useAdminOrders(initialParams = { page: 1, limit: 15 }) {
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, status: previous } : o))
       );
-      const message = err.response?.data?.message || 'Failed to update status.';
+      const message = i18n.t('admin.orders.update_error');
       toast.error(message, { style: { background: '#dc2626', color: '#fff' } });
     } finally {
       setUpdatingId(null);

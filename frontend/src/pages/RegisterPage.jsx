@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserPlus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/context/AuthContext';
-import { UZ_PHONE_REGEX, UZ_PHONE_MESSAGE } from '@/lib/validation';
+import { UZ_PHONE_REGEX } from '@/lib/validation';
 import Layout from '@/components/layout/Layout';
 
 export default function RegisterPage() {
+  const { t } = useTranslation();
   const { register } = useAuth();
   const navigate      = useNavigate();
 
@@ -14,24 +16,20 @@ export default function RegisterPage() {
   const [errors, setErrors]         = useState({});
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Validation ─────────────────────────────────────────────────────────────
-
   const validate = () => {
     const e = {};
     if (!form.name.trim() || form.name.trim().length < 2)
-      e.name = 'Full name must be at least 2 characters.';
+      e.name = t('validation.name_min');
     if (!form.email.trim())
-      e.email = 'Email is required.';
+      e.email = t('validation.email_required');
     if (!form.phone.trim())
-      e.phone = 'Phone number is required.';
+      e.phone = t('validation.phone_required');
     else if (!UZ_PHONE_REGEX.test(form.phone.trim()))
-      e.phone = UZ_PHONE_MESSAGE;
+      e.phone = t('validation.phone_invalid');
     if (!form.password || form.password.length < 6)
-      e.password = 'Password must be at least 6 characters.';
+      e.password = t('validation.password_min');
     return e;
   };
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleChange = (field) => (ev) => {
     setForm((prev) => ({ ...prev, [field]: ev.target.value }));
@@ -53,8 +51,6 @@ export default function RegisterPage() {
     if (result.success) navigate(`/verify-otp?email=${encodeURIComponent(form.email)}`, { replace: true });
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
@@ -64,10 +60,10 @@ export default function RegisterPage() {
           <div className="text-center flex flex-col gap-2">
             <UserPlus className="w-8 h-8 text-brand-gold mx-auto" aria-hidden="true" />
             <h1 className="text-3xl font-light text-text-primary tracking-wide">
-              Create Account
+              {t('auth.create_account')}
             </h1>
             <p className="text-sm text-text-muted">
-              Join us to explore our exclusive fragrance collection.
+              {t('auth.register_description')}
             </p>
           </div>
 
@@ -83,13 +79,13 @@ export default function RegisterPage() {
                 htmlFor="register-name"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Full Name <span className="text-brand-gold">*</span>
+                {t('auth.full_name')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="register-name"
                 type="text"
                 autoComplete="name"
-                placeholder="Jane Doe"
+                placeholder={t('auth.full_name_placeholder')}
                 value={form.name}
                 onChange={handleChange('name')}
                 aria-required="true"
@@ -108,13 +104,13 @@ export default function RegisterPage() {
                 htmlFor="register-email"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Email <span className="text-brand-gold">*</span>
+                {t('auth.email')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="register-email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.email_placeholder')}
                 value={form.email}
                 onChange={handleChange('email')}
                 aria-required="true"
@@ -133,13 +129,13 @@ export default function RegisterPage() {
                 htmlFor="register-phone"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Phone Number <span className="text-brand-gold">*</span>
+                {t('auth.phone')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="register-phone"
                 type="tel"
                 autoComplete="tel"
-                placeholder="+998901234567"
+                placeholder={t('auth.phone_placeholder')}
                 value={form.phone}
                 onChange={handleChange('phone')}
                 aria-required="true"
@@ -158,13 +154,13 @@ export default function RegisterPage() {
                 htmlFor="register-password"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Password <span className="text-brand-gold">*</span>
+                {t('auth.password')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="register-password"
                 type="password"
                 autoComplete="new-password"
-                placeholder="Min. 6 characters"
+                placeholder={t('auth.password_placeholder')}
                 value={form.password}
                 onChange={handleChange('password')}
                 aria-required="true"
@@ -181,21 +177,21 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={submitting}
-              aria-label="Create your account"
+              aria-label={t('auth.create_account')}
               className="w-full py-3.5 text-sm uppercase tracking-widest font-medium bg-brand-gold text-brand-black hover:bg-opacity-90 transition-all duration-200 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed mt-1"
             >
-              {submitting ? 'Creating account…' : 'Create Account'}
+              {submitting ? t('auth.creating_account') : t('auth.create_account')}
             </button>
           </form>
 
           {/* Login link */}
           <p className="text-center text-sm text-text-muted">
-            Already have an account?{' '}
+            {t('auth.already_account')}{' '}
             <Link
               to="/login"
               className="text-brand-gold hover:underline underline-offset-4"
             >
-              Sign in
+              {t('auth.sign_in')}
             </Link>
           </p>
 

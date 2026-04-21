@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import PerfumeFields  from './CategoryFields/PerfumeFields';
 import SkincareFields from './CategoryFields/SkincareFields';
@@ -18,19 +19,19 @@ const DEFAULT_PROFILES = {
 
 const ACCORD_KEYS = ['woody', 'citrus', 'floral', 'oriental', 'fresh', 'spicy', 'sweet', 'powdery'];
 
-function validateProfile(type, profile) {
+function validateProfile(type, profile, t) {
   const errors = {};
 
   if (type === 'perfume') {
     const hasAccord = ACCORD_KEYS.some((k) => (profile[k] ?? 0) > 0);
     if (!hasAccord) {
-      errors._root = 'At least one accord must be greater than 0.';
+      errors._root = t('admin.perfume_fields.error');
     }
   }
 
   if (type === 'skincare') {
     if (!(profile.ingredients?.length > 0)) {
-      errors.ingredients = 'At least one ingredient is required.';
+      errors.ingredients = t('admin.skincare_fields.error');
     }
   }
 
@@ -46,12 +47,6 @@ const FIELD_COMPONENTS = {
   cosmetics: CosmeticsFields,
 };
 
-const MODAL_TITLES = {
-  perfume:   'Perfume Profile',
-  skincare:  'Skincare Profile',
-  cosmetics: 'Cosmetics Profile',
-};
-
 // ─── CategoryModal ────────────────────────────────────────────────────────────
 
 /**
@@ -65,6 +60,7 @@ const MODAL_TITLES = {
  * @param {function}     onClose         - Called to close without saving.
  */
 export default function CategoryModal({ open, type, initialProfile, onApply, onClose }) {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState(DEFAULT_PROFILES[type] ?? {});
   const [errors,  setErrors]  = useState({});
 
@@ -101,11 +97,11 @@ export default function CategoryModal({ open, type, initialProfile, onApply, onC
   // For other types: fall through to submit-time errors as before.
   const displayErrors =
     type === 'perfume'
-      ? { ...errors, _root: allAccordsZero ? 'At least one accord must be greater than 0.' : undefined }
+      ? { ...errors, _root: allAccordsZero ? t('admin.perfume_fields.error') : undefined }
       : errors;
 
   const handleApply = () => {
-    const errs = validateProfile(type, profile);
+    const errs = validateProfile(type, profile, t);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       return;
@@ -134,13 +130,13 @@ export default function CategoryModal({ open, type, initialProfile, onApply, onC
             id="category-modal-title"
             className="text-sm uppercase tracking-[0.2em] text-text-primary"
           >
-            {MODAL_TITLES[type]}
+            {t(`admin.category_modal.${type}_title`)}
           </h3>
           <button
             type="button"
             onClick={onClose}
             className="text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Close profile modal"
+            aria-label={t('admin.category_modal.close')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -162,7 +158,7 @@ export default function CategoryModal({ open, type, initialProfile, onApply, onC
             onClick={onClose}
             className="px-4 py-2 text-sm text-text-secondary border border-neutral-border hover:border-text-secondary transition-colors rounded-sm"
           >
-            Cancel
+            {t('admin.category_modal.cancel')}
           </button>
           <button
             type="button"
@@ -170,7 +166,7 @@ export default function CategoryModal({ open, type, initialProfile, onApply, onC
             disabled={allAccordsZero}
             className="px-5 py-2 text-sm font-medium bg-brand-gold text-brand-black hover:bg-opacity-90 transition-all rounded-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Apply
+            {t('admin.category_modal.apply')}
           </button>
         </div>
 

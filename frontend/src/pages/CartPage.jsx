@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 
 import { useCartStore } from "@/store/cartStore";
@@ -128,18 +129,19 @@ function CartItem({ item, onUpdate, onRemove }) {
 /* ───────────── Order Summary ───────────── */
 
 function OrderSummary({ subtotal, itemCount }) {
+  const { t } = useTranslation();
   const isEmpty = itemCount === 0;
 
   return (
     <aside className="bg-surface-card border border-neutral-border rounded-sm p-6 flex flex-col gap-5 h-fit">
 
       <h2 className="text-xs uppercase tracking-[0.2em] text-text-muted">
-        Order Summary
+        {t('cart.order_summary')}
       </h2>
 
       <div className="flex justify-between">
         <span className="text-sm text-text-secondary">
-          Subtotal ({itemCount} {itemCount === 1 ? "item" : "items"})
+          {t('cart.subtotal')} ({t('cart.items_count', { count: itemCount })})
         </span>
 
         <span className="text-lg text-text-primary">
@@ -148,9 +150,9 @@ function OrderSummary({ subtotal, itemCount }) {
       </div>
 
       <div className="flex justify-between">
-        <span className="text-sm text-text-secondary">Shipping</span>
+        <span className="text-sm text-text-secondary">{t('cart.shipping')}</span>
         <span className="text-xs text-text-muted italic">
-          Calculated at checkout
+          {t('cart.shipping_info')}
         </span>
       </div>
 
@@ -158,7 +160,7 @@ function OrderSummary({ subtotal, itemCount }) {
 
       <div className="flex justify-between">
         <span className="text-sm uppercase tracking-widest text-text-secondary">
-          Total
+          {t('cart.total')}
         </span>
 
         <span className="text-xl text-brand-gold">
@@ -175,7 +177,7 @@ function OrderSummary({ subtotal, itemCount }) {
             : "bg-brand-gold text-brand-black hover:bg-opacity-90"
         }`}
       >
-        Proceed to Checkout
+        {t('cart.proceed_checkout')}
         <ArrowRight className="w-4 h-4" />
       </Link>
 
@@ -183,7 +185,7 @@ function OrderSummary({ subtotal, itemCount }) {
         to="/products"
         className="text-center text-xs uppercase tracking-widest text-text-muted hover:text-brand-gold"
       >
-        Continue Shopping
+        {t('cart.continue_shopping')}
       </Link>
     </aside>
   );
@@ -192,6 +194,7 @@ function OrderSummary({ subtotal, itemCount }) {
 /* ───────────── Cart Page ───────────── */
 
 export default function CartPage() {
+  const { t } = useTranslation();
   const items = useCartStore((state) => state.items);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const removeItem = useCartStore((state) => state.removeItem);
@@ -212,8 +215,7 @@ export default function CartPage() {
 
   const handleRemove = (productId, name) => {
     removeItem(productId);
-
-    toast.success(`${name} removed from cart`, {
+    toast.success(t('cart.removed', { name }), {
       duration: 2000,
       style: { background: "#1a1a1a", color: "#e8e0d0" }
     });
@@ -226,12 +228,12 @@ export default function CartPage() {
         <div className="flex items-center gap-3 mb-10">
           <ShoppingBag className="w-5 h-5 text-brand-gold" />
           <h1 className="text-2xl text-text-primary">
-            Your Cart
+            {t('cart.title')}
           </h1>
 
           {itemCount > 0 && (
             <span className="text-sm text-text-muted">
-              ({itemCount} items)
+              ({t('cart.items_count', { count: itemCount })})
             </span>
           )}
         </div>
@@ -239,15 +241,15 @@ export default function CartPage() {
         {items.length === 0 ? (
           <div className="flex flex-col items-center">
             <EmptyState
-              message="Your cart is empty"
-              description="Browse our fragrances and discover something you'll love."
+              message={t('cart.empty')}
+              description={t('cart.empty_description')}
             />
 
             <Link
               to="/products"
               className="mt-2 border border-brand-gold text-brand-gold px-6 py-3 text-sm uppercase tracking-widest hover:bg-brand-gold hover:text-brand-black"
             >
-              Continue Shopping
+              {t('cart.continue_shopping')}
             </Link>
           </div>
         ) : (

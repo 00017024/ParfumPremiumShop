@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { RotateCcw, ExternalLink } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAdminOrders } from '@/hooks/admin/useAdminOrders';
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge';
@@ -12,7 +13,7 @@ function SkeletonRow() {
     <tr className="border-b border-neutral-border animate-pulse">
       {[140, 120, 100, 80, 80, 160].map((w, i) => (
         <td key={i} className="px-4 py-3">
-          <div className={`h-3 bg-surface-dark rounded`} style={{ width: w }} />
+          <div className="h-3 bg-surface-dark rounded" style={{ width: w }} />
         </td>
       ))}
     </tr>
@@ -22,6 +23,7 @@ function SkeletonRow() {
 // ─── AdminOrdersPage ──────────────────────────────────────────────────────────
 
 export default function AdminOrdersPage() {
+  const { t } = useTranslation();
   const {
     orders,
     total,
@@ -35,6 +37,16 @@ export default function AdminOrdersPage() {
     updateParams,
   } = useAdminOrders({ page: 1, limit: 20 });
 
+  const COLUMNS = [
+    t('admin.orders.col_id'),
+    t('admin.orders.col_customer'),
+    t('admin.orders.col_city'),
+    t('admin.orders.col_total'),
+    t('admin.orders.col_date'),
+    t('admin.orders.col_status'),
+    t('admin.orders.col_actions'),
+  ];
+
   return (
     <div className="flex flex-col gap-6 max-w-7xl">
 
@@ -42,11 +54,11 @@ export default function AdminOrdersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-light text-text-primary tracking-wide">
-            Orders
+            {t('admin.orders.title')}
           </h1>
           {!loading && (
             <p className="text-sm text-text-muted mt-1">
-              {total} total order{total !== 1 ? 's' : ''}
+              {t('admin.orders.total', { count: total })}
             </p>
           )}
         </div>
@@ -55,10 +67,10 @@ export default function AdminOrdersPage() {
           onClick={reload}
           disabled={loading}
           className="flex items-center gap-2 text-xs text-text-muted hover:text-brand-gold transition-colors disabled:opacity-40"
-          aria-label="Refresh orders list"
+          aria-label={t('admin.orders.refresh')}
         >
           <RotateCcw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
+          {t('admin.orders.refresh')}
         </button>
       </div>
 
@@ -75,7 +87,7 @@ export default function AdminOrdersPage() {
                   : 'border-neutral-border text-text-muted hover:border-brand-gold/50 hover:text-text-primary'
               }`}
             >
-              {s ?? 'All'}
+              {s ? t(`admin.status.${s}`) : t('admin.orders.all')}
             </button>
           )
         )}
@@ -91,19 +103,17 @@ export default function AdminOrdersPage() {
       {/* ── Table ───────────────────────────────────────────────────── */}
       <div className="bg-surface-card border border-neutral-border rounded-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" aria-label="Orders table">
+          <table className="w-full text-sm" aria-label={t('admin.orders.title')}>
             <thead>
               <tr className="border-b border-neutral-border">
-                {['Order ID', 'Customer', 'City', 'Total', 'Date', 'Status', 'Actions'].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-text-muted font-medium whitespace-nowrap"
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                {COLUMNS.map((h) => (
+                  <th
+                    key={h}
+                    className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-text-muted font-medium whitespace-nowrap"
+                  >
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
 
@@ -117,7 +127,7 @@ export default function AdminOrdersPage() {
                       colSpan={7}
                       className="px-4 py-12 text-center text-sm text-text-muted"
                     >
-                      No orders found.
+                      {t('admin.orders.no_orders')}
                     </td>
                   </tr>
                 )
@@ -166,8 +176,7 @@ export default function AdminOrdersPage() {
                           <Link
                             to={`/admin/orders/${order._id}`}
                             className="text-text-muted hover:text-brand-gold transition-colors flex-shrink-0"
-                            title="View order details"
-                            aria-label={`View order #${shortId}`}
+                            aria-label={`#${shortId}`}
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
                           </Link>
@@ -190,7 +199,7 @@ export default function AdminOrdersPage() {
             disabled={params.page <= 1}
             className="px-3 py-1.5 text-xs border border-neutral-border text-text-secondary hover:border-brand-gold transition-all rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Previous
+            {t('pagination.previous')}
           </button>
           <span className="text-xs text-text-muted px-2">
             {params.page} / {pages}
@@ -200,7 +209,7 @@ export default function AdminOrdersPage() {
             disabled={params.page >= pages}
             className="px-3 py-1.5 text-xs border border-neutral-border text-text-secondary hover:border-brand-gold transition-all rounded-sm disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Next
+            {t('pagination.next')}
           </button>
         </div>
       )}

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import CategoryModal from './CategoryModal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -69,29 +70,29 @@ function mapDetailsToErrors(details = []) {
   return { fieldErrors, general };
 }
 
+
 // ─── Validation ───────────────────────────────────────────────────────────────
 
-function validateBase(form, productType, isEditing) {
+function validateBase(form, productType, isEditing, t) {
   const errors = {};
 
   if (!form.name.trim() || form.name.trim().length < 2)
-    errors.name = 'Name must be at least 2 characters.';
+    errors.name = t('admin.product_form.validation_name');
 
   if (!form.brand.trim())
-    errors.brand = 'Brand is required.';
+    errors.brand = t('admin.product_form.validation_brand');
 
   if (form.price === '' || isNaN(Number(form.price)) || Number(form.price) < 0)
-    errors.price = 'Price must be a non-negative number.';
+    errors.price = t('admin.product_form.validation_price');
 
   if (form.stock !== '' && (isNaN(Number(form.stock)) || Number(form.stock) < 0))
-    errors.stock = 'Stock must be a non-negative integer.';
+    errors.stock = t('admin.product_form.validation_stock');
 
   if (form.imageUrl && !/^https?:\/\/.+/.test(form.imageUrl.trim()))
-    errors.imageUrl = 'Image URL must start with http:// or https://';
+    errors.imageUrl = t('admin.product_form.validation_image');
 
-  // type required only on create; update can leave it unchanged
   if (!isEditing && !productType)
-    errors.type = 'Product type is required.';
+    errors.type = t('admin.product_form.validation_type');
 
   return errors;
 }
@@ -141,6 +142,7 @@ export default function ProductFormModal({
   onSave,
   onClose,
 }) {
+  const { t } = useTranslation();
   const isEditing = Boolean(product);
 
   // ── Base field state ─────────────────────────────────────────────────────
@@ -225,7 +227,7 @@ export default function ProductFormModal({
     setServerErrors([]);
 
     // ── Client-side validation first — no request sent if this fails ───────
-    const validationErrors = validateBase(form, productType, isEditing);
+    const validationErrors = validateBase(form, productType, isEditing, t);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
       return;
@@ -273,8 +275,7 @@ export default function ProductFormModal({
     if (general.length > 0) {
       setServerErrors(general);
     } else if (Object.keys(fieldErrors).length === 0) {
-      // Nothing mapped at all — show the top-level message as a banner.
-      setServerErrors([result.message || 'An unexpected error occurred.']);
+      setServerErrors([result.message || t('admin.product_form.unexpected_error')]);
     }
   };
 
@@ -311,7 +312,7 @@ export default function ProductFormModal({
               id="product-form-title"
               className="text-sm uppercase tracking-[0.2em] text-text-primary"
             >
-              {isEditing ? 'Edit Product' : 'Add New Product'}
+              {isEditing ? t('admin.product_form.edit_title') : t('admin.product_form.add_title')}
             </h2>
             <button
               type="button"
@@ -340,7 +341,7 @@ export default function ProductFormModal({
             )}
 
             {/* Name */}
-            <Field label="Product Name" required error={errors.name}>
+            <Field label={t('admin.product_form.name')} required error={errors.name}>
               <input
                 type="text"
                 placeholder="e.g. Chanel No. 5"
@@ -351,7 +352,7 @@ export default function ProductFormModal({
             </Field>
 
             {/* Brand */}
-            <Field label="Brand" required error={errors.brand}>
+            <Field label={t('admin.product_form.brand')} required error={errors.brand}>
               <input
                 type="text"
                 placeholder="e.g. Chanel"
@@ -363,7 +364,7 @@ export default function ProductFormModal({
 
             {/* Price + Stock */}
             <div className="grid grid-cols-2 gap-4">
-              <Field label="Price (USD)" required error={errors.price}>
+              <Field label={t('admin.product_form.price')} required error={errors.price}>
                 <input
                   type="number"
                   min="0"
@@ -374,7 +375,7 @@ export default function ProductFormModal({
                   className={inputClass('price')}
                 />
               </Field>
-              <Field label="Stock" error={errors.stock}>
+              <Field label={t('admin.product_form.stock')} error={errors.stock}>
                 <input
                   type="number"
                   min="0"
@@ -388,7 +389,7 @@ export default function ProductFormModal({
             </div>
 
             {/* Image URL */}
-            <Field label="Image URL" error={errors.imageUrl}>
+            <Field label={t('admin.product_form.image_url')} error={errors.imageUrl}>
               <input
                 type="url"
                 placeholder="https://..."
@@ -399,7 +400,7 @@ export default function ProductFormModal({
             </Field>
 
             {/* Audience category */}
-            <Field label="Category" error={errors.category}>
+            <Field label={t('admin.product_form.category')} error={errors.category}>
               <select
                 value={form.category}
                 onChange={handleChange('category')}
@@ -408,10 +409,10 @@ export default function ProductFormModal({
                   ${errors.category ? 'border-red-500' : 'border-neutral-border'}
                   ${form.category ? 'text-text-primary' : 'text-text-muted'}`}
               >
-                <option value="">Select category…</option>
+                <option value="">{t('admin.product_form.select_category')}</option>
                 {CATEGORY_OPTIONS.map((c) => (
                   <option key={c} value={c} className="bg-surface-card capitalize">
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
+                    {t(`category.${c}`, { defaultValue: c.charAt(0).toUpperCase() + c.slice(1) })}
                   </option>
                 ))}
               </select>
@@ -420,13 +421,13 @@ export default function ProductFormModal({
             {/* ── Product Type + Profile ─────────────────────────────── */}
             <div className="flex flex-col gap-3 pt-1 border-t border-neutral-border">
               <p className="text-[11px] uppercase tracking-widest text-text-muted pt-1">
-                Product Type & Profile
+                {t('admin.product_form.type_profile')}
               </p>
 
               {/* Type select + Specify button — inline row */}
               <div className="flex gap-3 items-start">
                 <Field
-                  label={isEditing ? 'Type' : 'Type'}
+                  label={t('admin.product_form.type')}
                   required={!isEditing}
                   error={errors.type}
                   className="flex-1"
@@ -439,10 +440,10 @@ export default function ProductFormModal({
                       ${errors.type ? 'border-red-500' : 'border-neutral-border'}
                       ${productType ? 'text-text-primary' : 'text-text-muted'}`}
                   >
-                    <option value="">Select type…</option>
-                    {PRODUCT_TYPES.map((t) => (
-                      <option key={t} value={t} className="bg-surface-card capitalize">
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
+                    <option value="">{t('admin.product_form.select_type')}</option>
+                    {PRODUCT_TYPES.map((pt) => (
+                      <option key={pt} value={pt} className="bg-surface-card capitalize">
+                        {t(`type.${pt}`, { defaultValue: pt.charAt(0).toUpperCase() + pt.slice(1) })}
                       </option>
                     ))}
                   </select>
@@ -461,13 +462,13 @@ export default function ProductFormModal({
                           ? 'border-brand-gold text-brand-gold hover:bg-brand-gold/10'
                           : 'border-neutral-border text-text-secondary hover:border-brand-gold hover:text-brand-gold'
                       }`}
-                    aria-label={profile ? 'Edit profile configuration' : 'Open profile configuration'}
+                    aria-label={profile ? t('admin.product_form.edit_profile') : t('admin.product_form.specify')}
                   >
                     {profile
                       ? <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" />
                       : <SlidersHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
                     }
-                    {profile ? 'Edit Profile' : 'Specify'}
+                    {profile ? t('admin.product_form.edit_profile') : t('admin.product_form.specify')}
                   </button>
                 </div>
               </div>
@@ -477,7 +478,7 @@ export default function ProductFormModal({
                 <div className="flex items-center gap-2 px-3 py-2 bg-surface-dark border border-neutral-border rounded-sm">
                   <CheckCircle2 className="w-3.5 h-3.5 text-brand-gold flex-shrink-0" aria-hidden="true" />
                   <span className="text-xs text-text-secondary line-clamp-1">
-                    <span className="capitalize text-text-muted">{productType}:</span>{' '}
+                    <span className="capitalize text-text-muted">{t(`type.${productType}`, { defaultValue: productType })}:</span>{' '}
                     {summary}
                   </span>
                   <button
@@ -493,10 +494,10 @@ export default function ProductFormModal({
             </div>
 
             {/* Description */}
-            <Field label="Description" error={errors.description}>
+            <Field label={t('admin.product_form.description')} error={errors.description}>
               <textarea
                 rows={3}
-                placeholder="Optional product description…"
+                placeholder={t('admin.product_form.description')}
                 value={form.description}
                 onChange={handleChange('description')}
                 className={`${inputClass('description')} resize-none`}
@@ -511,7 +512,7 @@ export default function ProductFormModal({
                 disabled={submitting}
                 className="px-4 py-2 text-sm text-text-secondary border border-neutral-border hover:border-text-secondary transition-colors rounded-sm disabled:opacity-40"
               >
-                Cancel
+                {t('admin.product_form.cancel')}
               </button>
               <button
                 type="submit"
@@ -519,7 +520,7 @@ export default function ProductFormModal({
                 className="px-5 py-2 text-sm font-medium bg-brand-gold text-brand-black hover:bg-opacity-90 transition-all rounded-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {submitting && <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />}
-                {isEditing ? 'Save Changes' : 'Create Product'}
+                {isEditing ? t('admin.product_form.save_changes') : t('admin.product_form.create')}
               </button>
             </div>
 

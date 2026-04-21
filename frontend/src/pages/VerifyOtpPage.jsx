@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/layout/Layout';
@@ -8,6 +9,7 @@ import Layout from '@/components/layout/Layout';
 const RESEND_COOLDOWN_S = 60;
 
 export default function VerifyOtpPage() {
+  const { t } = useTranslation();
   const { verifyOtp, resendOtp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -20,7 +22,6 @@ export default function VerifyOtpPage() {
   const [cooldown, setCooldown]     = useState(RESEND_COOLDOWN_S);
   const timerRef = useRef(null);
 
-  // Start the resend cooldown timer on mount
   useEffect(() => {
     timerRef.current = setInterval(() => {
       setCooldown((s) => {
@@ -36,7 +37,7 @@ export default function VerifyOtpPage() {
     setError('');
 
     if (!/^\d{6}$/.test(otp)) {
-      setError('Please enter the 6-digit code sent to your email.');
+      setError(t('auth.otp_error'));
       return;
     }
 
@@ -71,12 +72,12 @@ export default function VerifyOtpPage() {
           <div className="text-center flex flex-col gap-2">
             <ShieldCheck className="w-8 h-8 text-brand-gold mx-auto" aria-hidden="true" />
             <h1 className="text-3xl font-light text-text-primary tracking-wide">
-              Verify Your Email
+              {t('auth.verify_email')}
             </h1>
             <p className="text-sm text-text-muted">
-              We sent a 6-digit code to{' '}
+              {t('auth.otp_sent')}{' '}
               <span className="text-text-primary">{email}</span>.
-              <br />Enter it below to activate your account.
+              <br />{t('auth.otp_enter')}
             </p>
           </div>
 
@@ -91,7 +92,7 @@ export default function VerifyOtpPage() {
                 htmlFor="otp-input"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Verification Code <span className="text-brand-gold">*</span>
+                {t('auth.verification_code')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="otp-input"
@@ -118,19 +119,19 @@ export default function VerifyOtpPage() {
             <button
               type="submit"
               disabled={submitting}
-              aria-label="Verify code"
+              aria-label={t('auth.verify')}
               className="w-full py-3.5 text-sm uppercase tracking-widest font-medium bg-brand-gold text-brand-black hover:bg-opacity-90 transition-all duration-200 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed mt-1"
             >
-              {submitting ? 'Verifying…' : 'Verify'}
+              {submitting ? t('auth.verifying') : t('auth.verify')}
             </button>
           </form>
 
           {/* Resend */}
           <p className="text-center text-sm text-text-muted">
-            Didn&apos;t receive the code?{' '}
+            {t('auth.no_code')}{' '}
             {cooldown > 0 ? (
               <span className="text-text-muted">
-                Resend in {cooldown}s
+                {t('auth.resend_in', { count: cooldown })}
               </span>
             ) : (
               <button
@@ -138,7 +139,7 @@ export default function VerifyOtpPage() {
                 onClick={handleResend}
                 className="text-brand-gold hover:underline underline-offset-4 bg-transparent border-none p-0 cursor-pointer"
               >
-                Resend OTP
+                {t('auth.resend_otp')}
               </button>
             )}
           </p>

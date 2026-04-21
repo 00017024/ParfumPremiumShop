@@ -1,32 +1,29 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/layout/Layout';
 
 export default function LoginPage() {
+  const { t } = useTranslation();
   const { login } = useAuth();
   const navigate   = useNavigate();
   const location   = useLocation();
 
-  // Redirect back to the page the user tried to visit, or /products
   const from = location.state?.from?.pathname || '/products';
 
-  const [form, setForm]         = useState({ email: '', password: '' });
-  const [errors, setErrors]     = useState({});
+  const [form, setForm]             = useState({ email: '', password: '' });
+  const [errors, setErrors]         = useState({});
   const [submitting, setSubmitting] = useState(false);
-
-  // ── Validation ─────────────────────────────────────────────────────────────
 
   const validate = () => {
     const e = {};
-    if (!form.email.trim())    e.email    = 'Email is required.';
-    if (!form.password.trim()) e.password = 'Password is required.';
+    if (!form.email.trim())    e.email    = t('validation.email_required');
+    if (!form.password.trim()) e.password = t('validation.password_required');
     return e;
   };
-
-  // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleChange = (field) => (ev) => {
     setForm((prev) => ({ ...prev, [field]: ev.target.value }));
@@ -48,8 +45,6 @@ export default function LoginPage() {
     if (result.success) navigate(from, { replace: true });
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
     <Layout>
       <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
@@ -59,10 +54,10 @@ export default function LoginPage() {
           <div className="text-center flex flex-col gap-2">
             <LogIn className="w-8 h-8 text-brand-gold mx-auto" aria-hidden="true" />
             <h1 className="text-3xl font-light text-text-primary tracking-wide">
-              Sign In
+              {t('auth.sign_in')}
             </h1>
             <p className="text-sm text-text-muted">
-              Welcome back. Enter your credentials to continue.
+              {t('auth.welcome_back')}
             </p>
           </div>
 
@@ -78,13 +73,13 @@ export default function LoginPage() {
                 htmlFor="login-email"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Email <span className="text-brand-gold">*</span>
+                {t('auth.email')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="login-email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@example.com"
+                placeholder={t('auth.email_placeholder')}
                 value={form.email}
                 onChange={handleChange('email')}
                 aria-required="true"
@@ -103,7 +98,7 @@ export default function LoginPage() {
                 htmlFor="login-password"
                 className="text-[11px] uppercase tracking-widest text-text-muted"
               >
-                Password <span className="text-brand-gold">*</span>
+                {t('auth.password')} <span className="text-brand-gold">*</span>
               </label>
               <input
                 id="login-password"
@@ -126,21 +121,21 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              aria-label="Sign in to your account"
+              aria-label={t('auth.sign_in')}
               className="w-full py-3.5 text-sm uppercase tracking-widest font-medium bg-brand-gold text-brand-black hover:bg-opacity-90 transition-all duration-200 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed mt-1"
             >
-              {submitting ? 'Signing in…' : 'Sign In'}
+              {submitting ? t('auth.signing_in') : t('auth.sign_in')}
             </button>
           </form>
 
           {/* Register link */}
           <p className="text-center text-sm text-text-muted">
-            Don't have an account?{' '}
+            {t('auth.no_account')}{' '}
             <Link
               to="/register"
               className="text-brand-gold hover:underline underline-offset-4"
             >
-              Create one
+              {t('auth.create_one')}
             </Link>
           </p>
 

@@ -1,16 +1,9 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
-/**
- * Tag input for cosmetics colors.
- * Press Enter or comma to add; click × to remove.
- * Colors are stored lowercase and deduplicated.
- *
- * @param {{ colors: string[] }} profile
- * @param {function}             onChange
- * @param {object}               errors   - unused for cosmetics (colors are optional)
- */
-export default function CosmeticsFields({ profile, onChange, errors }) {
+export default function CosmeticsFields({ profile, onChange }) {
+  const { t } = useTranslation();
   const [input, setInput] = useState('');
 
   const commit = (raw) => {
@@ -34,7 +27,6 @@ export default function CosmeticsFields({ profile, onChange, errors }) {
       e.preventDefault();
       commit(input);
     }
-    // Backspace on empty input removes last tag
     if (e.key === 'Backspace' && !input && (profile.colors ?? []).length > 0) {
       const colors = profile.colors.slice();
       colors.pop();
@@ -42,22 +34,23 @@ export default function CosmeticsFields({ profile, onChange, errors }) {
     }
   };
 
+  const colorCount = (profile.colors ?? []).length;
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <label className="text-[11px] uppercase tracking-widest text-text-muted">
-          Colors
-          <span className="ml-2 text-text-muted normal-case tracking-normal">(optional)</span>
+          {t('admin.cosmetics_fields.colors')}
+          <span className="ml-2 text-text-muted normal-case tracking-normal">{t('admin.cosmetics_fields.optional')}</span>
         </label>
-        {(profile.colors ?? []).length > 0 && (
+        {colorCount > 0 && (
           <span className="text-[11px] text-text-muted">
-            {profile.colors.length} added
+            {t('admin.cosmetics_fields.added', { count: colorCount })}
           </span>
         )}
       </div>
 
-      {/* Tag list */}
-      {(profile.colors ?? []).length > 0 && (
+      {colorCount > 0 && (
         <div className="flex flex-wrap gap-2">
           {profile.colors.map((color) => (
             <span
@@ -78,21 +71,18 @@ export default function CosmeticsFields({ profile, onChange, errors }) {
         </div>
       )}
 
-      {/* Text input */}
       <input
         type="text"
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={handleKeyDown}
         onBlur={() => commit(input)}
-        placeholder="e.g. nude, red, coral — press Enter to add"
+        placeholder={t('admin.cosmetics_fields.placeholder')}
         className="w-full bg-surface-dark border border-neutral-border rounded-sm px-3 py-2.5 text-sm text-text-primary placeholder-text-muted focus:outline-none focus:border-brand-gold transition-colors"
       />
 
       <p className="text-[11px] text-text-muted">
-        Press <kbd className="bg-surface-dark border border-neutral-border px-1 rounded text-[10px]">Enter</kbd> or{' '}
-        <kbd className="bg-surface-dark border border-neutral-border px-1 rounded text-[10px]">,</kbd> to add.
-        Backspace removes the last tag.
+        {t('admin.cosmetics_fields.hint')}
       </p>
     </div>
   );

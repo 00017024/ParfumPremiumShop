@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
+import i18n from '@/i18n';
 
 /**
  * Fetches the /admin/analytics payload once on mount.
@@ -20,7 +21,7 @@ export function useAdminAnalytics() {
         const { data } = await api.get('/admin/analytics');
         if (!cancelled) setAnalytics(data);
       } catch {
-        if (!cancelled) setError('Failed to load analytics.');
+        if (!cancelled) setError(i18n.t('admin.analytics.load_error'));
       } finally {
         if (!cancelled) setLoading(false);
       }

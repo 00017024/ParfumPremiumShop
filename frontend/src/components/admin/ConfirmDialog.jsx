@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { AlertTriangle, Loader2, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * A reusable confirmation dialog for destructive actions (delete, block, etc.).
@@ -17,11 +18,12 @@ export default function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = 'Confirm',
+  confirmLabel,
   loading = false,
   onConfirm,
   onCancel,
 }) {
+  const { t } = useTranslation();
   const confirmRef = useRef(null);
 
   // Auto-focus the confirm button when dialog opens
@@ -67,7 +69,7 @@ export default function ConfirmDialog({
           onClick={onCancel}
           disabled={loading}
           className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
-          aria-label="Close dialog"
+          aria-label={t('admin.confirm.cancel')}
         >
           <X className="w-4 h-4" />
         </button>
@@ -99,7 +101,7 @@ export default function ConfirmDialog({
             disabled={loading}
             className="px-4 py-2 text-sm text-text-secondary border border-neutral-border hover:border-text-secondary transition-colors rounded-sm disabled:opacity-40"
           >
-            Cancel
+            {t('admin.confirm.cancel')}
           </button>
           <button
             ref={confirmRef}
@@ -108,7 +110,7 @@ export default function ConfirmDialog({
             className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 transition-colors rounded-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />}
-            {confirmLabel}
+            {confirmLabel ?? t('admin.confirm.cancel')}
           </button>
         </div>
 
