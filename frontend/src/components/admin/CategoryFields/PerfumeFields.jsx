@@ -5,9 +5,14 @@ const ACCORDS = [
   'fresh', 'spicy',  'sweet',  'powdery',
 ];
 
+/**
+ * Purpose: Renders 8 accord sliders (0–10) for the perfume profile; calls onChange with the updated profile object.
+ * Input: profile – current perfumeProfile object, onChange – (updatedProfile) => void, errors – field error map
+ */
 export default function PerfumeFields({ profile, onChange, errors }) {
   const { t } = useTranslation();
 
+  /** Purpose: Parses a raw input value, clamps it to [0, 10], and propagates the updated profile. */
   const handleAccord = (key, raw) => {
     const value = Math.min(10, Math.max(0, Number(raw)));
     onChange({ ...profile, [key]: value });

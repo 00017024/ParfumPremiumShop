@@ -12,6 +12,11 @@ import OrderStatusBadge      from '@/components/admin/OrderStatusBadge';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Fills missing dates in a sparse time-series array so charts always show a continuous x-axis.
+ * Input: data – array of { date, count?, revenue? }, days – number of days to cover ending today
+ * Output: Complete array with zero-filled entries for any dates missing from data.
+ */
 function fillDates(data, days) {
   const map = Object.fromEntries((data || []).map((d) => [d.date, d]));
   return Array.from({ length: days }, (_, i) => {
@@ -22,11 +27,13 @@ function fillDates(data, days) {
   });
 }
 
+/** Purpose: Formats an ISO date string to a short weekday abbreviation (e.g. "Mon"). */
 function shortDay(dateStr) {
   return new Date(`${dateStr}T12:00:00`)
     .toLocaleDateString('en-US', { weekday: 'short' });
 }
 
+/** Purpose: Formats an ISO date string to a short month + day label (e.g. "Apr 3"). */
 function shortDate(dateStr) {
   return new Date(`${dateStr}T12:00:00`)
     .toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -34,6 +41,9 @@ function shortDate(dateStr) {
 
 // ─── AdminDashboardPage ───────────────────────────────────────────────────────
 
+/**
+ * Purpose: Admin dashboard showing KPI stat cards, inline bar charts for weekly sales and 30-day revenue/user growth, and top products.
+ */
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
   const { stats, loading, error }                        = useAdminStats();

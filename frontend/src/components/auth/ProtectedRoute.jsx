@@ -1,11 +1,10 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
-// ─── ProtectedRoute ───────────────────────────────────────────────────────────
-// Wraps any route that requires authentication.
-// Preserves the intended destination in location state so LoginPage
-// can redirect back after a successful login.
-
+/**
+ * Purpose: Redirects unauthenticated users to /login, preserving the intended location for post-login redirect.
+ * Output: Renders children when authenticated; null while session is loading.
+ */
 export default function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();

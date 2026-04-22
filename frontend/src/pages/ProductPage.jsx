@@ -31,6 +31,9 @@ const toIngKey = (s) => s.toLowerCase().replace(/\s+/g, '_');
 
 // ─── Loading Skeleton ─────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Full-page skeleton for the product detail layout while data loads.
+ */
 function ProductPageSkeleton() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 animate-pulse">
@@ -67,6 +70,9 @@ function ProductPageSkeleton() {
 
 // ─── Error State ──────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Centered error state for the product detail page (e.g. 404 or network failure).
+ */
 function ProductError({ messageKey }) {
   const { t } = useTranslation();
   return (
@@ -93,6 +99,9 @@ function ProductError({ messageKey }) {
 
 const ACCORD_ORDER = ['woody', 'oriental', 'sweet', 'citrus', 'floral', 'spicy', 'powdery', 'fresh'];
 
+/**
+ * Purpose: Renders active accord tags with percentage bars for a perfume's scent profile.
+ */
 function ScentProfileDisplay({ profile }) {
   const { t } = useTranslation();
   const active = ACCORD_ORDER.filter((k) => (profile[k] ?? 0) > 0);
@@ -129,6 +138,9 @@ function ScentProfileDisplay({ profile }) {
 
 // ─── Skincare Profile Display ─────────────────────────────────────────────────
 
+/**
+ * Purpose: Small bordered tag chip used inside skincare and cosmetics profile displays.
+ */
 function ProfileBadge({ children }) {
   return (
     <span className="px-2.5 py-1 border border-neutral-border text-text-secondary text-xs rounded-sm">
@@ -137,6 +149,9 @@ function ProfileBadge({ children }) {
   );
 }
 
+/**
+ * Purpose: Renders skin types and key ingredients from a skincare product's profile.
+ */
 function SkincareProfileDisplay({ profile }) {
   const { t } = useTranslation();
   const skinTypes   = profile.skinTypes   || [];
@@ -184,6 +199,9 @@ const COLOR_SWATCHES = {
   nude: '#C4A882', red: '#C0392B', pink: '#E91E8C', brown: '#8B4513', coral: '#FF7F50',
 };
 
+/**
+ * Purpose: Renders available color family tags from a cosmetics product's profile.
+ */
 function CosmeticsProfileDisplay({ profile }) {
   const { t } = useTranslation();
   const colors = profile.colors || [];
@@ -212,6 +230,9 @@ function CosmeticsProfileDisplay({ profile }) {
 
 // ─── Category Pills ───────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Small uppercase tag chip for displaying the product category (e.g. "men", "unisex").
+ */
 function CategoryPill({ label }) {
   return (
     <span className="inline-block border border-neutral-border text-text-muted text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-sm">
@@ -222,6 +243,9 @@ function CategoryPill({ label }) {
 
 // ─── Quantity Selector ────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Stepper control for selecting add-to-cart quantity; clamps to [1, available stock].
+ */
 function QuantitySelector({ qty, setQty, max, disabled }) {
   const { t } = useTranslation();
   const decrease = () => setQty((q) => Math.max(1, q - 1));
@@ -264,6 +288,9 @@ function QuantitySelector({ qty, setQty, max, disabled }) {
 
 // ─── ProductPage ──────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Product detail page with image, stock status, quantity selector, add-to-cart, star rating, and similar product recommendations.
+ */
 export default function ProductPage() {
   const { id } = useParams();
   const { user } = useAuth();

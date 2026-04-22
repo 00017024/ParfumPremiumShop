@@ -9,6 +9,9 @@ import EmptyState from "@/components/product/EmptyState";
 
 /* ───────────── Quantity Selector ───────────── */
 
+/**
+ * Purpose: Stepper control for cart line quantity; clamps between 1 and available stock.
+ */
 function QuantitySelector({ productId, quantity, stock, onUpdate }) {
   const decrease = () => {
     if (quantity > 1) onUpdate(productId, quantity - 1);
@@ -45,6 +48,9 @@ function QuantitySelector({ productId, quantity, stock, onUpdate }) {
 
 /* ───────────── Cart Item ───────────── */
 
+/**
+ * Purpose: Renders a single cart line with product image, name, price, quantity stepper, and remove button.
+ */
 function CartItem({ item, onUpdate, onRemove }) {
   const { product, quantity } = item;
 
@@ -128,6 +134,9 @@ function CartItem({ item, onUpdate, onRemove }) {
 
 /* ───────────── Order Summary ───────────── */
 
+/**
+ * Purpose: Sticky sidebar showing cart subtotal, item count, and the proceed-to-checkout button.
+ */
 function OrderSummary({ subtotal, itemCount }) {
   const { t } = useTranslation();
   const isEmpty = itemCount === 0;
@@ -193,6 +202,9 @@ function OrderSummary({ subtotal, itemCount }) {
 
 /* ───────────── Cart Page ───────────── */
 
+/**
+ * Purpose: Shopping cart page showing all line items, a live stock banner, and a checkout CTA.
+ */
 export default function CartPage() {
   const { t } = useTranslation();
   const items = useCartStore((state) => state.items);

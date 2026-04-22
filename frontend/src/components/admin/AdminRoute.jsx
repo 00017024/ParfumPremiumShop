@@ -2,13 +2,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
 /**
- * AdminRoute — guards any route that requires admin role.
- *
- * Behaviour:
- * - While session is restoring (loading): render nothing (prevents flash redirect).
- * - Unauthenticated: redirect to /login, preserving the intended destination.
- * - Authenticated but not admin: redirect to /products (graceful, not 403 page).
- * - Admin: render children.
+ * Purpose: Restricts access to admin users; redirects non-admins to /products and unauthenticated users to /login.
+ * Output: Renders children for admin role; null while session is loading.
  */
 export default function AdminRoute({ children }) {
   const { user, loading } = useAuth();

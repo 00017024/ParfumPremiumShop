@@ -1,6 +1,9 @@
 import { Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Purpose: Centered empty-state placeholder with a box icon; uses i18n defaults when no message/description is passed.
+ */
 export default function EmptyState({ message, description }) {
   const { t } = useTranslation();
   const msg  = message     ?? t('empty.default_message');

@@ -5,6 +5,9 @@ import Layout from '@/components/layout/Layout';
 import ProductGrid from '@/components/product/ProductGrid';
 import toast from 'react-hot-toast';
 
+/**
+ * Purpose: Cosmetics category page; fetches all cosmetics products and renders a product grid.
+ */
 export default function Cosmetics() {
   const { t } = useTranslation();
   const [products, setProducts] = useState([]);

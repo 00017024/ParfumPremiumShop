@@ -1,9 +1,17 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Purpose: Renders prev/next buttons and a smart page-number list with ellipsis for large page counts.
+ * Input: currentPage, totalPages, onPageChange – (page: number) => void
+ */
 export default function Pagination({ currentPage, totalPages, onPageChange }) {
   const { t } = useTranslation();
 
+  /**
+   * Purpose: Builds the visible page-number list with at most 5 items + ellipsis, always including first/last.
+   * Output: (number | '...')[]
+   */
   const getPageNumbers = () => {
     const pages = [];
     const maxVisible = 5;

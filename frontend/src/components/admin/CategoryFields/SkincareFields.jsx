@@ -24,9 +24,14 @@ const INGREDIENT_KEY_MAP = {
   'retinol':        'retinol',
 };
 
+/**
+ * Purpose: Renders toggle chips for skin types and ingredients for the skincare profile.
+ * Input: profile – current skincareProfile object, onChange – (updatedProfile) => void, errors – field error map
+ */
 export default function SkincareFields({ profile, onChange, errors }) {
   const { t } = useTranslation();
 
+  /** Purpose: Adds or removes a value from a profile array field (skinTypes or ingredients). */
   const toggle = (field, value) => {
     const current = profile[field] ?? [];
     const updated = current.includes(value)

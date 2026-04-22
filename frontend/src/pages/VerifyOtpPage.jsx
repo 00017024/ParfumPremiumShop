@@ -8,6 +8,9 @@ import Layout from '@/components/layout/Layout';
 
 const RESEND_COOLDOWN_S = 60;
 
+/**
+ * Purpose: OTP verification page; reads email from query params, enforces a 60-second resend cooldown.
+ */
 export default function VerifyOtpPage() {
   const { t } = useTranslation();
   const { verifyOtp, resendOtp } = useAuth();

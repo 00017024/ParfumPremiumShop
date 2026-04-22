@@ -11,7 +11,11 @@ const REVENUE_STATUSES = [
   ORDER_STATUS.COMPLETED,
 ];
 
-// GET /admin/users
+/**
+ * Purpose: Returns paginated list of all users (passwords excluded), newest first.
+ * Input: Query params — page, limit (max 100)
+ * Output: { total, page, pages, users }
+ */
 exports.getAllUsers = async (req, res, next) => {
   try {
     const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
@@ -30,7 +34,10 @@ exports.getAllUsers = async (req, res, next) => {
   }
 };
 
-// GET /admin/users/:id
+/**
+ * Purpose: Fetches a single user by ID, excluding the password field.
+ * Output: User document or 404 ApiError.
+ */
 exports.getUserById = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id).select("-password");
@@ -45,7 +52,11 @@ exports.getUserById = async (req, res, next) => {
   }
 };
 
-// PUT /admin/users/:id
+/**
+ * Purpose: Updates any user fields except password (password key is stripped before applying).
+ * Input: Any User fields in req.body
+ * Output: Updated user document (password excluded) or 404 ApiError.
+ */
 exports.updateUser = async (req, res, next) => {
   try {
     const updates = { ...req.body };
@@ -67,7 +78,10 @@ exports.updateUser = async (req, res, next) => {
   }
 };
 
-// POST /admin/users/:id/block
+/**
+ * Purpose: Sets isActive=false to prevent the user from logging in; self-blocking is disallowed.
+ * Output: { message, user } or 400 if the admin attempts to block their own account.
+ */
 exports.blockUser = async (req, res, next) => {
   try {
     if (req.params.id === req.user._id.toString()) {
@@ -90,7 +104,10 @@ exports.blockUser = async (req, res, next) => {
   }
 };
 
-// POST /admin/users/:id/unblock
+/**
+ * Purpose: Restores access for a blocked user by setting isActive=true.
+ * Output: { message, user } or 404 ApiError.
+ */
 exports.unblockUser = async (req, res, next) => {
   try {
     const user = await User.findByIdAndUpdate(
@@ -109,7 +126,10 @@ exports.unblockUser = async (req, res, next) => {
   }
 };
 
-// GET /admin/analytics
+/**
+ * Purpose: Runs 7 parallel aggregations to produce dashboard analytics (top products, sales trends, user growth, revenue, conversion rate).
+ * Output: { topProductsByCategory, mostActiveUser, weeklySales, userGrowth, revenueOverTime, conversionRate }
+ */
 exports.getAnalytics = async (_req, res, next) => {
   try {
     const sevenDaysAgo = new Date();
@@ -263,7 +283,10 @@ exports.getAnalytics = async (_req, res, next) => {
   }
 };
 
-// GET /admin/order-locations
+/**
+ * Purpose: Returns { lat, lng } pairs for all orders that have a recorded delivery location.
+ * Output: Array of { lat, lng } objects for map rendering.
+ */
 exports.getOrderLocations = async (_req, res, next) => {
   try {
     const orders = await Order.find(
@@ -278,7 +301,10 @@ exports.getOrderLocations = async (_req, res, next) => {
   }
 };
 
-// GET /admin/stats
+/**
+ * Purpose: Returns high-level KPI counts (orders, revenue, pending, users, products) plus 5 recent orders.
+ * Output: { totalOrders, totalRevenue, pendingOrders, totalUsers, totalProducts, recentOrders }
+ */
 exports.getStats = async (_req, res, next) => {
   try {
     const [orderStats, totalUsers, totalProducts] = await Promise.all([

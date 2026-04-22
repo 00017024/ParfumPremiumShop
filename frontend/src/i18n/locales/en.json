@@ -329,6 +329,9 @@
   "admin": {
     "title": "PARFUM ADMIN",
     "sidebar": {
+      "brand": "PARFUM ADMIN",
+      "open_nav": "Open navigation",
+      "storefront": "Go to storefront",
       "admin_role": "Admin",
       "sign_out": "Sign out",
       "dashboard": "Dashboard",
@@ -488,7 +491,9 @@
       "pinned_other": "{{count}} pinned orders",
       "loading": "Loading locations…",
       "no_locations": "No order locations recorded yet.",
-      "load_error": "Failed to load order locations"
+      "load_error": "Failed to load order locations",
+      "order_location": "Order location {{n}}",
+      "map_load_error": "Failed to load map."
     },
     "product_form": {
       "edit_title": "Edit Product",
@@ -543,5 +548,16 @@
       "placeholder": "e.g. nude, red, coral — press Enter to add",
       "hint": "Press Enter or , to add. Backspace removes the last tag."
     }
+  },
+  "map": {
+    "load_error": "Map failed to load. Please check your connection.",
+    "search_placeholder": "Search for your address…",
+    "drag_marker": "Drag to adjust your delivery location"
+  },
+  "stock": {
+    "unavailable": "{{name}} is no longer available.",
+    "out_of_stock": "{{name}} is out of stock.",
+    "quantity_updated": "Only {{count}} unit available (your cart had {{qty}}). Quantity updated.",
+    "quantity_updated_other": "Only {{count}} units available (your cart had {{qty}}). Quantity updated."
   }
 }

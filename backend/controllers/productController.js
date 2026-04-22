@@ -6,8 +6,11 @@ const mlModel = require("../../ml/models/perfume_model.json");
 const ML_WEIGHTS = mlModel.weights;
 const ML_BIAS    = mlModel.bias;
 
-// Recreates the Python build_perfume_pair_features() used during training:
-//   8 element-wise products + 8 absolute differences + 1 cosine similarity = 17 features
+/**
+ * Purpose: Builds the 17-feature vector used by the ML model (mirrors Python training code).
+ * Input: p1, p2 – product lean docs with optional perfumeProfile
+ * Output: number[17] — 8 element-wise products, 8 absolute differences, 1 cosine similarity.
+ */
 function buildPerfumePairFeatures(p1, p2) {
   const v1 = profileToVector(p1.perfumeProfile || {});
   const v2 = profileToVector(p2.perfumeProfile || {});
@@ -17,7 +20,11 @@ function buildPerfumePairFeatures(p1, p2) {
   return [...elementwiseProduct, ...absoluteDifference, similarity];
 }
 
-// Linear model: score = bias + sum(weight_i * feature_i)
+/**
+ * Purpose: Evaluates the trained linear model to produce a similarity score.
+ * Input: features – number[17] from buildPerfumePairFeatures
+ * Output: Scalar score; higher means more similar perfumes.
+ */
 function computeMLScore(features) {
   let score = ML_BIAS;
   for (let i = 0; i < ML_WEIGHTS.length; i++) {
@@ -26,15 +33,11 @@ function computeMLScore(features) {
   return score;
 }
 
-// ─── getRecommendationReason ──────────────────────────────────────────────────
-// Returns the top 2–3 accords shared most strongly between two perfumes.
-// "Shared strength" = MIN(source[accord], candidate[accord]) — the overlap each
-// accord actually contributes to both profiles.  Accords with no overlap (min=0)
-// are excluded.  Results are sorted descending so the most prominent accord comes first.
-//
-// @param  {object} source     - source product (lean Mongoose doc)
-// @param  {object} candidate  - candidate product (lean Mongoose doc)
-// @returns {string[]}         - up to 3 accord names, e.g. ["woody", "citrus"]
+/**
+ * Purpose: Returns the top 2–3 accords most strongly shared between two perfumes (overlap = MIN of both values).
+ * Input: source, candidate – lean product docs with optional perfumeProfile
+ * Output: string[] of up to 3 accord names sorted by shared strength, e.g. ["woody", "citrus"].
+ */
 function getRecommendationReason(source, candidate) {
   const sp = source.perfumeProfile    || {};
   const cp = candidate.perfumeProfile || {};
@@ -59,7 +62,11 @@ const PROFILE_FOR_TYPE = {
 };
 const ALL_PROFILES = Object.values(PROFILE_FOR_TYPE);
 
-// GET /products
+/**
+ * Purpose: Paginates and optionally filters/searches the product catalogue.
+ * Input: Query params — search, page, limit, sort, order, category, type
+ * Output: { total, page, pages, products }
+ */
 exports.getProducts = async (req, res, next) => {
   try {
     let {
@@ -112,7 +119,10 @@ exports.getProducts = async (req, res, next) => {
   }
 };
 
-// GET /products/:id
+/**
+ * Purpose: Fetches a single product by ID; excludes the ratings sub-array from the response.
+ * Output: Product document or 404 ApiError.
+ */
 exports.getProductById = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id).select("-ratings");
@@ -127,7 +137,10 @@ exports.getProductById = async (req, res, next) => {
   }
 };
 
-// POST /products (Admin)
+/**
+ * Purpose: Creates a new product document from req.body (admin only).
+ * Output: 201 with the saved product; surfaces Mongoose ValidationError and profile-mismatch hook errors as 400.
+ */
 exports.addProduct = async (req, res, next) => {
   try {
     const product = new Product(req.body);
@@ -144,7 +157,11 @@ exports.addProduct = async (req, res, next) => {
   }
 };
 
-// PUT /products/:id (Admin)
+/**
+ * Purpose: Patches a product; when type changes, atomically $unsets incompatible profile fields.
+ * Input: Any product fields in req.body; type change triggers automatic profile cleanup.
+ * Output: Updated product document or 400/404 ApiError.
+ */
 exports.updateProduct = async (req, res, next) => {
   try {
     // When type is changing, build a $set/$unset document so that profiles
@@ -190,8 +207,11 @@ exports.updateProduct = async (req, res, next) => {
   }
 };
 
-// GET /products/filter/perfume
-// Ranks perfumes by cosine similarity against the user's accord preferences.
+/**
+ * Purpose: Ranks perfumes by cosine similarity against the user's accord preferences.
+ * Input: Query params matching ACCORD_FIELDS (woody, citrus, etc.), values 1–10; zero/absent = no preference.
+ * Output: { products, total } sorted by descending similarity score.
+ */
 exports.filterPerfumes = async (req, res, next) => {
   try {
     // Collect only accords the user actively set (value > 0).
@@ -244,8 +264,11 @@ exports.filterPerfumes = async (req, res, next) => {
   }
 };
 
-// GET /products/filter/skincare
-// Scores skincare products by overlapping ingredients (×2) and skin types (×1).
+/**
+ * Purpose: Scores skincare products by overlapping ingredients (×2) and skin types (×1) with the caller's preferences.
+ * Input: Query params — ingredients (comma-separated), skinTypes (comma-separated)
+ * Output: { products, total } sorted descending by match score.
+ */
 exports.filterSkincare = async (req, res, next) => {
   try {
     const ingredientList = req.query.ingredients
@@ -280,8 +303,11 @@ exports.filterSkincare = async (req, res, next) => {
   }
 };
 
-// GET /products/filter/cosmetics
-// Filters cosmetics by color family (exact match). No scoring needed.
+/**
+ * Purpose: Filters cosmetics by color family (exact match, no scoring).
+ * Input: Query param colors — comma-separated list of color strings
+ * Output: { products, total }; returns all cosmetics when no colors are specified.
+ */
 exports.filterCosmetics = async (req, res, next) => {
   try {
     const colorList = req.query.colors
@@ -300,14 +326,11 @@ exports.filterCosmetics = async (req, res, next) => {
   }
 };
 
-// GET /products/:id/recommendations
-// Returns similar products based on the source product's type:
-//   perfume   → cosine similarity on 8-dimensional accord vector
-//   skincare  → weighted overlap (ingredients ×2, skinTypes ×1)
-//   cosmetics → no recommendations (returns empty array)
-//
-// Query params:
-//   ?limit=N  — number of results to return (default 5, max 20)
+/**
+ * Purpose: Returns similar products for a given product ID using type-specific algorithms (perfume: ML cosine, skincare: ingredient overlap, cosmetics: none).
+ * Input: req.params.id – source product ID; optional query param limit (default 5, max 20)
+ * Output: { success, data } where data contains scored recommendation objects.
+ */
 exports.getRecommendations = async (req, res, next) => {
   try {
     const source = await Product.findById(req.params.id).lean();
@@ -432,9 +455,11 @@ exports.getRecommendations = async (req, res, next) => {
   }
 };
 
-// POST /products/:id/rate  (authenticated users)
-// Body: { rating: 1–5 }
-// Upserts the user's rating, recalculates averageRating + ratingCount, saves.
+/**
+ * Purpose: Upserts the user's rating on a product and recomputes averageRating + ratingCount.
+ * Input: { rating: 1–5 } in req.body
+ * Output: { averageRating, ratingCount, userRating }; no-ops when the same value is already stored.
+ */
 exports.rateProduct = async (req, res, next) => {
   try {
     const value = parseInt(req.body.rating, 10);
@@ -479,7 +504,10 @@ exports.rateProduct = async (req, res, next) => {
   }
 };
 
-// DELETE /products/:id (Admin)
+/**
+ * Purpose: Permanently deletes a product by ID (admin only).
+ * Output: Success message or 404 ApiError if not found.
+ */
 exports.deleteProduct = async (req, res, next) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);

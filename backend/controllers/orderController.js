@@ -3,6 +3,11 @@ const { Order, ORDER_STATUS } = require("../models/Order");
 const Product = require("../models/Product");
 const ApiError = require("../utils/ApiError");
 
+/**
+ * Purpose: Validates cart items, locks stock via a Mongo transaction, and persists a new order.
+ * Input: { items, customerName, phone, city, address, notes?, location? } in req.body
+ * Output: 201 { success, order } with populated product details; aborts and restores stock on any failure.
+ */
 exports.createOrder = async (req, res, next) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -107,7 +112,10 @@ exports.createOrder = async (req, res, next) => {
   }
 }; // ← createOrder ends HERE
 
-// GET /orders/my
+/**
+ * Purpose: Returns all orders belonging to the authenticated user, newest first.
+ * Output: Array of populated order documents.
+ */
 exports.getMyOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ user: req.user._id })
@@ -120,7 +128,10 @@ exports.getMyOrders = async (req, res, next) => {
   }
 };
 
-// GET /orders/:id
+/**
+ * Purpose: Fetches a single order by ID; enforces that only the owner or an admin can view it.
+ * Output: Populated order document; 403 if the caller does not own the order and is not admin.
+ */
 exports.getOrderById = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -140,7 +151,11 @@ exports.getOrderById = async (req, res, next) => {
   }
 };
 
-// GET /orders (Admin)
+/**
+ * Purpose: Returns paginated list of all orders for admin use, newest first.
+ * Input: Query params — page, limit (max 100)
+ * Output: { total, page, pages, orders } with user and product details populated.
+ */
 exports.getAllOrders = async (req, res, next) => {
   try {
     const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
@@ -160,7 +175,11 @@ exports.getAllOrders = async (req, res, next) => {
   }
 };
 
-// PUT /orders/:id/status (Admin)
+/**
+ * Purpose: Advances an order through its status machine; restores stock when an order is cancelled.
+ * Input: { status } in req.body; must be a valid next state per canTransitionTo().
+ * Output: Updated populated order; 400 if the transition is illegal.
+ */
 exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { status } = req.body;

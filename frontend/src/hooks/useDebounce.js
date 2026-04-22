@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Delay updating the returned value until the input value has stopped
- * changing for the specified duration.
- *
- * @param {*}      value 
- * @param {number} delay 
- * @returns
- *
- * @example
+ * Purpose: Returns a debounced copy of value that only updates after the given delay has elapsed with no new changes.
+ * Input: value – any value to debounce, delay – milliseconds
+ * Output: The last stable value after the delay window.
  */
 export function useDebounce(value, delay) {
   const [debouncedValue, setDebouncedValue] = useState(value);

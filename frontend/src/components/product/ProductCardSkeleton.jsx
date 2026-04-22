@@ -1,3 +1,6 @@
+/**
+ * Purpose: Animated placeholder card shown while product data is loading.
+ */
 export default function ProductCardSkeleton() {
   return (
     <div className="bg-surface-card rounded-lg overflow-hidden border border-neutral-border animate-pulse">

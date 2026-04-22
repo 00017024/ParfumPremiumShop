@@ -6,6 +6,9 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/context/AuthContext';
 import Layout from '@/components/layout/Layout';
 
+/**
+ * Purpose: Login form page; redirects to the originally requested path (or /products) after successful authentication.
+ */
 export default function LoginPage() {
   const { t } = useTranslation();
   const { login } = useAuth();

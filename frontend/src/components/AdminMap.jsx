@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { GoogleMap, MarkerClusterer, Marker } from '@react-google-maps/api';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useGoogleMaps } from '@/lib/googleMapsLoader';
 
 const INITIAL_CENTER = { lat: 41.3, lng: 64.6 };
@@ -13,7 +14,11 @@ const MAP_OPTIONS = {
   fullscreenControl: false,
 };
 
-// Gold cluster bubbles using canvas → data URL, avoiding deprecated google.maps.Marker constructor
+/**
+ * Purpose: Generates a canvas-drawn gold circle cluster icon as a data URL.
+ * Input: count – number of markers in the cluster (drives icon size via log2 scaling)
+ * Output: { url, size, anchor } for use as a MarkerClusterer style entry.
+ */
 function makeClusterIcon(count) {
   const size   = Math.min(32 + Math.log2(Math.max(count, 1)) * 7, 60);
   const canvas = document.createElement('canvas');
@@ -47,14 +52,16 @@ const CLUSTERER_STYLES = [1, 2, 3, 4, 5].map((tier) => {
 });
 
 /**
- * AdminMap
- *
- * Props:
- *   locations — Array<{ lat: number, lng: number }>
+ * Purpose: Renders a clustered Google Map of order delivery locations for the admin analytics page.
+ * Input: locations – array of { lat, lng } objects
  */
 export default function AdminMap({ locations = [] }) {
+  const { t } = useTranslation();
   const { isLoaded, loadError } = useGoogleMaps();
 
+  /**
+   * Purpose: Renders a Marker for each location inside the MarkerClusterer render-prop callback.
+   */
   const renderMarkers = useCallback(
     (clusterer) =>
       locations.map((loc, i) => (
@@ -62,16 +69,16 @@ export default function AdminMap({ locations = [] }) {
           key={i}
           position={{ lat: loc.lat, lng: loc.lng }}
           clusterer={clusterer}
-          title={`Order location ${i + 1}`}
+          title={t('admin.analytics.order_location', { n: i + 1 })}
         />
       )),
-    [locations]
+    [locations, t]
   );
 
   if (loadError) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-red-500">
-        Failed to load map.
+        {t('admin.analytics.map_load_error')}
       </div>
     );
   }

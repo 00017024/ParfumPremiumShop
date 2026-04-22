@@ -5,6 +5,9 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import AdminMap from '@/components/AdminMap';
 
+/**
+ * Purpose: Admin analytics page showing a clustered map of all order delivery locations.
+ */
 export default function AdminAnalyticsPage() {
   const { t } = useTranslation();
   const [locations, setLocations] = useState([]);

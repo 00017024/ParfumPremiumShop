@@ -8,9 +8,13 @@ import { useCartStore } from '@/store/cartStore';
 const LANGS = ['en', 'ru', 'uz'];
 const STORAGE_KEY = 'parfum_lang';
 
+/**
+ * Purpose: Renders EN | RU | UZ buttons and persists the selected language to localStorage.
+ */
 function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
+  /** Purpose: Switches the active language and writes the preference to localStorage. */
   const change = (lang) => {
     i18n.changeLanguage(lang);
     localStorage.setItem(STORAGE_KEY, lang);
@@ -39,6 +43,9 @@ function LanguageSwitcher() {
   );
 }
 
+/**
+ * Purpose: Sticky top navigation with logo, category links, language switcher, cart badge, and user actions.
+ */
 export default function Header() {
   const { t } = useTranslation();
   const { user, logout } = useAuth();

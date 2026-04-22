@@ -18,6 +18,9 @@ const STATUS_STYLES = {
   CANCELLED: 'bg-red-500/15 text-red-400 border border-red-500/30',
 };
 
+/**
+ * Purpose: Color-coded status pill for the order detail view.
+ */
 function StatusBadge({ status }) {
   const { t } = useTranslation();
   const styles = STATUS_STYLES[status] ?? 'bg-neutral-700 text-text-muted border border-neutral-600';
@@ -30,6 +33,9 @@ function StatusBadge({ status }) {
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Titled card wrapper for grouping related order detail fields.
+ */
 function Section({ title, children }) {
   return (
     <section
@@ -46,6 +52,9 @@ function Section({ title, children }) {
 
 // ─── Info row ─────────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Label + value row for the order detail sections; returns null when value is falsy.
+ */
 function InfoRow({ label, value }) {
   if (!value) return null;
   return (
@@ -60,6 +69,9 @@ function InfoRow({ label, value }) {
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Full-page skeleton for the order detail layout while data loads.
+ */
 function PageSkeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse">
@@ -85,6 +97,9 @@ function PageSkeleton() {
 
 const CANCELLABLE_STATUSES = ['PENDING', 'PAID'];
 
+/**
+ * Purpose: Shows full details of a single user order; allows cancellation while in PENDING or PAID status.
+ */
 export default function OrderDetailsPage() {
   const { t } = useTranslation();
   const { id } = useParams();

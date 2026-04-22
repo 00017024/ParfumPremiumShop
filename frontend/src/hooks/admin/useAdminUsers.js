@@ -8,7 +8,9 @@ import {
 import i18n from '@/i18n';
 
 /**
- * Manages admin user list with block/unblock operations.
+ * Purpose: Manages the paginated admin user list with block/unblock toggle actions.
+ * Input: initialParams – initial query params { page, limit }
+ * Output: { users, loading, error, togglingId, reload, toggleBlock }
  */
 export function useAdminUsers(initialParams = { page: 1, limit: 20 }) {
   const [users, setUsers]           = useState([]);

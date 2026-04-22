@@ -5,12 +5,19 @@ import { useCartStore } from '@/store/cartStore';
 import toast from 'react-hot-toast';
 import StarRating from '@/components/product/StarRating';
 
+/**
+ * Purpose: Renders a product tile with image, brand, name, price, star rating, and add-to-cart button.
+ * Input: product – product document from the API
+ */
 export default function ProductCard({ product }) {
   const { t } = useTranslation();
   const addItem = useCartStore((state) => state.addItem);
 
   const isOutOfStock = product.stock === 0;
 
+  /**
+   * Purpose: Adds one unit to the cart and shows a success toast; prevents the parent link navigation.
+   */
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();

@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '@/lib/api';
+import i18n from '@/i18n';
 
 /**
- * @param {Array}    items          - Cart items from cartStore.
- * @param {Function} updateQuantity - cartStore.updateQuantity, used to auto-clamp.
- * @param {Function} removeItem     - cartStore.removeItem, used when product is gone.
- * @param {Function} updateProduct  - cartStore.updateProduct, used to refresh product data.
- * @returns {{ stockIssues, checking, revalidate }}
+ * Purpose: Validates live stock for all cart items on mount and whenever item IDs/quantities change.
+ * Input: items – cart line array; updateQuantity/removeItem/updateProduct – stable cart store actions
+ * Output: { stockIssues, checking, revalidate } — stockIssues maps productId → user-facing message.
  */
 export function useStockValidation(items, updateQuantity, removeItem, updateProduct) {
   const [stockIssues, setStockIssues] = useState({});
@@ -51,7 +50,7 @@ export function useStockValidation(items, updateQuantity, removeItem, updateProd
 
         if (result.status === 'rejected') {
           // Product fetch failed (e.g. 404 after a DB reseed) — remove from cart
-          issues[productId] = `${item.product.name} is no longer available.`;
+          issues[productId] = i18n.t('stock.unavailable', { name: item.product.name });
           removeItemRef.current(productId);
           return;
         }
@@ -64,11 +63,9 @@ export function useStockValidation(items, updateQuantity, removeItem, updateProd
         updateProductRef.current(productId, liveProduct);
 
         if (liveStock === 0) {
-          issues[productId] = `${item.product.name} is out of stock.`;
+          issues[productId] = i18n.t('stock.out_of_stock', { name: item.product.name });
         } else if (item.quantity > liveStock) {
-          issues[productId] =
-            `Only ${liveStock} unit${liveStock === 1 ? '' : 's'} available ` +
-            `(your cart had ${item.quantity}). Quantity updated.`;
+          issues[productId] = i18n.t('stock.quantity_updated', { count: liveStock, qty: item.quantity });
           updateQuantityRef.current(productId, liveStock);
         }
       });

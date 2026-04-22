@@ -2,10 +2,15 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Purpose: Tag-input for cosmetics color families; Enter or comma commits a tag, Backspace removes the last one.
+ * Input: profile – current cosmeticsProfile object, onChange – (updatedProfile) => void
+ */
 export default function CosmeticsFields({ profile, onChange }) {
   const { t } = useTranslation();
   const [input, setInput] = useState('');
 
+  /** Purpose: Normalises input to lowercase, deduplicates, and appends it to the colors list. */
   const commit = (raw) => {
     const color = raw.trim().toLowerCase();
     if (!color) return;
@@ -18,10 +23,12 @@ export default function CosmeticsFields({ profile, onChange }) {
     setInput('');
   };
 
+  /** Purpose: Removes a specific color tag from the colors list. */
   const remove = (color) => {
     onChange({ ...profile, colors: (profile.colors ?? []).filter((c) => c !== color) });
   };
 
+  /** Purpose: Commits on Enter/comma; removes last tag on Backspace when the input is empty. */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();

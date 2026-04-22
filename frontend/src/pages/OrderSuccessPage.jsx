@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import Layout from '@/components/layout/Layout';
 
+/**
+ * Purpose: Post-order confirmation page; only accessible via router state from CheckoutPage — redirects to /orders otherwise.
+ */
 export default function OrderSuccessPage() {
   const { t } = useTranslation();
   const { state } = useLocation();

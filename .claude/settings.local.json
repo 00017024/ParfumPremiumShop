@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(node -e ':*)",
-      "Read(//d c:/Users/user/Desktop/**)"
+      "Read(//d c:/Users/user/Desktop/**)",
+      "Bash(grep -E \"\\\\.\\(js|jsx|ts|tsx|json|md|env|gitignore|yml|yaml\\)$\")"
     ]
   }
 }

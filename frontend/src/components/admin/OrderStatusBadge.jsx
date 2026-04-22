@@ -8,6 +8,10 @@ const STATUS_CLASSES = {
   CANCELLED: 'bg-red-500/15 text-red-400 border border-red-500/30',
 };
 
+/**
+ * Purpose: Renders a color-coded pill badge for an order status value.
+ * Input: status – one of PENDING | PAID | CONFIRMED | COMPLETED | CANCELLED
+ */
 export default function OrderStatusBadge({ status }) {
   const { t } = useTranslation();
   const classes = STATUS_CLASSES[status] ?? 'bg-neutral-700 text-text-muted border border-neutral-600';

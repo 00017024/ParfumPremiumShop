@@ -1,11 +1,6 @@
 /**
- * A single metric tile for the admin dashboard overview.
- *
- * @param {ReactNode} icon      - Icon element (e.g. from lucide-react).
- * @param {string}    label     - Metric label.
- * @param {string}    value     - Metric value (already formatted).
- * @param {string}    [sub]     - Optional sub-label (e.g. trend or note).
- * @param {boolean}   [loading] - Renders a skeleton when true.
+ * Purpose: Displays a single KPI tile with icon, label, value, and optional sub-text; shows a skeleton when loading.
+ * Input: icon, label, value, sub?, loading?
  */
 export default function StatCard({ icon, label, value, sub, loading = false }) {
   if (loading) {

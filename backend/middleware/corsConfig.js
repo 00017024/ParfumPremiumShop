@@ -1,5 +1,9 @@
 const cors = require("cors");
 
+/**
+ * Purpose: Resolves the allowed-origins list from env; warns and returns [] in production when unset.
+ * Output: string[] of allowed origin URLs; falls back to localhost ports in development.
+ */
 const buildAllowedOrigins = () => {
   if (process.env.CORS_ALLOWED_ORIGINS) {
     return process.env.CORS_ALLOWED_ORIGINS

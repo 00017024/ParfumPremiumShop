@@ -12,6 +12,11 @@ const generateOtp = require("../utils/generateOtp");
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 1 minute
 
+/**
+ * Purpose: Signs a JWT with a unique jti claim for blacklist support.
+ * Input: payload – object merged into the token (id, role, etc.)
+ * Output: { token, jti }
+ */
 const signToken = (payload) => {
   const jti = crypto.randomUUID();
   const token = jwt.sign(
@@ -22,7 +27,11 @@ const signToken = (payload) => {
   return { token, jti };
 };
 
-// POST /auth/register
+/**
+ * Purpose: Creates a new unverified user and sends an OTP verification email.
+ * Input: { name, email, password, phone } in req.body
+ * Output: 201 with a confirmation message; first registered user gets admin role.
+ */
 exports.register = async (req, res, next) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -67,7 +76,11 @@ exports.register = async (req, res, next) => {
   }
 };
 
-// POST /auth/verify-otp
+/**
+ * Purpose: Validates the OTP for a pending user and issues a JWT on success.
+ * Input: { email, otp } in req.body
+ * Output: { token, user } on match; enforces a 5-attempt limit per OTP window.
+ */
 exports.verifyOtp = async (req, res, next) => {
   try {
     const { email, otp } = req.body;
@@ -126,7 +139,11 @@ exports.verifyOtp = async (req, res, next) => {
   }
 };
 
-// POST /auth/resend-otp
+/**
+ * Purpose: Re-sends an OTP to the given email, rate-limited to one per minute.
+ * Input: { email } in req.body
+ * Output: Always the same generic success message to prevent account enumeration.
+ */
 exports.resendOtp = async (req, res, next) => {
   const MIN_RESPONSE_MS = 500;
   const start = Date.now();
@@ -163,7 +180,11 @@ exports.resendOtp = async (req, res, next) => {
   }
 };
 
-// POST /auth/login
+/**
+ * Purpose: Authenticates a verified user and returns a signed JWT.
+ * Input: { email, password } in req.body
+ * Output: { token, user }; always runs bcrypt compare to avoid timing attacks.
+ */
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -197,7 +218,11 @@ exports.login = async (req, res, next) => {
   }
 };
 
-// POST /auth/logout
+/**
+ * Purpose: Invalidates the caller's JWT by persisting its jti to the blacklist.
+ * Input: Bearer token in Authorization header
+ * Output: { success: true }; the blacklist entry expires when the token would have expired.
+ */
 exports.logout = async (req, res, next) => {
   try {
     const rawToken = req.header("Authorization")?.replace("Bearer ", "");

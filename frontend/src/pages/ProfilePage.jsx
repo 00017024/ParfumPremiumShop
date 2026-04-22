@@ -15,6 +15,9 @@ const inputClass = (hasError) =>
    focus:outline-none focus:border-brand-gold transition-colors
    ${hasError ? 'border-red-500' : 'border-neutral-border'}`;
 
+/**
+ * Purpose: Accessible form field wrapper with label and inline error message for profile/password forms.
+ */
 function FormField({ id, label, error, children }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -33,6 +36,9 @@ function FormField({ id, label, error, children }) {
 
 // ─── Profile Details Panel ────────────────────────────────────────────────────
 
+/**
+ * Purpose: Inline edit panel for updating name and phone; calls the profile API and propagates updated user to parent.
+ */
 function ProfilePanel({ user, onUpdated }) {
   const { t } = useTranslation();
   const [form, setForm]     = useState({ name: user.name ?? '', phone: user.phone ?? '' });
@@ -116,6 +122,9 @@ function ProfilePanel({ user, onUpdated }) {
 
 // ─── Change Password Panel ────────────────────────────────────────────────────
 
+/**
+ * Purpose: Password change panel; validates current and new passwords client-side before calling the API.
+ */
 function PasswordPanel() {
   const { t } = useTranslation();
   const [form, setForm]     = useState({ current: '', next: '', confirm: '' });
@@ -194,6 +203,9 @@ function PasswordPanel() {
 
 // ─── ProfilePage ──────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: User profile page composed of a profile-details panel and a password-change panel.
+ */
 export default function ProfilePage() {
   const { t } = useTranslation();
   const { user } = useAuth();

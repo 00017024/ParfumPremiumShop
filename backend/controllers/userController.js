@@ -3,7 +3,10 @@ const bcrypt = require("bcryptjs");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 
-// GET /users/profile
+/**
+ * Purpose: Returns the authenticated user's profile fields.
+ * Output: { user: { id, name, email, phone, role, isActive, createdAt, updatedAt } }
+ */
 exports.getProfile = async (req, res, next) => {
   try {
     res.status(200).json({
@@ -23,7 +26,11 @@ exports.getProfile = async (req, res, next) => {
   }
 };
 
-// PUT /users/profile
+/**
+ * Purpose: Updates name and/or phone for the authenticated user.
+ * Input: { name?, phone? } in req.body (only provided fields are applied)
+ * Output: Updated user object; runs Mongoose validators on the patch.
+ */
 exports.updateProfile = async (req, res, next) => {
   try {
     const { name, phone } = req.body;
@@ -57,7 +64,11 @@ exports.updateProfile = async (req, res, next) => {
   }
 };
 
-// PUT /users/password
+/**
+ * Purpose: Replaces the authenticated user's password after verifying the current one.
+ * Input: { currentPassword, newPassword } in req.body
+ * Output: Success message on match; 400 if currentPassword is wrong.
+ */
 exports.changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;

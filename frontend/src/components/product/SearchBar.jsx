@@ -1,6 +1,10 @@
 import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Purpose: Controlled search input with a leading icon; calls onChange on every keystroke.
+ * Input: value – current query string, onChange – (string) => void
+ */
 export default function SearchBar({ value, onChange }) {
   const { t } = useTranslation();
 

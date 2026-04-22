@@ -2,6 +2,10 @@ const ApiError = require("../utils/ApiError");
 
 const isProduction = process.env.NODE_ENV === "production";
 
+/**
+ * Purpose: Central Express error handler — formats ApiErrors as structured JSON and masks unexpected errors in production.
+ * Output: JSON response with { success, message, code? }; 500 for unknown errors, err.statusCode for ApiErrors.
+ */
 const errorHandler = (err, req, res, next) => {
   console.error(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}\n`, err);
 

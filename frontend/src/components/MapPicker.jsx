@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { GoogleMap, Marker, Autocomplete } from '@react-google-maps/api';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useGoogleMaps } from '@/lib/googleMapsLoader';
 
 // Tashkent fallback — center of activity
@@ -22,14 +23,11 @@ const MAP_OPTIONS = {
 };
 
 /**
- * MapPicker
- *
- * Props:
- *   value            — { lat, lng } | null
- *   onChange         — (coords: { lat, lng }) => void
- *   onAddressChange  — (address: string) => void   (optional)
+ * Purpose: Interactive Google Map component for selecting a delivery pin; auto-locates the user on first render.
+ * Input: value – { lat, lng } | null, onChange – (coords) => void, onAddressChange – (address) => void
  */
 export default function MapPicker({ value, onChange, onAddressChange }) {
+  const { t } = useTranslation();
   const { isLoaded, loadError } = useGoogleMaps();
 
   const [mapCenter, setMapCenter] = useState(
@@ -69,6 +67,9 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
+  /**
+   * Purpose: Reverse-geocodes coordinates and passes the formatted address to onAddressChange.
+   */
   const doReverseGeocode = useCallback(
     (coords) => {
       if (!geocoderRef.current) return;
@@ -81,6 +82,9 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
     [onAddressChange]
   );
 
+  /**
+   * Purpose: Updates the pin position and triggers reverse geocoding when the user clicks the map.
+   */
   const handleMapClick = useCallback(
     (e) => {
       const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() };
@@ -91,6 +95,9 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
     [onChange, doReverseGeocode]
   );
 
+  /**
+   * Purpose: Updates coordinates and reverse-geocodes when the user finishes dragging the marker.
+   */
   const handleMarkerDrag = useCallback(
     (e) => {
       const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() };
@@ -100,6 +107,9 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
     [onChange, doReverseGeocode]
   );
 
+  /**
+   * Purpose: Moves the map to the autocomplete result and propagates the selected coordinates and address.
+   */
   const handlePlaceChanged = useCallback(() => {
     const place = autocompleteRef.current?.getPlace();
     if (!place?.geometry?.location) return;
@@ -117,7 +127,7 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
   if (loadError) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-red-500 px-4 text-center">
-        Map failed to load. Please check your connection.
+        {t('map.load_error')}
       </div>
     );
   }
@@ -138,7 +148,6 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
 
   return (
     <div className="relative w-full h-full">
-      {/* Search autocomplete — restricted to Uzbekistan */}
       <Autocomplete
         onLoad={(ref) => { autocompleteRef.current = ref; }}
         onPlaceChanged={handlePlaceChanged}
@@ -146,7 +155,7 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
       >
         <input
           type="text"
-          placeholder="Search for your address…"
+          placeholder={t('map.search_placeholder')}
           className="absolute top-2 left-2 right-2 z-10 rounded px-3 py-2 text-sm shadow-lg
                      border border-gray-200 bg-white focus:outline-none focus:border-brand-gold"
           style={{ color: '#111827' }}
@@ -166,7 +175,7 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
             draggable
             onDragEnd={handleMarkerDrag}
             icon={markerIcon}
-            title="Drag to adjust your delivery location"
+            title={t('map.drag_marker')}
           />
         )}
       </GoogleMap>

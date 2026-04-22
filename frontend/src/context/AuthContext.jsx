@@ -9,6 +9,10 @@ const AuthContext = createContext(null);
 
 // ─── AuthProvider ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Manages auth state (user, token, loading) and provides login/register/OTP/logout actions.
+ * Output: AuthContext with { user, token, loading, login, register, verifyOtp, resendOtp, logout }.
+ */
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [token, setToken]     = useState(null);
@@ -42,6 +46,9 @@ export function AuthProvider({ children }) {
 
   // ── Persist helpers ───────────────────────────────────────────────────────
 
+  /**
+   * Purpose: Writes token and user to localStorage and syncs React state.
+   */
   const persistSession = (token, user) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
@@ -49,6 +56,9 @@ export function AuthProvider({ children }) {
     setUser(user);
   };
 
+  /**
+   * Purpose: Removes token and user from localStorage and resets React state to null.
+   */
   const clearSession = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -58,6 +68,10 @@ export function AuthProvider({ children }) {
 
   // ── Login ─────────────────────────────────────────────────────────────────
 
+  /**
+   * Purpose: Calls the login API and persists the session on success; shows a toast on failure.
+   * Output: { success: boolean }
+   */
   const login = async (email, password) => {
     try {
       const { data } = await api.post('/auth/login', { email, password });
@@ -71,6 +85,10 @@ export function AuthProvider({ children }) {
 
   // ── Register ──────────────────────────────────────────────────────────────
 
+  /**
+   * Purpose: Submits registration; on success returns the email so the caller can redirect to the OTP page.
+   * Output: { success: boolean, email? }
+   */
   const register = async (name, email, password, phone) => {
     try {
       await api.post('/auth/register', { name, email, password, phone });
@@ -83,6 +101,10 @@ export function AuthProvider({ children }) {
 
   // ── Verify OTP ────────────────────────────────────────────────────────────
 
+  /**
+   * Purpose: Verifies the OTP and persists the session if the code is accepted.
+   * Output: { success: boolean }
+   */
   const verifyOtp = async (email, otp) => {
     try {
       const { data } = await api.post('/auth/verify-otp', { email, otp });
@@ -96,6 +118,10 @@ export function AuthProvider({ children }) {
 
   // ── Resend OTP ────────────────────────────────────────────────────────────
 
+  /**
+   * Purpose: Requests a new OTP for the given email; shows a success or error toast.
+   * Output: { success: boolean }
+   */
   const resendOtp = async (email) => {
     try {
       await api.post('/auth/resend-otp', { email });
@@ -109,6 +135,9 @@ export function AuthProvider({ children }) {
 
   // ── Logout ────────────────────────────────────────────────────────────────
 
+  /**
+   * Purpose: Calls the logout API to blacklist the token, then clears the local session regardless of network result.
+   */
   const logout = async () => {
     try {
       await api.post('/auth/logout');
@@ -130,6 +159,10 @@ export function AuthProvider({ children }) {
 
 // ─── useAuth hook ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Consumes AuthContext; throws if called outside AuthProvider.
+ * Output: { user, token, loading, login, register, verifyOtp, resendOtp, logout }
+ */
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error('useAuth must be used inside AuthProvider');

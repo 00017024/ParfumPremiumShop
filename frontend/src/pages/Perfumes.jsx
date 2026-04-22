@@ -8,6 +8,9 @@ import toast from 'react-hot-toast';
 // Category values are backend params — labels come from i18n
 const CATEGORY_VALUES = [null, 'men', 'women', 'unisex'];
 
+/**
+ * Purpose: Perfumes category page; fetches all perfumes filtered by gender category and renders a product grid.
+ */
 export default function Perfumes() {
   const { t } = useTranslation();
   const [products, setProducts] = useState([]);

@@ -9,7 +9,9 @@ import {
 import i18n from '@/i18n';
 
 /**
- * Manages admin product list with create, update, delete operations.
+ * Purpose: Manages the paginated admin product list with create, update, and delete operations.
+ * Input: initialParams – initial query params { page, limit, search? }
+ * Output: { products, total, pages, params, loading, error, setParams, reload, createProduct, updateProduct, deleteProduct }
  */
 export function useAdminProducts(initialParams = { page: 1, limit: 12 }) {
   const [products, setProducts]   = useState([]);

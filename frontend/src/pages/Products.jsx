@@ -18,6 +18,11 @@ const ITEMS_PER_PAGE = 12;
 
 // ─── Derive filter config from URL params ─────────────────────────────────────
 
+/**
+ * Purpose: Parses URL search params and returns a typed filter config for the active product type.
+ * Input: searchParams – URLSearchParams instance from React Router
+ * Output: { type, params } | null — null means "no filter active, use regular search".
+ */
 function getFilterConfig(searchParams) {
   const filterType = searchParams.get('filterType');
   if (!filterType) return null;
@@ -50,6 +55,9 @@ function getFilterConfig(searchParams) {
 
 // ─── Products page ────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Main catalogue page with debounced search, URL-persisted sort/page state, and a type-specific filter panel.
+ */
 export default function Products() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();

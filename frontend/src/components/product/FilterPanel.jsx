@@ -28,6 +28,9 @@ function toggle(list, item) {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Reusable pill button that visually indicates active/inactive state.
+ */
 function ToggleChip({ label, active, onClick }) {
   return (
     <button
@@ -48,7 +51,8 @@ function ToggleChip({ label, active, onClick }) {
 // ─── FilterPanel ──────────────────────────────────────────────────────────────
 
 /**
- * @param {{ onApply: (config: object) => void, onClear: () => void }} props
+ * Purpose: Sidebar filter panel for type-specific product filters (accord sliders, skin types, ingredients, colors).
+ * Input: onApply – ({ type, params }) => void, onClear – () => void
  */
 export default function FilterPanel({ onApply, onClear }) {
   const { t } = useTranslation();
@@ -59,6 +63,7 @@ export default function FilterPanel({ onApply, onClear }) {
   const [ingredients, setIngredients] = useState([]);
   const [colorFams, setColorFams]     = useState([]);
 
+  /** Purpose: Switches active product type and resets all filter state to defaults. */
   const handleTypeChange = (newType) => {
     setType(newType);
     setAccords(DEFAULT_ACCORDS);
@@ -67,6 +72,7 @@ export default function FilterPanel({ onApply, onClear }) {
     setColorFams([]);
   };
 
+  /** Purpose: Assembles the filter config for the active type (strips zero-value accords) and calls onApply. */
   const handleApply = () => {
     if (type === 'perfume') {
       const activeAccords = Object.fromEntries(
@@ -80,6 +86,7 @@ export default function FilterPanel({ onApply, onClear }) {
     }
   };
 
+  /** Purpose: Resets all local filter state and propagates the clear event to the parent. */
   const handleClear = () => {
     setAccords(DEFAULT_ACCORDS);
     setSkinTypes([]);

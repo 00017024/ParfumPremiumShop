@@ -4,6 +4,10 @@ const User = require('../models/User');
 const BlacklistedToken = require('../models/BlacklistedToken');
 const ApiError = require('../utils/ApiError');
 
+/**
+ * Purpose: Verifies the Bearer JWT, checks the blacklist, and attaches the active user to req.user.
+ * Output: Calls next() on success; passes an ApiError (401/403/404) on any failure.
+ */
 const authMiddleware = async (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   if (!token) return next(new ApiError(401, 'No token, authorization denied', 'NO_TOKEN'));

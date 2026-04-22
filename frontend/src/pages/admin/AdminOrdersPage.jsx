@@ -8,6 +8,9 @@ import OrderStatusSelect from '@/components/admin/OrderStatusSelect';
 
 // ─── Table row skeleton ───────────────────────────────────────────────────────
 
+/**
+ * Purpose: Animated skeleton row for the orders table while data loads.
+ */
 function SkeletonRow() {
   return (
     <tr className="border-b border-neutral-border animate-pulse">
@@ -22,6 +25,9 @@ function SkeletonRow() {
 
 // ─── AdminOrdersPage ──────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Paginated admin orders table with inline status dropdowns for quick status updates.
+ */
 export default function AdminOrdersPage() {
   const { t } = useTranslation();
   const {

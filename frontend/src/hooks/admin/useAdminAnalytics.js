@@ -3,8 +3,8 @@ import api from '@/lib/api';
 import i18n from '@/i18n';
 
 /**
- * Fetches the /admin/analytics payload once on mount.
- * Mirrors the same cancellation + loading pattern as useAdminStats.
+ * Purpose: Fetches the /admin/analytics payload once on mount with abort-on-unmount cancellation.
+ * Output: { analytics, loading, error }
  */
 export function useAdminAnalytics() {
   const [analytics, setAnalytics] = useState(null);

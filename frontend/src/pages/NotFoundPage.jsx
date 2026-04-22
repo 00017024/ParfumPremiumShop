@@ -4,6 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import Layout from '@/components/layout/Layout';
 
+/**
+ * Purpose: 404 page rendered when no route matches; provides a back button and a link to the catalogue.
+ */
 export default function NotFoundPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();

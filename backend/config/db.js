@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 
+/**
+ * Purpose: Establishes a Mongoose connection to MongoDB using MONGO_URI.
+ * Output: Resolves on success; exits the process (or throws in test) on failure.
+ */
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);

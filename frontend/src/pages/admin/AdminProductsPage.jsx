@@ -9,6 +9,9 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 // ─── Skeleton row ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Animated skeleton row for the products table while data loads.
+ */
 function SkeletonRow() {
   return (
     <tr className="border-b border-neutral-border animate-pulse">
@@ -27,6 +30,9 @@ function SkeletonRow() {
 
 // ─── AdminProductsPage ────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Paginated admin products table with debounced search, and add/edit/delete via modal dialogs.
+ */
 export default function AdminProductsPage() {
   const { t } = useTranslation();
   const {

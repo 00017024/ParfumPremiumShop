@@ -7,10 +7,9 @@ import {
 import i18n from '@/i18n';
 
 /**
- * Manages the admin orders list.
- * Supports pagination, status filtering, and in-place status updates.
- *
- * @param {object} initialParams - Initial query params (page, limit, status).
+ * Purpose: Manages the paginated admin orders list with in-place status updates.
+ * Input: initialParams – initial query params { page, limit, status? }
+ * Output: { orders, total, pages, params, loading, error, setParams, reload, changeStatus }
  */
 export function useAdminOrders(initialParams = { page: 1, limit: 15 }) {
   const [orders, setOrders]         = useState([]);

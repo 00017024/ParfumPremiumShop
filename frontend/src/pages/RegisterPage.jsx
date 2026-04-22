@@ -7,6 +7,9 @@ import { useAuth } from '@/context/AuthContext';
 import { UZ_PHONE_REGEX } from '@/lib/validation';
 import Layout from '@/components/layout/Layout';
 
+/**
+ * Purpose: Registration form page; on success redirects to the OTP verification page with the email in query params.
+ */
 export default function RegisterPage() {
   const { t } = useTranslation();
   const { register } = useAuth();

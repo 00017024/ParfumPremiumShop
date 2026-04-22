@@ -1,5 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Purpose: Sort order selector with options for newest, price ascending, and price descending.
+ * Input: value – current sort key string (e.g. "createdAt-desc"), onChange – (string) => void
+ */
 export default function SortDropdown({ value, onChange }) {
   const { t } = useTranslation();
 

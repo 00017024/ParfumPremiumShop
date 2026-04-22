@@ -8,6 +8,9 @@ import OrderStatusSelect from '@/components/admin/OrderStatusSelect';
 
 // ─── Section wrapper ──────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Card wrapper with accessible aria-label and a divider title for grouping order detail sections.
+ */
 function Section({ title, children }) {
   return (
     <section
@@ -22,6 +25,9 @@ function Section({ title, children }) {
   );
 }
 
+/**
+ * Purpose: Label + value row for order detail fields; returns null when value is falsy (optional fields).
+ */
 function InfoRow({ label, value }) {
   if (!value) return null;
   return (
@@ -34,6 +40,9 @@ function InfoRow({ label, value }) {
   );
 }
 
+/**
+ * Purpose: Full-page skeleton for the admin order detail layout while data loads.
+ */
 function PageSkeleton() {
   return (
     <div className="flex flex-col gap-6 animate-pulse max-w-4xl">
@@ -50,6 +59,9 @@ function PageSkeleton() {
 
 // ─── AdminOrderDetailPage ─────────────────────────────────────────────────────
 
+/**
+ * Purpose: Admin order detail page with customer info, items, and a status selector for advancing the order.
+ */
 export default function AdminOrderDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams();

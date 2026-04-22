@@ -329,6 +329,9 @@
   "admin": {
     "title": "PARFUM ADMIN",
     "sidebar": {
+      "brand": "PARFUM ADMIN",
+      "open_nav": "Navigatsiyani ochish",
+      "storefront": "Do'konga o'tish",
       "admin_role": "Administrator",
       "sign_out": "Chiqish",
       "dashboard": "Boshqaruv paneli",
@@ -488,7 +491,9 @@
       "pinned_other": "{{count}} ta buyurtma joylashuvi",
       "loading": "Joylashuvlar yuklanmoqda…",
       "no_locations": "Hali buyurtma joylashuvi yo'q.",
-      "load_error": "Buyurtma joylashuvlarini yuklashda xato"
+      "load_error": "Buyurtma joylashuvlarini yuklashda xato",
+      "order_location": "Buyurtma {{n}}",
+      "map_load_error": "Xaritani yuklab bo'lmadi."
     },
     "product_form": {
       "edit_title": "Mahsulotni tahrirlash",
@@ -543,5 +548,16 @@
       "placeholder": "mas. nude, red, coral — qo'shish uchun Enter bosing",
       "hint": "Qo'shish uchun Enter yoki , bosing. Backspace oxirgi tegni o'chiradi."
     }
+  },
+  "map": {
+    "load_error": "Xaritani yuklab bo'lmadi. Internetni tekshiring.",
+    "search_placeholder": "Manzilingizni qidiring…",
+    "drag_marker": "Yetkazib berish joyini aniqlash uchun sudrang"
+  },
+  "stock": {
+    "unavailable": "{{name}} endi mavjud emas.",
+    "out_of_stock": "{{name}} tugab ketdi.",
+    "quantity_updated": "Faqat {{count}} ta mavjud (savatda {{qty}} ta edi). Miqdor yangilandi.",
+    "quantity_updated_other": "Faqat {{count}} ta mavjud (savatda {{qty}} ta edi). Miqdor yangilandi."
   }
 }

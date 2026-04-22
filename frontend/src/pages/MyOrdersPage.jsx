@@ -18,6 +18,9 @@ const STATUS_STYLES = {
   CANCELLED: 'bg-red-500/15 text-red-400 border border-red-500/30',
 };
 
+/**
+ * Purpose: Inline status pill for the My Orders list; maps order status to a color-coded badge.
+ */
 function StatusBadge({ status }) {
   const { t } = useTranslation();
   const styles = STATUS_STYLES[status] ?? 'bg-neutral-700 text-text-muted border border-neutral-600';
@@ -30,6 +33,9 @@ function StatusBadge({ status }) {
 
 // ─── SkeletonCard ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Animated placeholder card shown for each order while the order list loads.
+ */
 function SkeletonCard() {
   return (
     <div className="animate-pulse bg-surface-card border border-neutral-border rounded-sm p-5 flex flex-col gap-4">
@@ -57,6 +63,9 @@ function SkeletonCard() {
 
 // ─── OrderCard ────────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Summary card for a single order showing order number, date, status, items preview, and total.
+ */
 function OrderCard({ order }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -143,6 +152,9 @@ function OrderCard({ order }) {
 
 // ─── MyOrdersPage ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Displays all orders for the authenticated user with status badges, newest first.
+ */
 export default function MyOrdersPage() {
   const { t } = useTranslation();
   const [orders, setOrders] = useState([]);

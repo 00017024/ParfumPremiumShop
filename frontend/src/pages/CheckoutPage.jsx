@@ -13,6 +13,9 @@ import EmptyState from '@/components/product/EmptyState';
 
 // ─── FormField ────────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Accessible form field wrapper with label, required marker, and inline error message.
+ */
 function FormField({ id, label, required, error, children }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -42,6 +45,9 @@ const inputClass = (hasError) =>
 
 // ─── OrderSummaryPanel ────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Read-only order summary sidebar showing line items, stock warnings, and the total for the checkout form.
+ */
 function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
   const { t } = useTranslation();
 
@@ -125,6 +131,9 @@ function OrderSummaryPanel({ items, subtotal, stockIssues = {} }) {
 
 // ─── CheckoutPage ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Checkout form page; validates delivery details, runs live stock checks, and submits the order via API.
+ */
 export default function CheckoutPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();

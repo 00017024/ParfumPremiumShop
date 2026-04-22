@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { fetchStats } from '@/services/admin/ordersService';
 import i18n from '@/i18n';
 
-/*
-Single MongoDB aggregation pipeline on the backend — no bulk data transfer.
+/**
+ * Purpose: Fetches admin KPI stats (orders, revenue, users, products) via a single server-side aggregation.
+ * Output: { stats, loading, error }
  */
 export function useAdminStats() {
   const [stats, setStats]     = useState(null);

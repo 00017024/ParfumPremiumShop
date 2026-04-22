@@ -2,6 +2,10 @@ import ProductCard from './ProductCard';
 import ProductCardSkeleton from './ProductCardSkeleton';
 import EmptyState from './EmptyState';
 
+/**
+ * Purpose: Renders a responsive product grid; shows 12 skeleton cards while loading and an empty state when no results.
+ * Input: products – array of product documents, loading – boolean
+ */
 export default function ProductGrid({ products, loading }) {
   if (loading) {
     return (

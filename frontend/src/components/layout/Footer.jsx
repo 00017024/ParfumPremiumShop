@@ -1,5 +1,8 @@
 import { useTranslation } from 'react-i18next';
 
+/**
+ * Purpose: Renders the site footer with the brand name, tagline, and dynamic copyright year.
+ */
 export default function Footer() {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();

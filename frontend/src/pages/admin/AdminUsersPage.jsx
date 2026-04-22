@@ -7,6 +7,9 @@ import ConfirmDialog from '@/components/admin/ConfirmDialog';
 
 // ─── Role badge ───────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Color-coded pill showing whether a user has the admin or user role.
+ */
 function RoleBadge({ role }) {
   return (
     <span
@@ -23,6 +26,9 @@ function RoleBadge({ role }) {
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Green/red pill indicating whether a user account is active or blocked.
+ */
 function StatusBadge({ isActive }) {
   const { t } = useTranslation();
   return (
@@ -46,6 +52,9 @@ function StatusBadge({ isActive }) {
 
 // ─── Skeleton row ─────────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Animated skeleton row for the users table while data loads.
+ */
 function SkeletonRow() {
   return (
     <tr className="border-b border-neutral-border animate-pulse">
@@ -60,6 +69,9 @@ function SkeletonRow() {
 
 // ─── AdminUsersPage ───────────────────────────────────────────────────────────
 
+/**
+ * Purpose: Admin users table with client-side search and block/unblock actions guarded by a confirm dialog.
+ */
 export default function AdminUsersPage() {
   const { t } = useTranslation();
   const { users, loading, error, togglingId, reload, toggleBlock } = useAdminUsers();

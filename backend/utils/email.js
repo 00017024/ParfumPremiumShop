@@ -8,6 +8,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+/**
+ * Purpose: Sends an HTML + plain-text OTP verification email via the Gmail transporter.
+ * Input: to – recipient address, otp – 6-digit code string
+ * Output: Resolves when accepted by the SMTP relay; throws on send failure.
+ */
 exports.sendOtpEmail = async (to, otp) => {
   await transporter.sendMail({
     from: `"Parfum Premium" <${process.env.EMAIL_USER}>`,

@@ -1,9 +1,13 @@
 const rateLimit = require("express-rate-limit");
 
-// In test mode every limiter is replaced with a passthrough so that the
-// high volume of rapid sequential requests from Jest doesn't trigger 429s.
+/**
+ * Purpose: No-op middleware substituted for all limiters in test mode to avoid false 429s during Jest runs.
+ */
 const passthrough = (_req, _res, next) => next();
 
+/**
+ * Purpose: Shared handler for all express-rate-limit instances; returns a consistent 429 JSON error.
+ */
 const rateLimitHandler = (req, res) => {
   res.status(429).json({
     success: false,

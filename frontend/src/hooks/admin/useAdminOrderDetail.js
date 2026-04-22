@@ -4,9 +4,9 @@ import { fetchOrderById, updateOrderStatus } from '@/services/admin/ordersServic
 import i18n from '@/i18n';
 
 /**
- * Manages a single order's data and status update for the detail page.
- *
- * @param {string} id - The order's MongoDB _id.
+ * Purpose: Fetches a single order and exposes a changeStatus action for the admin detail page.
+ * Input: id – the order's MongoDB _id
+ * Output: { order, loading, error, updating, reload, changeStatus }
  */
 export function useAdminOrderDetail(id) {
   const [order, setOrder]       = useState(null);
