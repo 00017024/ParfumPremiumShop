@@ -3,7 +3,8 @@
     "allow": [
       "Bash(node -e ':*)",
       "Read(//d c:/Users/user/Desktop/**)",
-      "Bash(grep -E \"\\\\.\\(js|jsx|ts|tsx|json|md|env|gitignore|yml|yaml\\)$\")"
+      "Bash(grep -E \"\\\\.\\(js|jsx|ts|tsx|json|md|env|gitignore|yml|yaml\\)$\")",
+      "Bash(cd c:\\\\\\\\Users\\\\\\\\user\\\\\\\\Desktop\\\\\\\\ParfumPremium)"
     ]
   }
 }

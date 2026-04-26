@@ -150,7 +150,6 @@ export default function AdminOrderDetailPage() {
               <InfoRow label={t('admin.order_detail.label_name')}    value={order.customerName} />
               <InfoRow label={t('admin.order_detail.label_phone')}   value={order.phone} />
               <InfoRow label={t('admin.order_detail.label_city')}    value={order.city} />
-              <InfoRow label={t('admin.order_detail.label_address')} value={order.address} />
               {order.notes && (
                 <InfoRow label={t('admin.order_detail.label_notes')} value={order.notes} />
               )}

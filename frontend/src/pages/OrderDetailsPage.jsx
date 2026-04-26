@@ -234,7 +234,6 @@ export default function OrderDetailsPage() {
                 <InfoRow label={t('order_detail.label_name')}    value={order.customerName} />
                 <InfoRow label={t('order_detail.label_phone')}   value={order.phone} />
                 <InfoRow label={t('order_detail.label_city')}    value={order.city} />
-                <InfoRow label={t('order_detail.label_address')} value={order.address} />
                 {order.notes && (
                   <InfoRow label={t('order_detail.label_notes')} value={order.notes} />
                 )}

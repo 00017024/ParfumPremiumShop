@@ -158,7 +158,6 @@ export default function CheckoutPage() {
     name: '',
     phone: '',
     city: 'Tashkent',
-    address: '',
     notes: '',
   });
   const [location, setLocation]   = useState(null);
@@ -180,8 +179,6 @@ export default function CheckoutPage() {
       e.phone = t('validation.phone_invalid');
     if (!['Tashkent', 'Samarkand'].includes(form.city))
       e.city = t('validation.city_invalid');
-    if (!form.address.trim() || form.address.trim().length < 5)
-      e.address = t('validation.address_min');
     if (!location)
       e.location = t('validation.location_required');
     return e;
@@ -212,7 +209,6 @@ export default function CheckoutPage() {
         customerName: form.name.trim(),
         phone:        form.phone.trim(),
         city:         form.city,
-        address:      form.address.trim(),
         notes:        form.notes.trim() || undefined,
         location,
       };
@@ -342,25 +338,6 @@ export default function CheckoutPage() {
                 </select>
               </FormField>
 
-              {/* Address */}
-              <FormField
-                id="checkout-address"
-                label={t('checkout.address')}
-                required
-                error={errors.address}
-              >
-                <textarea
-                  id="checkout-address"
-                  rows={3}
-                  placeholder={t('checkout.address_placeholder')}
-                  value={form.address}
-                  onChange={handleChange('address')}
-                  autoComplete="street-address"
-                  aria-required="true"
-                  className={`${inputClass(!!errors.address)} resize-none`}
-                />
-              </FormField>
-
               {/* Notes */}
               <FormField
                 id="checkout-notes"
@@ -399,10 +376,6 @@ export default function CheckoutPage() {
                     onChange={(coords) => {
                       setLocation(coords);
                       if (errors.location) setErrors((prev) => ({ ...prev, location: undefined }));
-                    }}
-                    onAddressChange={(addr) => {
-                      setForm((prev) => ({ ...prev, address: addr }));
-                      if (errors.address) setErrors((prev) => ({ ...prev, address: undefined }));
                     }}
                   />
                 </div>

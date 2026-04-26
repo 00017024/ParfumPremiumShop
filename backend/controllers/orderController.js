@@ -5,7 +5,7 @@ const ApiError = require("../utils/ApiError");
 
 /**
  * Purpose: Validates cart items, locks stock via a Mongo transaction, and persists a new order.
- * Input: { items, customerName, phone, city, address, notes?, location? } in req.body
+ * Input: { items, customerName, phone, city, notes?, location? } in req.body
  * Output: 201 { success, order } with populated product details; aborts and restores stock on any failure.
  */
 exports.createOrder = async (req, res, next) => {
@@ -13,16 +13,16 @@ exports.createOrder = async (req, res, next) => {
   session.startTransaction();
 
   try {
-    const { items, customerName, phone, city, address, notes, location } = req.body;
+    const { items, customerName, phone, city, notes, location } = req.body;
 
     if (!items || items.length === 0) {
       throw new ApiError(400, "Order items missing", "ORDER_ITEMS_MISSING");
     }
 
-    if (!customerName || !phone || !city || !address) {
+    if (!customerName || !phone || !city) {
       throw new ApiError(
         400,
-        "Customer details required (name, phone, city, address)",
+        "Customer details required (name, phone, city)",
         "CUSTOMER_DETAILS_MISSING"
       );
     }
@@ -73,7 +73,6 @@ exports.createOrder = async (req, res, next) => {
       customerName,
       phone,
       city,
-      address,
       notes,
       ...(location?.lat != null && location?.lng != null && { location }),
       items: orderItems,

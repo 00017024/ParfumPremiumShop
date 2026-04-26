@@ -8,7 +8,6 @@ exports.createOrderSchema = Joi.object({
     .message(UZ_PHONE_MESSAGE)
     .required(),
   city: Joi.string().valid("Tashkent", "Samarkand").required(),
-  address: Joi.string().min(5).max(300).required(),
   notes: Joi.string().max(500).allow("", null).optional(),
   items: Joi.array()
     .items(

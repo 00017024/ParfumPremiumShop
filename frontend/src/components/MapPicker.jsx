@@ -24,9 +24,9 @@ const MAP_OPTIONS = {
 
 /**
  * Purpose: Interactive Google Map component for selecting a delivery pin; auto-locates the user on first render.
- * Input: value – { lat, lng } | null, onChange – (coords) => void, onAddressChange – (address) => void
+ * Input: value – { lat, lng } | null, onChange – (coords) => void
  */
-export default function MapPicker({ value, onChange, onAddressChange }) {
+export default function MapPicker({ value, onChange }) {
   const { t } = useTranslation();
   const { isLoaded, loadError } = useGoogleMaps();
 
@@ -35,16 +35,8 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
   );
   const [zoom, setZoom] = useState(value ? 15 : 12);
 
-  const geocoderRef      = useRef(null);
   const autocompleteRef  = useRef(null);
   const didAutoLocate    = useRef(false);
-
-  // Build Geocoder once Maps is ready
-  useEffect(() => {
-    if (isLoaded && !geocoderRef.current) {
-      geocoderRef.current = new window.google.maps.Geocoder();
-    }
-  }, [isLoaded]);
 
   // Auto-detect user location on first render (skip if a value is already set)
   useEffect(() => {
@@ -58,7 +50,6 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
         setMapCenter(coords);
         setZoom(15);
         onChange(coords);
-        doReverseGeocode(coords);
       },
       () => {
         // Permission denied — stay at Tashkent fallback
@@ -68,47 +59,30 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
   }, [isLoaded]);
 
   /**
-   * Purpose: Reverse-geocodes coordinates and passes the formatted address to onAddressChange.
-   */
-  const doReverseGeocode = useCallback(
-    (coords) => {
-      if (!geocoderRef.current) return;
-      geocoderRef.current.geocode({ location: coords }, (results, status) => {
-        if (status === 'OK' && results?.[0]) {
-          onAddressChange?.(results[0].formatted_address);
-        }
-      });
-    },
-    [onAddressChange]
-  );
-
-  /**
-   * Purpose: Updates the pin position and triggers reverse geocoding when the user clicks the map.
+   * Purpose: Updates the pin position when the user clicks the map.
    */
   const handleMapClick = useCallback(
     (e) => {
       const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() };
       onChange(coords);
       setMapCenter(coords);
-      doReverseGeocode(coords);
     },
-    [onChange, doReverseGeocode]
+    [onChange]
   );
 
   /**
-   * Purpose: Updates coordinates and reverse-geocodes when the user finishes dragging the marker.
+   * Purpose: Updates coordinates when the user finishes dragging the marker.
    */
   const handleMarkerDrag = useCallback(
     (e) => {
       const coords = { lat: e.latLng.lat(), lng: e.latLng.lng() };
       onChange(coords);
-      doReverseGeocode(coords);
     },
-    [onChange, doReverseGeocode]
+    [onChange]
   );
 
   /**
-   * Purpose: Moves the map to the autocomplete result and propagates the selected coordinates and address.
+   * Purpose: Moves the map to the autocomplete result and propagates the selected coordinates.
    */
   const handlePlaceChanged = useCallback(() => {
     const place = autocompleteRef.current?.getPlace();
@@ -121,8 +95,7 @@ export default function MapPicker({ value, onChange, onAddressChange }) {
     onChange(coords);
     setMapCenter(coords);
     setZoom(16);
-    if (place.formatted_address) onAddressChange?.(place.formatted_address);
-  }, [onChange, onAddressChange]);
+  }, [onChange]);
 
   if (loadError) {
     return (
