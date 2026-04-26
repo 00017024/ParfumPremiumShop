@@ -152,16 +152,17 @@ exports.getOrderById = async (req, res, next) => {
 
 /**
  * Purpose: Returns paginated list of all orders for admin use, newest first.
- * Input: Query params — page, limit (max 100)
+ * Input: Query params — page, limit (max 100), status? (optional enum filter)
  * Output: { total, page, pages, orders } with user and product details populated.
  */
 exports.getAllOrders = async (req, res, next) => {
   try {
-    const page  = Math.max(1, parseInt(req.query.page,  10) || 1);
-    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const page   = Math.max(1, parseInt(req.query.page,  10) || 1);
+    const limit  = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 20));
+    const filter = req.query.status ? { status: req.query.status } : {};
 
-    const total  = await Order.countDocuments();
-    const orders = await Order.find()
+    const total  = await Order.countDocuments(filter);
+    const orders = await Order.find(filter)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
