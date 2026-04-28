@@ -48,8 +48,8 @@ const orderSchema = new mongoose.Schema(
     },
 
     location: {
-      lat: { type: Number },
-      lng: { type: Number },
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
     },
 
     items: [

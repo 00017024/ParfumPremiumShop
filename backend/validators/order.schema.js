@@ -9,6 +9,10 @@ exports.createOrderSchema = Joi.object({
     .required(),
   city: Joi.string().valid("Tashkent", "Samarkand").required(),
   notes: Joi.string().max(500).allow("", null).optional(),
+  location: Joi.object({
+    lat: Joi.number().min(-90).max(90).required(),
+    lng: Joi.number().min(-180).max(180).required(),
+  }).required(),
   items: Joi.array()
     .items(
       Joi.object({
